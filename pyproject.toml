@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=65.6.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "duck"
+version = "1.0"
+authors = [
+  { name="Brian Musakwa", email="ducksoftwarenet@gmail.com" },
+]
+description = "A simple module to create a webserver with minimum effort."
+readme = "README.MD"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU LESSER GENERAL PUBLIC LICENSE",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/digreatbrian/duck"
+"Bug Tracker" = "https://github.com/digreatbrian/duck/issues"
