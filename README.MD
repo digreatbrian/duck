@@ -1,3 +1,5 @@
+![icon](https://github.com/digreatbrian/duck/blob/main/assets/duck.jpg)
+
 # Duck Description
 
 This module is powerful in the creation of http/https servers.
