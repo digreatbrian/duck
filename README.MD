@@ -180,13 +180,8 @@ See also the list of [contributors](https://github.com/digreatbrian/duck/contrib
 
 ## License
 
-This project is licensed under the Lesser General Public License - see the [LICENSE](LICENSE) file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
 ## Acknowledgments
 
 *We thank the contributors for their efforts in this software as theier investment in this work really matters.
-
-
-
-
-
