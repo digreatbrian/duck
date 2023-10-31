@@ -1,6 +1,6 @@
 import sys
-version_num=(1,0)
-version='%d.%d'%version_num
+version_num=(1, 0, 1)
+version='%d.%d.%d'%version_num
 version_name='Duck'
 
 pyversion=sys.version.split(' ')[0]
