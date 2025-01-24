@@ -5,6 +5,7 @@
 **Duck** is a Python-based webserver, framework, and proxy that integrates seamlessly with **Django**. It simplifies web development with built-in HTTPS support, SSL certificate generation, and robust customization options.
 
 ## Support This Project towards its completion
+![Duck Collaboration Image](./duck-collaboration.jpg)
 [![Ko-fi](./support_me_on_kofi_red.png)](https://ko-fi.com/digreatbrian)  
 **Please provide your list of features that you would like for this amazing project!**
 
