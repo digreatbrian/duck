@@ -1,8 +1,12 @@
+# Repository under maintainance!
 # 🦆 Duck Webserver and Proxy
 ![Duck image](./duck/etc/staticfiles/images/duck-default-bw.png)  
 
 **Duck** is a Python-based webserver, framework, and proxy that integrates seamlessly with **Django**. It simplifies web development with built-in HTTPS support, SSL certificate generation, and robust customization options.
 
+## Support This Project towards its completion
+[![Ko-fi](./support_me_on_kofi_red.png)](https://ko-fi.com/digreatbrian)  
+**Please provide your list of features that you would like for this amazing project!**
 
 ## ✨ Features
 
@@ -51,8 +55,6 @@
 
 - **Reusable React Components**: Quickly integrate prebuilt, dynamic, and flexible React components.
 
-- **Asynchronous Support**: Support asynchronous connections rather than using threads only.
-
 
 ## 🚀 Getting Started
 
@@ -73,7 +75,6 @@ requests>=2.31.0
 diskcache
 colorama
 tzdata # for django time conversions
-curio
 ```
 **Additionally, you'll need to have OpenSSL installed on your system for SSL certificate generation**.
 
