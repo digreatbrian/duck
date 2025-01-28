@@ -1,59 +1,39 @@
 # Repository under maintainance!
 # 🦆 Duck Webserver and Proxy
-![Duck image](./duck/etc/staticfiles/images/duck-default-bw.png)  
+![Duck image](./images/duck-cover.png)  
 
 **Duck** is a Python-based webserver, framework, and proxy that integrates seamlessly with **Django**. It simplifies web development with built-in HTTPS support, SSL certificate generation, and robust customization options.
 
 ## Support This Project towards its completion
 ![Duck Collaboration Image](./duck-collaboration.jpg)
-[![Ko-fi](./support_me_on_kofi_red.png)](https://ko-fi.com/digreatbrian)  
+[![Ko-fi](./images/support_me_on_kofi_red.png)](https://ko-fi.com/digreatbrian)  
 **Please provide your list of features that you would like for this amazing project!**
 
 ## ✨ Features
 
 - **Django Integration**: Effortlessly connect with Django projects.
-
-- **Fast**: Duck is fast for asynchronous requests handling, It uses curio to improve performance.
-
 - **HTTPS & SSL**: Easily generate and manage SSL certificates for secure connections.
-
 - **Quick Setup**: Minimal configuration needed to start development.
-
 - **Enhanced Security**: Offers a strong security layer for production servers.
-
 - **Versatile Template Engines**: Supports Jinja2 and Django templates, complete with built-in tags and filters.
-
 - **Logging Options**: Supports file and console-based logging for easier debugging.
-
 - **Reusable HTML Components**: Quickly integrate prebuilt, dynamic, and flexible HTML elements.
-
 - **Extensive Customization**: Easily adjust settings in settings.py for tailored configurations.
-
 - **Task Automation**: Automate repetitive tasks to streamline workflows.
-
 - **Route Blueprints**: Group and organize routes for better readability and project management.
 - **Live Reloading**: Automatically restart the server on file changes with **DuckSight Reloader**.
 - **React Template Integration**: Seamlessly integrate **React** code into Django or Jinja2 templates.
 - **Dual Connection Mode**: Supports handling requests using both **keep-alive** and **close** connection modes.
-- **Render Minify Support**: Strips blank newlines and spaces after a template has been rendered thus improving transfer speed.
-
 
 ## 🔧 Upcoming Features
 
 - **SNI Support**: Host multiple websites on the same IP using Server Name Indication.
-
 - **Load Balancer**: Built-in mechanism for distributing traffic using multiple servers and workers (processes for handling requests).
-
 - **Server Analytics**: Monitor and analyze server traffic and statistics.
-
 - **Credential Manager**: Securely store sensitive data like database credentials.
-
 - **Elevate Duck's Online Presence**: Build a dedicated website to foster a thriving community, share knowledge, and streamline access to resources.
-
 - **Remote Server Backends**: Enable proxy compatibility to seamlessly handle client requests via remote servers (currently supports only Django).
-
 - **Admin Site**: Effortlessy manage Duck using customizable administration site.
-
 - **Reusable React Components**: Quickly integrate prebuilt, dynamic, and flexible React components.
 
 
@@ -84,24 +64,24 @@ tzdata # for django time conversions
 *To start a new project, run*:
 
 ```sh
-duck makeproject -n myproject
+duck makeproject myproject
 ```
 
 ### Duck makeproject modes
 1. **Normal project**:  
 Create a normal average project.
 ```sh
-duck makeproject -n myproject
+duck makeproject myproject
 ```
 2. **Mini project**:  
 Create a mini version project with lesser files and directories.
 ```sh
-duck makeproject -n myproject --mini
+duck makeproject myproject --mini
 ```
 3. **Full project**:  
 Create a full complete project with all settings and necessary files and directories.
 ```sh
-duck makeproject -n myproject --full
+duck makeproject myproject --full
 ```
 
 *Project structure:*
@@ -110,9 +90,6 @@ duck makeproject -n myproject --full
 # Full version
 myproject/
 ├── apps/
-│   ├── app1/ 
-│   │       ├── blueprint.py
-│   │       └── views.py
 │   └── ...
 ├── backend/  
 │   ├── django/  
@@ -143,6 +120,27 @@ myproject/
 ```
 
 ```
+# Normal version
+myproject/  
+├── backend/  
+│   ├── django/  
+│   │   └── duckapp/  
+│   │       ├── settings.py  
+│   │       ├── urls.py  
+│   │       ├── views.py  
+│   │       └── ...  
+│   └── manage.py
+├── main.py  
+├── settings.py
+├── urls.py
+├── LICENSE
+├── README.md
+├── TODO.md
+├── requirements.txt
+└── views.py
+```
+
+```
 # Mini version
 myproject/  
 ├── backend/  
@@ -156,6 +154,7 @@ myproject/
 ├── main.py  
 ├── settings.py
 ├── urls.py
+├── requirements.txt
 └── views.py
 ```
 
@@ -169,7 +168,7 @@ python main.py
 *Alternatively, use:*
 ```sh
 $ cd myproject  
-$ python3 -m duck runserver -p 8000 -d 'localhost'
+$ duck runserver -p 8000 -d 'localhost'
 ```
 Then open http://localhost:8000 or https://localhost:8000 if **ENABLE_HTTPS** is enabled in **settings.py**.
 
@@ -179,7 +178,7 @@ You can use **--ipv6** argument to start server on ipv6 address.
 
 *Once you open your browser at the respective url, you should see something like this.*
 
-![Duck local website](./duck/etc/staticfiles/images/local-duck-site.png)
+![Duck local website](./images/local-duck-site.png)
 
 ### Example Files
 
@@ -188,7 +187,7 @@ You can use **--ipv6** argument to start server on ipv6 address.
 
 from duck.app import App  
 
-app = App(port=5000, addr='127.0.0.1') # App(port=8000, addr='::1', uses_ipv6=True) for ipv6
+app = App(port=8000, addr='127.0.0.1') # App(port=8000, addr='::1', uses_ipv6=True) for ipv6
 
 if __name__ == '__main__':
 	app.run()
@@ -204,11 +203,11 @@ def home():
 ```py
 # urls.py
 
-from duck.urls import path  
+from duck.urls import path, re_path
 from . import views  
 
 urlpatterns = [  
-    path("/", views.home, "home", ["GET"]),  
+    path("/", views.home, "home", methods=["GET"]), # methods is optional
 ]
 
 ```
@@ -241,14 +240,27 @@ myproject/
 ```py
 # blueprint.py
 
-from duck.route import RouteBlueprint  
+from duck.routes import Blueprint
+from duck.urls import re_path, path
 from . import views  
 
-ProductsBlueprint = RouteBlueprint(name='products') # initialize blueprint
+ProductsBlueprint = Blueprint(
+    location=__file__,
+    name="media",
+    urlpatterns=[
+        path(
+            f"/list-products",
+            views.product_list_view,
+            name="list-products",
+            methods=["GET"],
+        ),
+    ],
+    prepend_name_to_urls=False,
+    is_builtin=True,
+    enable_template_dir=True,
+    enable_static_dir=True,
+)
 
-ProductsBlueprint.register_route("/list", views.list_products, name='products-list', methods=["GET"]) # register a normal route to list all products
-
-ProductsBlueprint.re_register_route("media/.*", views.products_media, name='products-media', methods=["GET"]) # register a regex route to serve products media
 ```
 
 ```py
@@ -305,11 +317,18 @@ You can use the HTML components like so in a Jinja2 template:
 In Django templates, the usage is slightly different, and you need to ensure that the tag is on one line and keyword arguments are quoted as strings:
 	
 ```django
-{% Button properties='{"id": "btn", "value": "Hello world"}' style='{"background-color": "blue", "color": "white"}' %}
+{% Button %}
+     properties={
+         "id": "btn",
+         "value": "Hello world"
+      },
+      style={
+           "background-color": "blue",
+            "color": "white"
+       },
+       optional_argument="Some value"
+{% endButton %}
 ```
-
-**Note:** In Django templates, make sure the tag is written on a single line and that the keyword arguments are passed as strings (e.g., properties='{"key": "value"}').
-
 
 ## HTML Components Configuration
 
