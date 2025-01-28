@@ -43,7 +43,9 @@
 
 **Install Duck using pip**:
 ```sh
-pip install --upgrade duck
+git clone https://github.com/digreatbrian/duck.git
+cd duck -e .
+python 
 ```
 ### Requirements
 
@@ -246,7 +248,7 @@ from . import views
 
 ProductsBlueprint = Blueprint(
     location=__file__,
-    name="media",
+    name="products",
     urlpatterns=[
         path(
             f"/list-products",
