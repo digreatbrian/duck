@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Duck Server - The best server for all your duck needs.">
+  
+  {% block favicon %}
+    <link rel="icon" href="{{favicon}}" type="image/png">
+  {% endblock favicon %}
+  
+  {% block stylesheets %}
+    <link rel="stylesheet" href="/duck-static/css/base.css" type="text/css">
+    {% block extra_stylesheets %}{% endblock extra_stylesheets %}
+  {% endblock stylesheets %}
+  <title>{% block title %}Duck Server{% endblock title %}</title>
+</head>
+
+<body>
+  {% block header %}
+    <header>
+      <h1 class="header-title"><a href="{{ home }}" aria-label="Navigate Home">Duck Server</a></h1>
+    </header>
+  {% endblock header %}
+  
+  {% block nav %}
+    <nav>
+    {% block nav_links %}
+      <a href="{{ home }}" aria-label="Home Page">Home</a>
+      <a href="{{ about }}" aria-label="About Page">About</a>
+      <a href="{{ contact }}" aria-label="Contact Page">Contact</a>
+    {% endblock nav_links %}
+    </nav>
+  {% endblock nav %}
+  
+  <main class="container">
+    {% block main %}
+      <h1>Welcome to Duck Server {{ server_version }}</h1>
+      <p>You are seeing this because DEBUG=True in settings.</p>
+      <img src="{{ duck_image}}" alt="A beautiful duck illustration">
+      <p>Experience the best server for all your duck needs! Ready to startup.</p>
+      <button class="button" id="alertButton">Click Me</button>
+    {% endblock main %}
+  </main>
+  <div id="placeholder-container"></div>
+  {% block footer %}
+    <footer>
+    {% block footer_content %}
+      <div id="kofi-donation-container">
+        <a href="https://ko-fi.com/digreatbrian"><img src="{{ kofi_donate_img }}" id="kofi-donate-img" alt="Image notifying users to support Duck framework" width="25%" height="25%"></a>
+      </div>
+      <p>Explore or contribute to our <a href="{{ repo_url }}" aria-label="GitHub Repository">GitHub Repository</a>.</p>
+    {% endblock footer_content %}
+    </footer>
+  {% endblock footer %}
+  
+  {% if request.path == "/" %}
+    <script>
+      document.getElementById('alertButton').addEventListener('click', function() {
+        alert('Duck has been setup, ready to deploy!');
+      });
+    </script>
+  {% endif %}
+</body>
+</html>

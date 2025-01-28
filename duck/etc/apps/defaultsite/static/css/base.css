@@ -1,0 +1,170 @@
+:root {
+    --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+body {
+    font-family: var(--font-family);
+    margin: 0;
+    padding: 0;
+    background-color: #f0f8ff;
+    color: #333;
+    max-width: 100vw;
+    max-height: 100vh;
+    display: block;
+}
+
+header {
+    color: #fff;
+    padding: 1rem;
+    text-align: center;
+}
+
+.header-title {
+    margin: 0;
+    font-size: 2rem;
+}
+
+.header-title a {
+    color: #FFA500;
+    text-decoration: none;
+}
+
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+nav a {
+    color: #FFA500;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: color 0.3s ease;
+}
+
+nav a:hover {
+    color: #FF8C00;
+}
+
+.container {
+    max-width: 800px;
+    width: 90%;
+    margin: 2rem auto;
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow-wrap: break-word; /* Ensures text wraps inside the container */
+    word-wrap: break-word; /* Legacy support */
+    word-break: break-word; /* Handles long words and URLs */
+    hyphens: auto; /* Enables hyphenation for better text wrapping */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    animation: fadeIn 0.8s ease-in-out;
+}
+
+.placeholder-container {
+   height: auto;
+}
+
+h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #FF8C00;
+    text-align: center;
+}
+
+p {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin: 1rem 0;
+    color: #666;
+    text-align: justify; /* Align text for a neat appearance */
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 1rem 0;
+}
+  
+.button {
+    display: inline-block;
+    background-color: #FF8C00;
+    color: white;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 5px;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.button:hover {
+    background-color: #FFA500;
+    transform: scale(1.05);
+}
+
+footer {
+    padding: 1rem;
+    border-top: 1px solid #ddd;
+    margin: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+footer a {
+    color: #FFA500;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+footer a:hover {
+    color: #FF8C00;
+}
+
+#kofi-donation-container a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#kofi-donation-container img {
+  width: 130px;
+  height: 65px;
+  object-fit: contain;
+}
+
+
+@media (max-width: 600px) {
+    .header-title {
+       font-size: 1.5rem;
+     }
+    
+    p {
+      font-size: 0.9rem;
+    }
+    
+    nav a {
+      font-size: 0.9rem;
+    }
+    
+    .container {
+      padding: 1rem;
+    }
+    
+    .button {
+      font-size: 0.9rem;
+      padding: 0.7rem 1.2rem;
+    }
+}

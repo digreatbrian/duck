@@ -1,0 +1,96 @@
+{# CSRF Error Page Template #}  
+{# This template uses Django's templating engine and is only rendered in the user's browser if DEBUG=True #}  
+{% extends "base_template_response.html" %}  
+
+{% block title %}CSRF Error{% endblock title %}  
+
+{% block nav_links %}
+<!-- Clear navigation links for this error page -->  
+{% endblock nav_links %}  
+
+{% block main %}
+<div class="error-container">
+    <h1>Oops! Something went wrong</h1>
+    <h3><strong>CSRF Middleware token error!</strong></h3>
+    <p>
+        Duck does not trust this site: <i><strong>{{ request.build_absolute_uri('/') }}</strong></i>
+    </p>
+
+    {% if reason %}
+    <p><strong><i>Reason:</strong> {{ reason }}.</i></p>
+    
+    <p>
+    Duck uses CSRF token for security reasons, ensuring that your browser is not being hijacked by third parties.
+    </p>
+    <br>
+    {% endif %}
+
+    <p>
+        You are seeing this page because <code>DEBUG=True</code> in your Duck settings.  
+        To see a standard error page instead, set <code>DEBUG=False</code>.
+    </p>
+    
+    <div>
+    	<a href="{{request.absolute_uri}}" alt="Go back">GO BACK</a>
+    </div>
+</div>
+
+<style>
+    .error-container {
+        background-color: #fdf2f2; /* Soft red background for better readability */
+        color: #d32f2f; /* Deep red for error text */
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        animation: fadeIn 0.8s ease-in-out;
+    }
+    .error-container h1 {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+    .error-container h3 {
+        font-size: 1.5rem;
+        font-weight: normal;
+        margin-bottom: 1rem;
+    }
+    .error-container p {
+        font-size: 1.1rem;
+        margin: 0.75rem 0;
+        line-height: 1.5;
+    }
+    .error-container a.button {
+        display: inline-block;
+        background-color: #d9534f; /* Bootstrap danger button color */
+        color: #fff;
+        padding: 0.8rem 1.5rem;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        font-weight: bold;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    .error-container a.button:hover {
+        background-color: #c9302c;
+        transform: scale(1.05);
+    }
+    div a {
+      color: #FFA500;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+    div a:hover {
+      color: #FF8C00;
+    }
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock main %}  

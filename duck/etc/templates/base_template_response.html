@@ -1,0 +1,89 @@
+{# Jinja2 Templating Engine #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Duck Server - The best server for all your duck needs.">
+  <link rel="icon" href="{{icon_link}}" type="{{icon_type}}">
+  <title>{{title}}</title>
+  <style>
+      :root {
+        --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        --primary-color: #FF8C00;
+        --secondary-color: #333;
+        --background-color: #f0f8ff;
+        --container-bg-color: #fff;
+        --text-color: #666;
+        --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        --border-radius: 10px;
+        --margin: 2rem;
+        --padding: 1.5rem;
+        --max-width: 88%;
+        --width: 90%;
+        --min-height: 20vh;
+      }
+      body {
+        font-family: var(--font-family);
+        margin: 0;
+        padding: 0;
+        background-color: var(--background-color);
+        color: var(--secondary-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: fit-content;
+      }
+      .container {
+        max-width: var(--max-width);
+        width: fit-content;
+        margin: var(--margin) auto;
+        background: var(--container-bg-color);
+        padding: var(--padding);
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        min-height: var(--min-height);
+        word-wrap: break-word;
+        word-break: break-word;
+        hyphens: auto;
+        display: flex;
+        flex-direction: column;
+      }
+      h1 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: var(--primary-color);
+        text-align: justify;
+      }
+      p {
+        font-size: 1.5rem;
+        line-height: 1.5;
+        margin: 1rem 0;
+        color: var(--text-color);
+        text-align: justify;
+      }
+      @media (max-width: 600px) {
+        p {
+          font-size: 0.9rem;
+        }
+        .container {
+          padding: 1rem;
+        }
+      }
+    </style>
+</head>
+<body>
+  <main class="container">
+    {% block main %}
+      <h1>{{heading}}</h1>
+      <div>{{body}}</div>
+      {% if debug %}
+          <p>
+              You are seeing this page because <code>DEBUG=True</code> in your Duck settings.  
+              To see a standard page instead, set <code>DEBUG=False</code>.
+          </p>
+      {% endif %}
+   {% endblock main %}
+  </main>
+</body>
+</html>

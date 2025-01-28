@@ -1,0 +1,38 @@
+
+{# Showcase of Html Components in django #}
+{# Setting ENABLE_HTML_COMPONENTS must be True and every Html component must be present in HTML_COMPONENTS #}
+
+{% extends "base.html" %}
+{% block title %}Contact Us{% endblock title %}
+
+{% block main %}
+{% if feedback_submitted %}
+    <h1>Feedback Submitted</h1>
+    <p class="feedback-message">Thanks for your feedback!</p>
+
+{% else %}
+    <h1>Contact Us</h1>
+    <p>If you have any questions, feel free to reach out to us!</p>
+    <form action='{% resolve "contact" absolute=False %}' method="post" class="contact-form" enctype="multipart/form-data">
+        {% CSRFInput request %}
+        
+        <div class="form-group">
+            <label for="name">Name:</label>
+            {% Input properties='{"type":"text", "id":"name", "name": "name", "class": "form-control", "required": "true"}' %}
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email:</label>
+            {% Input properties='{"type":"email", "id":"email", "name": "email", "class": "form-control", "required": "true"}' %}
+        </div>
+        
+        <div class="form-group">
+            <label for="message">Message:</label>
+            {% TextArea properties='{"id":"message", "name": "message", "class": "form-control", "required": "true"}' %}
+        </div>
+        
+        {% RaisedButton properties='{"type":"submit", "id":"submit", "class": "form-control"}' style='{"background-color": "black", "color": "white"}' %}
+    
+    </form>
+{% endif %}
+{% endblock main %}
