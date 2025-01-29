@@ -1,20 +1,25 @@
 """
-File containing mini settings for Duck application.
+File containing settings for Duck application.
 """
-
+# yapf: disable
 import os
+import json
 import pathlib
 
 from duck.etc.middlewares import middlewares
 from duck.etc.normalizers import normalizers
-from duck.secrets import DUCK_SECRET
+from duck.secrets import DUCK_SECRET, SECRET_DOMAIN
+from duck.storage import duck_storage
+
 
 # Base directory where the Duck application is running from
 BASE_DIR: str | pathlib.Path = pathlib.Path(".").resolve()
 
-# SECURITY WARNING: keep the secret key used in production secret! Will be used also to validate private connection
-# between Duck app and Django
+
+# SECURITY WARNING: Keep the secret key used in production secret!
+# Modify this for your own secure secret key. Defaults to random secret key on every Duck launch.
 SECRET_KEY: str = os.environ.get("DUCK_SECRET_KEY", DUCK_SECRET)
+
 
 # Debug Mode
 # Specifies whether to run the server in debug mode.
@@ -24,9 +29,6 @@ SECRET_KEY: str = os.environ.get("DUCK_SECRET_KEY", DUCK_SECRET)
 #   - You must define and register your own URLs by adding `path` or `re_path` entries in the `urlpatterns` list in `urls.py`.
 DEBUG: bool = True
 
-# Web Server Gateway Interface (WSGI) to use within Duck.
-# **Caution**: Changing WSGI may result in unexpected behavior for logging if not handled correctly.
-WSGI: str = "duck.http.wsgi.WSGI"
 
 # HTTPS
 # Specifies whether to enable HTTPS for the server.
@@ -34,155 +36,107 @@ WSGI: str = "duck.http.wsgi.WSGI"
 # - Ensure you have valid SSL certificates configured for secure communication.
 ENABLE_HTTPS: bool = False
 
+
 # Force HTTPS
 # Enforces HTTPS by redirecting unencrypted HTTP traffic to HTTPS.
 # - When `FORCE_HTTPS=True`, all HTTP requests will be redirected to HTTPS.
 FORCE_HTTPS: bool = False
+
 
 # Force HTTPS Bind Port
 # Specifies the port for the redirection app to handle HTTP to HTTPS redirection.
 # - This port will listen for unencrypted traffic and redirect it to the HTTPS-enabled app.
 FORCE_HTTPS_BIND_PORT: int = 8080
 
+
 # Allowed Hosts, Wildcards Allowed
 ALLOWED_HOSTS: list[str] = ["*"]
+
 
 # Module for urlpatterns definition.
 URLPATTERNS_MODULE: str = "urls"
 
-# Route Blueprints
-# Route blueprints are more Flask's blueprints for organizing routes.
+
+# Blueprints
+# Blueprints are more Flask's blueprints for organizing routes.
 # **Note**: The blueprint name will determine the entire route, e.g.
-# For route `/home` and blueprint with name `products`, the final route will be `/products/home`
-# The best way to maximise usage of blueprints, create subfolders within base directory and create blueprints and their related views in those subfolders for good project organization.
-ROUTE_BLUEPRINTS: list[str] = [
-    # your blueprints here, e.g.
-    # blueprints.SampleBlueprint
+# For route `/home` and blueprint with name `products`, the final route will be `/products/home`. This behavior can be disabled by setting argument `prepend_name_to_url` to False.
+# The best way to maximize usage of blueprints, create subfolders within base directory and create blueprints and their related views in those subfolders for good project organization.
+BLUEPRINTS: list[str] = [
+    "duck.etc.apps.essentials.blueprint.MediaFiles",
+    "duck.etc.apps.essentials.blueprint.StaticFiles",
+    "duck.etc.apps.react_frontend.blueprint.ReactFrontend",
 ]
+
+
+# Asynchronous Request Handling
+
+# Determines whether to use asynchronous request handling.
+# If set to False, the framework defaults to multithreaded request handling.
+# Example: ASYNC_HANDLING=True enables async handling; False uses threads.
+ASYNC_HANDLING: bool = True
+
 
 # DJANGO INTEGRATION
 # Whether to use Django for Backend
 # This will make Duck server act as Proxy for Django
 USE_DJANGO: bool = False
 
+
 # Django Server Port
 # This is the port where django server will be started on
 DJANGO_BIND_PORT: int = 9999
 
-# URLS to  be parsed right to django
+
+# URLS to  be parsed straight to django
 # This is only useful for urls that were registered with django but not with duck .e.g /admin
+# These urls don't pass through the processing middlewares (responsible for detecting errors like Not found.)
+# Add a url if the urlpattern was defined only directly in the Django side.
+# **Note:** To avoid conflicts, only make sure that the url pattern definition is only in Django (Duck doesnt know of any urlpattern matching this).
 # Regex urls are allowed
-DJANGO_REGISTERED_URLS: list[str] = [
-    "/admin",
+DJANGO_SIDE_URLS: list[str] = [
+    "/admin.*",
 ]
 
-# Directory to lookup templates
-# Duck uses single template directory to avoid inaccuraces like retreiving wrong template which might available in many template directories.
-TEMPLATE_DIR: str | pathlib.Path = pathlib.Path("templates/").resolve()
 
-# Module which contains Custom Template Tags or Filters
-# Set to '' to disable custom tags or filters
-# Example:
-# # tags.py
-# from duck.template import TemplateTag, TemplateFilter
-#
-# def mytag(arg1):
-# 	# do some stuff here
-# 	return "some data"
-#
-# def myfilter(data):
-# 	# do some stuff here
-# 	return data
-#
-# TAGS = [
-# 	TemplateTag("name_here", mytag, takes_context=False) # takes_context defaults to False
-# ]
-#
-# FILTERS = [
-# 	TemplateFilter("name_here", myfilter)
-# ]
-TEMPLATE_TAGS_FILTERS_MODULE: str = ""
+# Duck Explicit URLs
+# These are urls you want to be explicitly handled by Duck if USE_DJANGO=True
+# By default, if USE_DJANGO=True, all requests will be proxied to Django first to obtain a response
+# Even if you define urlpatterns within the Duck side, those urlpatterns will be registered at django endpoint as well.
+# This option flags all requests matching urls defined here to avoid all that effort of being first sent to Django server to produce a response, but
+# rather be handled directly (in short, prefer Duck over Django).
+# This is very useful for reducing latency for requests that do not rely operations that need Django. (e.g staticfiles handling, mediafiles handling, etc)
+# These URLs are considered more over DJANGO_SIDE_URLS if same url is defined both here and in DJANGO_SIDE_URLS
+DUCK_EXPLICIT_URLS: list = [
+    "/duck-static.*",
+    "/static.*",
+    "/media.*",
+]
 
-# Enabled Html Components
-# These are mapping of Html Component Name to the Html Component class
-# You can create your custom HtmlComponent by subclassing the component from duck.html.components.InnerHtmlComponent or NoInnerHtmlComponent.
 
-# Do help on how these two classes work
-# Example:
-# class Button(InnerHtmlComponent):
-#    """
-#    HTML Button component.
-#    """
-#    def __init__(self, properties: dict[str, str]={}, style: dict[str, str]={}):
-#        """
-#        Initialize the FlatButton component.
-#        """
-#        btn_style = {
-#            "padding": "10px 20px",
-#            "cursor": "pointer",
-#            "transition": "background-color 0.3s ease",
-#            "border": "none",
-#        } # default style
-#
-#        btn_style.update(style) if style else None # update default style
-#
-#        super().__init__("button", properties, btn_style)
+# Template Dirs
+# Global Directories to lookup templates
+TEMPLATE_DIRS: list[str | pathlib.Path] = [pathlib.Path("templates/").resolve()]
 
-HTML_COMPONENTS: dict[str, str] = {
-    "Button": "duck.html.components.button.Button",
-    "FlatButton": "duck.html.components.button.FlatButton",
-    "RaisedButton": "duck.html.components.button.RaisedButton",
-    "Input": "duck.html.components.input.Input",
-    "CSRFInput": "duck.html.components.input.CSRFInput",
-    "Checkbox": "duck.html.components.checkbox.Checkbox",
-    "Select": "duck.html.components.select.Select",
-    "TextArea": "duck.html.components.textarea.TextArea",
-}
 
-# List of all middlewares as strings in form "middleware.MiddlewareClass"
-# Make sure DuckToDjangoMetaDataShareMiddleware is in MIDDLEWARES so as to
-# enable good cooperation between duck and django if Django is used as backend
-# **Note**: CSRFMiddleware and SessionMiddleware will be removed if USE_DJANGO=True
-# WARNING: The middlewares should be arranged in order at this point
-MIDDLEWARES: list[str] = middlewares
-
-#  Request Normalizers
-# These Normalizers accept a Request object as an argument and return the Request object with normalized attributes.
-NORMALIZERS: list[str] = normalizers
-
-# STATIC FILES HANDLING
-
-# The root directory for storing static files.
-# Auto created if it does'nt exist
-STATIC_ROOT: str = BASE_DIR / "staticfiles"
-
-# The URL to use for serving static files.
-STATIC_URL: str = "static/"
-
-# MEDIA FILES HANDLING
-
-# Media Root
-# This is where the media files will reside in.
-# Auto created if it does'nt exist
-MEDIA_ROOT: str = BASE_DIR / "media"
-
-# Media Url
-# This is the url for serving media files
-MEDIA_URL: str = "media/"
-
-# AUTOMATION SETTINGS
-# Automations you would like to run when the application is running.
-# This is a mapping of Automation objects as a string to a dictionary with only one allowed key, ie. `trigger`.
-# The key `trigger` can be either a class or an object.
-# Do help on duck.automations for more info.
-# Note: Preparing Automation environment may make the application startup a bit slower.
-AUTOMATIONS: dict[str, dict[str, str]] = {
-    "duck.automation.SampleAutomation": {
-        "trigger": "duck.automation.trigger.NoTrigger",
+# Frontend Integration
+# Currently, only React is supported.
+FRONTEND: dict[str, dict] = {
+    "REACT": {
+        # URLs or filepaths for loading React, ReactDOM, and Babel scripts (Javascript only).
+        # **Note**: Babel script is required.
+        "scripts": [
+            "https://unpkg.com/react@17/umd/react.development.js",
+            "https://unpkg.com/react-dom@17/umd/react-dom.development.js",
+            "https://unpkg.com/@babel/standalone/babel.min.js"
+        ],
+        # Root URL for the React application, this serves the jsx code in between "react_fronted" template tag.
+        "root_url": "/react/serve",
+        "scripts_url": "/scripts", # URL for serving the above scripts. Final Route = root_url + scripts_url.
     }
 }
 
-# Automation Dispatcher Configuration
-# Specifies the class responsible for dispatching automations.
-# - You can use a custom dispatcher by subclassing the `AutomationDispatcher` class and implementing the `listen` method.
-AUTOMATION_DISPATCHER: str = "duck.automation.dispatcher.DispatcherV1"
+
+# List of all middlewares as strings in form "middleware.MiddlewareClass"
+# WARNING: The middlewares should be arranged in order at this point.
+MIDDLEWARES: list[str] = middlewares

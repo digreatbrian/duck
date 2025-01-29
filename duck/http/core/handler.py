@@ -71,9 +71,13 @@ def get_status_debug_msg(response: HttpResponse, request: HttpRequest) -> Option
     Returns:
         str: A debug message that provides context or explanation for the given status code.
     """
+    # exceptional status code that doesnt require debug messages
+    if response.status_code < 300:
+        return ""
+    
     if response.status_code in responses.keys():
         debug_msg, reason = responses[response.status_code]
-        print(response.payload_obj.raw)
+        
         if request:
             if response.status_code in {301, 302, 307}:
                 final_debug_msg = f"{debug_msg}: {request.path} -> {response.get_header('location', 'unknown')}"
@@ -82,6 +86,7 @@ def get_status_debug_msg(response: HttpResponse, request: HttpRequest) -> Option
         else:
             final_debug_msg = f'{debug_msg}: unknown'
         return final_debug_msg
+    return "" # empty string to show no debug msg
 
 
 def get_django_formatted_log(
@@ -117,7 +122,9 @@ def get_django_formatted_log(
     if debug_message:
         info += reset + debug_message.strip() + "\n"
     else:
-        info += reset + (get_status_debug_msg(response, request) or "") + "\n"
+        debug_message = get_status_debug_msg(response, request)
+        if debug_message:
+            info += reset + debug_message + "\n"
     
     # Add the main log information with date, status code, content size, and request info
     info += (
@@ -154,7 +161,7 @@ def get_duck_formatted_log(
     
     if not debug_message:
         # Obtain debug message if not present.
-        debug_message = get_status_debug_msg(response, request) or ""
+        debug_message = get_status_debug_msg(response, request)
     
     if debug_message:
         info += f"\n  ├── {response.payload_obj.status_message} [{response.payload_obj.status_code}] "

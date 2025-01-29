@@ -98,6 +98,10 @@ def duck_to_django_request(request):
     # Set request headers (handling case-insensitivity for headers)
     for h, v in request.headers.items():
         new_request.headers._store[h.lower()] = (h.title(), v)
+    
+    if hasattr(request, "user"):
+        new_request.user = request.user
+    
     return new_request
 
 

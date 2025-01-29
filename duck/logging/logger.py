@@ -36,6 +36,23 @@ CRITICAL = logging.CRITICAL
 # Error Logging Level
 ERROR = logging.ERROR
 
+# Logging configuration
+# Logging to file
+LOG_TO_FILE = SETTINGS["LOG_TO_FILE"]
+
+# Format for all logs
+LOG_FILE_FORMAT = SETTINGS["LOG_FILE_FORMAT"]
+
+# Logging Directory
+LOGGING_DIR = SETTINGS["LOGGING_DIR"]
+
+# Silencing all logs
+SILENT = SETTINGS["SILENT"] # silence logs
+
+# Verbose logging, enabled by default if DEBUG=True
+VERBOSE_LOGGING = SETTINGS["VERBOSE_LOGGING"]
+
+
 globals = import_module_once("duck.globals")
 
 
@@ -57,10 +74,10 @@ def get_current_log_file() -> str:
             # failed to retrieve last log file used by the main app.
             pass
 
-    log_file_format = SETTINGS["LOG_FILE_FORMAT"]
-    logging_dir = SETTINGS["LOGGING_DIR"]
+    log_file_format = LOG_FILE_FORMAT
+    logging_dir = LOGGING_DIR
     current_log_file = os.environ.get("DUCK_CURRENT_LOG_FILE")
-
+    
     if not os.path.isdir(logging_dir):
         raise FileNotFoundError("Directory to save log files doesn't exist.")
 
@@ -111,7 +128,7 @@ def redirect_console_output():
     This function locks sys.stdout and sys.stderr so that they cannot be modified by another process.
 
     """
-    if not SETTINGS["LOG_TO_FILE"] or SETTINGS["SILENT"]:
+    if not LOG_TO_FILE or SILENT:
         # Do not log to any file if logging is disabled in settings.
         return
 
@@ -160,7 +177,7 @@ def get_latest_log_file():
     """
     Returns the latest created file in LOGGING_DIR.
     """
-    logging_dir = SETTINGS["LOGGING_DIR"]
+    logging_dir = LOGGING_DIR
     if os.path.isdir(logging_dir):
         scan = {i.stat().st_ctime: i for i in os.scandir(logging_dir)}
         return scan.get(sorted(scan)[-1]) if scan else None
@@ -208,13 +225,13 @@ def handle_exception(func: Callable):
         except Exception as e:
             exception = f"Exception: {str(e)}"
 
-            if SETTINGS["VERBOSE_LOGGING"]:
+            if VERBOSE_LOGGING:
                 exception = expand_exception(e)
 
-            if not SETTINGS["SILENT"]:
+            if not SILENT:
                 log_raw(exception)
 
-            if SETTINGS["LOG_TO_FILE"]:
+            if LOG_TO_FILE:
                 # Write the expanded exception to a file.
                 log_to_file(exception)
 
@@ -269,8 +286,8 @@ def log_raw(
     log_level = level
     std = sys.stdout
 
-    if SETTINGS["SILENT"]:
-        if SETTINGS["LOG_TO_FILE"]:
+    if SILENT:
+        if LOG_TO_FILE:
             cleaned_data = remove_ansi_escape_codes(
                 [msg])[0]  # remove ansi escape codes if present
             log_to_file(cleaned_data, end=end)
@@ -320,8 +337,8 @@ def log(
     color = Fore.WHITE  # Default color for normal message
     std = sys.stdout
 
-    if SETTINGS["SILENT"]:
-        if SETTINGS["LOG_TO_FILE"]:
+    if SILENT:
+        if LOG_TO_FILE:
             cleaned_data = remove_ansi_escape_codes(
                 [msg])[0]  # remove ansi escape codes if present
             log_to_file(cleaned_data, end=end)
@@ -348,8 +365,12 @@ def log(
 
 
 try:
-    if SETTINGS["LOG_TO_FILE"]:
-        atexit.register(
-            get_current_log_file_fd().close)  # close log file at exit.
+    
+    if not os.path.isdir(LOGGING_DIR):
+        os.makedirs(LOGGING_DIR, exist_ok=True)
+    
+    if LOG_TO_FILE:
+        # Close log file at exit.
+        atexit.register(get_current_log_file_fd().close)
 except Exception:
     pass

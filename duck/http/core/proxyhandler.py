@@ -353,7 +353,7 @@ class HttpProxyHandler:
             leftover_data += _leftover
         else:
             data = data[0]
-        print("~~~", data, "~~~")
+        
         # Parse headers from bytes - assuming it returns a dictionary with lists of values for each header
         headers: Dict[str, List[str]] = parse_headers_from_bytes(data)
         

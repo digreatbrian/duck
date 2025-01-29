@@ -1,9 +1,10 @@
 __pycache__/
-backend/django/duckapp/staticfiles/
 ./staticfiles/
 .uploads/
 .venv/
 .logs/
 .cache/
+Duck.egg-info/
 .ducksight-state
 .duck-processes.json
+

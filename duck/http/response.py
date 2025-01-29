@@ -820,13 +820,14 @@ class HttpRedirectResponse(HttpResponse):
         status_code = 307  # temporary redirect
 
         if permanent:
-            status_code = 301  # permanent redirect
+            status_code = 308  # permanent redirect
 
-        super().__init__("",
-                         status_code,
-                         headers=headers,
-                         content_type=content_type)
-
+        super().__init__(
+            "",
+            status_code,
+            headers=headers,
+            content_type=content_type)
+            
 
 class HttpErrorRequestResponse(HttpResponse):
     """

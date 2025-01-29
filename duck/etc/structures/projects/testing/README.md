@@ -1,0 +1,1 @@
+This project structure is for testing purposes or for minimum initial setup to be able to run Duck specific tasks e.g. Command Execution using default settings.

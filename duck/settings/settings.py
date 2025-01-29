@@ -6,7 +6,7 @@ import sys
 import importlib
 
 from duck.exceptions.all import SettingsError
-
+from duck.utils.importer import import_module_once
 
 os.environ.setdefault("DUCK_SETTINGS_MODULE", "settings")
 
@@ -25,7 +25,7 @@ def settings_to_dict(settings_module: str) -> dict:
     Raises:
             ImportError: If the settings module cannot be imported.
     """
-    settings_mod = importlib.import_module(settings_module)
+    settings_mod = import_module_once(settings_module)
     settings = {}
     for var in dir(settings_mod):
         if var.isupper():

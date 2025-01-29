@@ -8,14 +8,19 @@ Notes:
 """
 
 import threading
-import urllib.parse
 
-from duck.http.core.httpd.servers import MicroHttpServer, MicroHttpsServer
+from duck.http.core.httpd.servers import (
+    MicroHttpServer,
+    MicroHttpsServer,
+)
 from duck.http.core.processor import RequestProcessor
 from duck.http.request import HttpRequest
-from duck.http.response import HttpRedirectResponse, HttpResponse
-from duck.utils.path import sanitize_path_segment
+from duck.http.response import (
+    HttpRedirectResponse,
+    HttpResponse,
+)
 from duck.utils.port_recorder import PortRecorder
+from duck.utils.urlcrack import URL
 
 
 class MicroApp:
@@ -88,8 +93,7 @@ class MicroApp:
                 processor (RequestProcessor): Default request processor which you may use to process request.
         """
         raise NotImplementedError(
-            "Implement this method to return HttpResponse or any data as response."
-        )
+            "Implement this method to return HttpResponse or any data as response.")
 
     def run(self):
         """
@@ -101,7 +105,7 @@ class MicroApp:
         """
         Stops the current running micro-application.
         """
-        self.server.stop_server(log_to_console=False)
+        self.server.stop_server(log_to_console=not self.no_logs)
 
 
 class HttpsRedirectMicroApp(MicroApp):
@@ -109,19 +113,19 @@ class HttpsRedirectMicroApp(MicroApp):
     HttpsRedirectMicroApp class capable of redirecting http traffic to https.
     """
 
-    def __init__(self, location_url: str, *args, **kwargs):
+    def __init__(self, location_root_url: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.location_url = sanitize_path_segment(location_url)
+        self.location_root_url = location_root_url
+        self.location_url_obj = URL(location_root_url)
 
     def view(self, request: HttpRequest,
-             request_processor: RequestProcessor) -> HttpResponse:
+        request_processor: RequestProcessor) -> HttpResponse:
         """
         Returns an http redirect response.
         """
-        destination = urllib.parse.urljoin(self.location_url,
-                                           request.path).rstrip("/")
-        query = request.META.get("QUERY_STRING")
-        if query:
-            destination += "?" + query
-        redirect = HttpRedirectResponse(location=destination, permanent=True)
+        query = request.META.get("QUERY_STRING", "")
+        self.location_url_obj.innerjoin(request.path)
+        self.location_url_obj.query = query
+        destination = self.location_url_obj.to_str()
+        redirect = HttpRedirectResponse(location=destination, permanent=False)
         return redirect

@@ -12,6 +12,14 @@ class DjangoHeaderFixerMiddleware(BaseMiddleware):
         secret_domain = SETTINGS["DJANGO_SHARED_SECRET_DOMAIN"]
         if not secret_domain:
             return
+        
+        # Add headers on the real http headers before they are modified
+        if request.host:
+            request.headers["D-Host"] = request.host
+        
+        if request.origin:
+            request.headers["D-Origin"] = request.origin
+        
         host_obj = URL(request.host)
         host_obj.host = secret_domain
         
@@ -23,13 +31,6 @@ class DjangoHeaderFixerMiddleware(BaseMiddleware):
             'host': host_obj.to_str(),
         }
         
-        if request.referer:
-            # Rebuild referer as it is with new hostname
-            referer = URL(request.referer)
-            referer.host = secret_domain
-            referer.port = None
-            modify_headers['referer'] = referer.to_str()
-        
         if request.origin:
             origin = URL(request.origin)
             origin.host = secret_domain
@@ -38,3 +39,5 @@ class DjangoHeaderFixerMiddleware(BaseMiddleware):
         
         # Modify some headers: host, referer and origin
         request.headers.update(modify_headers)
+        
+        

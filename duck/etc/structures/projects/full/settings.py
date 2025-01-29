@@ -125,7 +125,7 @@ REQUEST_HANDLING_TASK_EXECUTOR: str = "duck.http.core.httpd.task_executor.Reques
 #   "duck.http.core.httpd.task_executor.trio_execute"
 #   "duck.http.core.httpd.task_executor.curio_execute"
 REQUEST_HANDLING_TASK_EXECUTOR_KWARGS: dict = {
-    "async_executor": "duck.http.core.httpd.task_executor.trio_execute",
+    "async_executor": None,
     "thread_executor": None,
 }
 
@@ -401,6 +401,11 @@ ENABLE_HTML_COMPONENTS: bool = True
 
 # Frontend Integration
 # Currently, only React is supported.
+# Use React within your template using the following template tag:
+#    {% react_frontend %}
+#        Your JSX Code here
+#    {% endreact_frontend %}
+#
 FRONTEND: dict[str, dict] = {
     "REACT": {
         # URLs or filepaths for loading React, ReactDOM, and Babel scripts (Javascript only).
@@ -669,9 +674,9 @@ VERBOSE_LOGGING: bool = True
 # Do help on duck.automations for more info.
 # Note: Preparing Automation environment may make the application startup a bit slower.
 AUTOMATIONS: dict[str, dict[str, str]] = {
-    "duck.automation.SampleAutomation": {
-        "trigger": "duck.automation.trigger.NoTrigger",
-    }
+    #"duck.automation.SampleAutomation": {
+    #   "trigger": "duck.automation.trigger.NoTrigger",
+    # }
 }
 
 

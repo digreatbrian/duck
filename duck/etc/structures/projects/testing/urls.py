@@ -1,0 +1,1 @@
+urlpatterns = [] # No URL configuration

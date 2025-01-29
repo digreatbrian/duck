@@ -1,9 +1,0 @@
-__pycache__/
-backend/django/duckapp/staticfiles/
-staticfiles/
-uploads/
-.venv/
-.logs/
-.cache/
-.ducksight-state
-.duck-processes.json

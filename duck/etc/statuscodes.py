@@ -1,13 +1,13 @@
 """
-Respones for HTTP status codes.
+Responses for HTTP status codes.
 """
 
 responses = {
     100: ("Continue", "Request received, please continue"),
-    101: (
-        "Switching Protocols",
-        "Switching to new protocol; obey Upgrade header",
-    ),
+    101: ("Switching Protocols", "Switching to new protocol; obey Upgrade header"),
+    102: ("Processing", "Request is being processed, no response available yet"),
+    103: ("Early Hints", "Preliminary response with headers before final response"),
+
     200: ("OK", "Request fulfilled, document follows"),
     201: ("Created", "Document created, URL follows"),
     202: ("Accepted", "Request accepted, processing continues off-line"),
@@ -15,52 +15,59 @@ responses = {
     204: ("No Content", "Request fulfilled, nothing follows"),
     205: ("Reset Content", "Clear input form for further input."),
     206: ("Partial Content", "Partial content follows."),
+    207: ("Multi-Status", "Multiple status codes returned for sub-requests"),
+    208: ("Already Reported", "Member already reported in Multi-Status response"),
+    226: ("IM Used", "Response reflects instance manipulations applied to resource"),
+
     300: ("Multiple Choices", "Object has several resources -- see URI list"),
     301: ("Moved Permanently", "Object moved permanently -- see URI list"),
     302: ("Found", "Object moved temporarily -- see URI list"),
     303: ("See Other", "Object moved -- see Method and URL list"),
     304: ("Not Modified", "Document has not changed since given time"),
-    305: (
-        "Use Proxy",
-        "You must use proxy specified in Location to access this "
-        "resource.",
-    ),
+    305: ("Use Proxy", "You must use proxy specified in Location to access this resource."),
+    306: ("Unused", "No longer used but reserved"),
     307: ("Temporary Redirect", "Object moved temporarily -- see URI list"),
+    308: ("Permanent Redirect", "Object moved permanently -- see URI list"),
+
     400: ("Bad Request", "Bad request syntax or unsupported method"),
     401: ("Unauthorized", "No permission -- see authorization schemes"),
     402: ("Payment Required", "No payment -- see charging schemes"),
     403: ("Forbidden", "Request forbidden -- authorization will not help"),
     404: ("Not Found", "Nothing matches the given URI"),
-    405: (
-        "Method Not Allowed",
-        "Specified method is invalid for this resource.",
-    ),
+    405: ("Method Not Allowed", "Specified method is invalid for this resource."),
     406: ("Not Acceptable", "URI not available in preferred format."),
-    407: (
-        "Proxy Authentication Required",
-        "You must authenticate with "
-        "this proxy before proceeding.",
-    ),
+    407: ("Proxy Authentication Required", "You must authenticate with this proxy before proceeding."),
     408: ("Request Timeout", "Request timed out; try again later."),
     409: ("Conflict", "Request conflict."),
     410: ("Gone", "URI no longer exists and has been permanently removed."),
     411: ("Length Required", "Client must specify Content-Length."),
     412: ("Precondition Failed", "Precondition in headers is false."),
-    413: ("Request Entity Too Large", "Entity is too large."),
-    414: ("Request-URI Too Long", "URI is too long."),
+    413: ("Payload Too Large", "Entity is too large."),
+    414: ("URI Too Long", "URI is too long."),
     415: ("Unsupported Media Type", "Entity body in unsupported format."),
-    416: ("Requested Range Not Satisfiable", "Cannot satisfy request range."),
+    416: ("Range Not Satisfiable", "Cannot satisfy request range."),
     417: ("Expectation Failed", "Expect condition could not be satisfied."),
+    418: ("I'm a Teapot", "April Fools' joke response"),
+    421: ("Misdirected Request", "Request was directed at a server that cannot respond"),
+    422: ("Unprocessable Entity", "Request was well-formed but could not be processed"),
+    423: ("Locked", "Resource is locked"),
+    424: ("Failed Dependency", "Request failed due to failure of a previous request"),
+    425: ("Too Early", "Risk of replay attack, server is rejecting the request"),
+    426: ("Upgrade Required", "Client must switch to a different protocol"),
+    428: ("Precondition Required", "Request must be conditional"),
+    429: ("Too Many Requests", "User has sent too many requests in a given time"),
+    431: ("Request Header Fields Too Large", "Header fields are too large to process"),
+    451: ("Unavailable For Legal Reasons", "Request denied for legal reasons"),
+
     500: ("Internal Server Error", "Server got itself in trouble"),
     501: ("Not Implemented", "Server does not support this operation"),
     502: ("Bad Gateway", "Invalid responses from another server/proxy."),
-    503: (
-        "Service Unavailable",
-        "The server cannot process the request due to a high load",
-    ),
-    504: (
-        "Gateway Timeout",
-        "The gateway server did not receive a timely response",
-    ),
+    503: ("Service Unavailable", "The server cannot process the request due to a high load"),
+    504: ("Gateway Timeout", "The gateway server did not receive a timely response"),
     505: ("HTTP Version Not Supported", "Cannot fulfill request."),
+    506: ("Variant Also Negotiates", "Server has an internal configuration error"),
+    507: ("Insufficient Storage", "Server is unable to store the representation"),
+    508: ("Loop Detected", "Server detected an infinite loop while processing request"),
+    510: ("Not Extended", "Further extensions to request are required"),
+    511: ("Network Authentication Required", "Client must authenticate to gain network access"),
 }

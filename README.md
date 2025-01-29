@@ -1,13 +1,10 @@
-# Repository under maintainance!
 # 🦆 Duck Webserver and Proxy
 ![Duck image](./images/duck-cover.png)  
 
-**Duck** is a Python-based webserver, framework, and proxy that integrates seamlessly with **Django**. It simplifies web development with built-in HTTPS support, SSL certificate generation, and robust customization options.
+**Duck** is a new advanced, Python-based **web server**, **framework**, and **proxy** designed for seamless integration with **Django**.
+It simplifies **web development** by providing built-in **HTTPS support**, simple **SSL certificate generation**, and powerful **customization options**.
+With **Duck**, developers can quickly deploy secure, high-performance applications with minimal configuration. Ideal for creating scalable, secure, and customizable **web solutions**, **Duck** streamlines the development process while ensuring top-notch security and performance.
 
-## Support This Project towards its completion
-![Duck Collaboration Image](./duck-collaboration.jpg)
-[![Ko-fi](./images/support_me_on_kofi_red.png)](https://ko-fi.com/digreatbrian)  
-**Please provide your list of features that you would like for this amazing project!**
 
 ## ✨ Features
 
@@ -20,7 +17,7 @@
 - **Reusable HTML Components**: Quickly integrate prebuilt, dynamic, and flexible HTML elements.
 - **Extensive Customization**: Easily adjust settings in settings.py for tailored configurations.
 - **Task Automation**: Automate repetitive tasks to streamline workflows.
-- **Route Blueprints**: Group and organize routes for better readability and project management.
+- **Blueprints**: Group and organize routes for better readability and project management.
 - **Live Reloading**: Automatically restart the server on file changes with **DuckSight Reloader**.
 - **React Template Integration**: Seamlessly integrate **React** code into Django or Jinja2 templates.
 - **Dual Connection Mode**: Supports handling requests using both **keep-alive** and **close** connection modes.
@@ -44,8 +41,7 @@
 **Install Duck using pip**:
 ```sh
 git clone https://github.com/digreatbrian/duck.git
-cd duck -e .
-python 
+python3 install ./duck
 ```
 ### Requirements
 
@@ -58,6 +54,7 @@ requests>=2.31.0
 diskcache
 colorama
 tzdata # for django time conversions
+http.client # used by requests library
 ```
 **Additionally, you'll need to have OpenSSL installed on your system for SSL certificate generation**.
 
@@ -81,7 +78,8 @@ Create a mini version project with lesser files and directories.
 duck makeproject myproject --mini
 ```
 3. **Full project**:  
-Create a full complete project with all settings and necessary files and directories.
+Create a full complete project with all settings and necessary files and directories. Use this to see all the 
+or customize the Duck configuration.
 ```sh
 duck makeproject myproject --full
 ```
@@ -164,13 +162,13 @@ myproject/
 
 To start the Duck server, navigate to your project directory and run:
 ```sh
-python main.py
+python main.py # or duck runserver --file main.py
 ```
 
 *Alternatively, use:*
 ```sh
-$ cd myproject  
-$ duck runserver -p 8000 -d 'localhost'
+cd myproject  
+duck runserver -p 8000 -d 'localhost' # The -d flag resolves to the server domain.
 ```
 Then open http://localhost:8000 or https://localhost:8000 if **ENABLE_HTTPS** is enabled in **settings.py**.
 
@@ -180,9 +178,20 @@ You can use **--ipv6** argument to start server on ipv6 address.
 
 *Once you open your browser at the respective url, you should see something like this.*
 
-![Duck local website](./images/local-duck-site.png)
+![Duck local website](./images/duck-local-site.jpg)
 
-### Example Files
+### What Your Terminal Looks Like After Running `duck runserver`
+
+After running the `duck runserver` command, your terminal should display output similar to the examples below:
+
+**For Smaller Screens:**
+![Duck local website terminal](./images/duck-local-site-small-terminal.jpg)
+
+**For Larger Screens:**
+![Duck local website terminal](./images/duck-local-site-large-terminal.jpg)
+
+
+## Example Application Files
 
 ```py
 # main.py
@@ -199,7 +208,7 @@ if __name__ == '__main__':
 # views.py
 
 def home():  
-    return "<h1>Hello world</h1>"
+    return "<h1>Hello world</h1>" # or a duck.http.HttpResponse object.
 ```
 
 ```py
@@ -214,13 +223,56 @@ urlpatterns = [
 
 ```
 
+## Django Integration 🐍  
+Duck has seamless Django integration which enables more control and customization of the web development process. You can use Django and Duck interchangeably within the same project.  
+
+While Duck does not currently support database models, which would enable data migration, etc., **Django ORM** is a good option to use. This means you can define `urlpatterns` that rely on databases, which will be handled by the Django backend, while lightweight routes can be managed by Duck—more likely used as a CDN.
+
+Alternatively, if you want to access Django ORM without defining separate `urlpatterns` (on both the Duck and Django sides), you can convert a Duck request to a Django request using:  
+duck.backend.django.utils.duck_to_django_request  
+duck.backend.django.django_to_duck_request  
+or vice-versa. The `duck.backend.django.utils` module provides more functions that help facilitate the interaction between Duck and Django. Keep in mind that using these tools may ensure only essential fields are transferred, but not all attributes from one request/response object may be preserved.
+
+Feel free to use an alternate ORM, as Duck is not limited to Django's ORM.
+
+### Getting Started with Django 🚀  
+To enable Django, set `USE_DJANGO = True` in your `settings.py` file. Once this is done, all HTTP traffic will be forwarded to the Django server, even for `urlpatterns` defined in Duck. This behavior can be stopped by setting `DUCK_EXPLICIT_URLS` in `settings.py`.  
+
+`DUCK_EXPLICIT_URLS` is a list of regex URLs that you want Duck to handle directly, instead of passing them to Django (e.g., Django admin site). You can also specify URLs for Django to handle strictly by setting `DJANGO_SIDE_URLS`. These settings are clearly documented in `settings.py`.
+
+You can leverage Duck and Django interchangeably for various use cases, like using Duck as a CDN or for handling APIs.  
+
+---
+
+### Security in Django Integration 🔒  
+**Duck** prioritizes security when integrating with **Django**. The Django server is protected by ensuring that only Duck can communicate with it.
+If you try to access the **Django** server directly after it has been set up by Duck, the request will be automatically rejected. Duck configures Django to accept requests only from hosts that both Duck and Django know.
+
+By using **Django** as the backend, an additional layer of security is introduced. New requests must pass through both Duck and Django middleware, adding an extra level of protection before reaching the core application.
+This layered security approach helps ensure that each request is thoroughly validated, enhancing the overall safety of your application. 🔐
+
+Duck modifies the following headers before sending the request to the Django server:  
+Host  
+Origin (if present)
+
+### How can I obtain the headers modified by Duck in their original state? 🤔  
+Don't worry—Duck provides a solution!  
+When these headers are modified, the original headers will be set with a `D-` prefix. You can easily retrieve the real header by doing this:
+
+header = headers.get("D-Some-Header")
+
+*You can also use Duck template tags and filters, which might not be built into Django's template engine, by using the following:*  
+{% load ducktags %}
+
+**See the Duck full project documentation for more Django customization options.**
+
 
 ## 📘 Blueprints
 
-Organize routes using blueprints for better management. Blueprints let you group URL patterns under a single namespace.
+Organize routes/urlpatterns using blueprints for better management. Blueprints let you group URL patterns under a single namespace.
 
 **Note**: Blueprint names determine the route prefix.
-For example, a route /home under a blueprint named products becomes /products/home. This behavior may be disabled by parsing set argument `prepend_name_to_url` to False.
+For example, a route `/home` under a blueprint named products becomes `/products/home`. This behavior may be disabled by parsing set argument `prepend_name_to_url` to False.
 
 **You can create multiple blueprints under same blueprint.py file.**
 
@@ -268,16 +320,65 @@ ProductsBlueprint = Blueprint(
 ```py
 # settings.py
 
-ROUTE_BLUEPRINTS = [  
+BLUEPRINTS = [  
     "some_name.blueprint.ProductsBlueprint",  
 ]
 ```
+
+## Duck CLI
+
+The **Duck CLI** provides a powerful command-line interface for managing and interacting with your **Duck** web server and framework. It is designed for ease of use, allowing you to perform various tasks with simple commands.
+
+To get started, just type `duck` in your terminal to view available commands and their usage. The **Duck CLI** is powered by **Click**, ensuring an intuitive and user-friendly experience for developers of all levels.
+
+With **Duck CLI**, you can streamline your workflow, automate tasks, and quickly manage configurations, making your development process more efficient and effective.
+
+
+## 🔒 HTTPS and SSL Guide
+Duck provides **built-in SSL configuration** with default server certificates and private keys for **development and testing** purposes.
+
+### ✅ Enabling HTTPS  
+To activate HTTPS, set the following in your `settings.py`:  
+```python
+ENABLE_HTTPS = True
+```
+
+### 🔄 Force HTTPS Redirection  
+To automatically redirect **all HTTP traffic to HTTPS**, enable the redirect feature:  
+```python
+FORCE_HTTPS = True
+```
+
+⚠️ **Note:** FORCE_HTTPS requires ENABLE_HTTPS to be set to True.
+
+---
+
+## 🚀 SSL Certificate Generation  
+Duck includes an **`ssl-gen`** command to generate SSL certificates.
+
+### 📌 Requirements  
+Ensure you have **OpenSSL** installed before running the command.
+
 
 ## 🛠️ Production Recommendations
 
 Use port 80 for HTTP and port 443 for HTTPS in production.
 
 **Secure your SSL configuration for enhanced security.**
+
+
+## Duck Automations ⚙️
+
+Duck offers powerful automation capabilities that can run tasks throughout your application's lifecycle. With Duck automations, you can schedule tasks to run when specific triggers occur, or you can set them up to run automatically at specified times. 
+
+These automations are incredibly useful for a variety of purposes, such as:
+
+- Automatically generating SSL certificates 🔒
+- Handling routine maintenance tasks 🛠️
+- Managing scheduled backups ⏳
+- Triggering notifications or other actions based on specific events 📲
+
+By leveraging Duck's automation framework, you can save time, reduce manual intervention, and ensure critical tasks are handled efficiently and reliably.
 
 
 ## Templates
@@ -301,7 +402,7 @@ Duck provides several HTML components that can be dynamically created and render
 
 You can use the HTML components like so in a Jinja2 template:
 
-```jinja
+```jinja2
 {{ Button(
     style={
         "background-color": "red",
@@ -407,6 +508,67 @@ class CustomButton(InnerHtmlComponent):
 
 This setup makes it easy to add reusable HTML components to your templates and customize their appearance and behavior by simply passing properties and styles. You can also extend this by creating custom components to suit your needs.
 
+
+## React Integration
+![React dark image](./images/react-dark.png)
+Duck provides built-in **React integration**, allowing you to easily render React components and JSX code within your templates.
+The default React configuration is pre-enabled, so you can get started quickly without any extra setup.
+
+
+### Default Configuration
+The default React configuration in Duck is as follows:
+
+```py
+FRONTEND: dict[str, dict] = {
+    "REACT": {
+        # URLs or file paths for loading React, ReactDOM, and Babel scripts (JavaScript only).
+        # **Note**: The Babel script is required for JSX to JavaScript compilation.
+        "scripts": [
+            # React development script from UNPKG CDN
+            "https://unpkg.com/react@17/umd/react.development.js",
+            
+            # ReactDOM development script from UNPKG CDN
+            "https://unpkg.com/react-dom@17/umd/react-dom.development.js",
+            
+            # Babel standalone script for JSX transformation in the browser
+            "https://unpkg.com/@babel/standalone/babel.min.js"
+        ],
+
+        # The root URL for serving the React application.
+        # This URL will serve the JSX code inside the "react_frontend" template tag.
+        "root_url": "/react/serve",
+
+        # URL for serving the React-related scripts.
+        # The final route for the scripts will be a combination of root_url and scripts_url.
+        "scripts_url": "/scripts",
+    }
+}
+
+
+### Customization
+The default React configuration can be customized based on your project's needs.
+You are free to modify the settings (e.g., changing script URLs, adjusting the root URL) to suit your preferences.
+
+
+### Setting Up React
+To ensure smooth integration of React with Duck, run the following command in your terminal:
+
+```bash
+cd yourproject
+duck collectscripts
+```
+
+### Security
+Duck ensures the security of your React files and code when serving them, safeguarding your app while providing seamless React integration.
+
+
+## Use React within your template using the following template tag:
+```html
+{% react_frontend %}
+    Your JSX Code here
+{% endreact_frontend %}
+```
+
 ## Troubleshooting Tips:
 
 ### SSL Certificate Issues:
@@ -425,16 +587,62 @@ If the server fails to start due to a port conflict, check if the port is alread
 python3 -m duck runserver -p 8080
 ```
 
+### Django Disallowed Host Error
+
+If you encounter the following error when running the Duck application:
+Invalid HTTP_HOST header: 'sq7441iv4yyg1iczep3meyga1lbhpu.gkr.pxyecarnhz.com'. You may need to add 'sq7441iv4yyg1iczep3meyga1lbhpu.gkr.pxyecarnhz.com' to ALLOWED_HOSTS.
+
+This typically indicates that another instance of Django launched by Duck is already running. This instance may be configured to allow only specific hosts. To resolve the issue, you need to stop the old Django process before starting the new instance.
+
+### Example:
+
+To stop the old Django process, you can use the following steps:
+
+1. List the running processes:
+
+    ```
+    $ ps
+      PID TTY          TIME CMD
+    4491 pts/0    00:00:00 /data/data/com.termux/files/usr/bin/bash
+    21276 pts/0    00:00:02 python
+    21285 pts/0    00:00:00 ps
+    ```
+
+2. Kill the old Django process (assuming the PID is 21276):
+
+    ```
+    kill 21276
+    ```
+
+Once the old process is stopped, you can continue with your new Django instance.
+
+
+## Is it Worth Moving from Django Only to Duck? 🤔
+
+The short answer is **Yes**! If you already have a Django application running, making the transition to Duck is straightforward. You don’t need to completely migrate your Django project—just configure a few settings, and you’ll be able to seamlessly integrate Duck into your existing setup.
+
+You can continue using your existing Django project without starting from scratch. Duck enhances your current infrastructure, giving you more flexibility and control over certain processes while maintaining the stability of your Django application.
+
+So, it’s not about migrating from Django; rather, it’s about extending and improving what you already have with the power of Duck! 🚀
+
 
 ## 📜 License
-
 **Duck** is licensed under the BSD License. See the [LICENSE](./LICENSE) file for details.
 
 
 ## 💬 Support
-
 For questions or issues, please open an issue on the **Duck GitHub repository**.
 
----
 
+## Documentation
+
+The documentation may appear unclear or incomplete.
+We welcome contributions to improve it and make it more accessible for everyone.
+
+## Support This Project
+![Duck Collaboration Image](./duck-collaboration.jpg)
+[![Support me on Ko-fi](./images/support_me_on_kofi_red.png)](https://ko-fi.com/digreatbrian)
+**Your feedback is valuable! Share your ideas for new features or improvements you'd like to see in this amazing project.**
+
+---
 **Start building secure, scalable, and customizable web applications with Duck today!**

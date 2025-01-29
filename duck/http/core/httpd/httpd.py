@@ -178,7 +178,8 @@ class BaseServer:
                     if "HTTP_REQUEST" in str(e):
                         logger.log(f"Client may be trying to connect with https on http server or vice-versa: {e}", level=logger.WARNING)
                     else:
-                        logger.log(f"SSL error: {e}", level=logger.WARNING)
+                        # logger.log(f"SSL error: {e}", level=logger.WARNING)
+                        pass
             except Exception as e:
                 if not no_logs:
                     logger.log_exception(e)
@@ -633,4 +634,4 @@ class BaseMicroServer:
             
             if not self.microapp.no_logs:
                 # If logs are not disabled for the micro application, log error immediately
-                self.log_exception(e)
+                logger.log_exception(e)

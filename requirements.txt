@@ -5,4 +5,4 @@ requests>=2.31.0
 diskcache
 colorama
 tzdata
-uvloop
+http.client

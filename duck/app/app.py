@@ -196,7 +196,7 @@ class App:
             force_https_port = SETTINGS["FORCE_HTTPS_BIND_PORT"]
 
             self.force_https_app = HttpsRedirectMicroApp(
-                location_url=self.absolute_uri,
+                location_root_url=self.absolute_uri,
                 addr=force_https_addr,
                 port=force_https_port,
                 enable_https=False,
@@ -373,8 +373,8 @@ class App:
                 headers={"Host": SETTINGS["DJANGO_SHARED_SECRET_DOMAIN"]},
                 timeout=1,
             )
-            good_statuses = [200, 404, 500]
-            if not response.status_code in good_statuses:
+            # good_statuses = [200, 404, 500]
+            if not response:
                 # response status is not expected here
                 return False
             return True
@@ -466,11 +466,10 @@ class App:
             (self.force_https_app.stop()
              if self.force_https_app_up and stop_force_https_server else None)
 
-        if hasattr(self, "django_server_process"):
+        if hasattr(self, "_django_server_process"):
             # django server has been started
-            self.django_server_process.terminate()
-            os.kill(self.django_server_process.pid) # ensure django stopped
-
+            self._django_server_process.kill()
+            
     def on_pre_stop(self):
         """Event called before final app termination."""
         pass

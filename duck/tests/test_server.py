@@ -1,17 +1,16 @@
 """
 Test cases for Duck webserver.
 """
-
 import os
-import random
-import shutil
-import subprocess
 import time
+import shutil
+import random
 import unittest
-import warnings
-from typing import Any, Optional
-
 import requests
+import warnings
+import subprocess
+
+from typing import Any, Optional, Dict
 
 
 class TestBaseServer(unittest.TestCase):
@@ -21,8 +20,6 @@ class TestBaseServer(unittest.TestCase):
     Notes:
         - A single server instance is shared across all subclasses unless a new instance is explicitly requested.
     """
-
-    PROJECT_NAME: str = "testproject"
     SERVER_START_DELAY: int = 4
     PORT_RANGE: tuple[int, int] = (8000, 9000)
 
@@ -59,44 +56,7 @@ class TestBaseServer(unittest.TestCase):
             raise AttributeError(
                 "Server not started yet! Call `start_server` first.")
         return self._server_port
-
-    @property
-    def project_dir(self) -> str:
-        return self.PROJECT_NAME
-
-    def prepare_project(self) -> None:
-        """Clears and sets up the test project directory."""
-        if os.path.isdir(self.project_dir):
-            shutil.rmtree(self.project_dir)
-        os.makedirs(self.project_dir, exist_ok=True)
-
-    def create_settings_file(self, settings: dict[str, Any]) -> None:
-        """
-        Creates a settings file with provided custom settings.
-
-        Args:
-            settings: Dictionary containing settings to write to the file (keys are case insensitive).
-        """
-        if not settings:
-            return
-
-        settings_file = os.path.join(self.project_dir, "settings.py")
-        mode = "w" if os.path.isfile(settings_file) else "x"
-
-        try:
-            with open(settings_file, mode) as file:
-                file.write(
-                    f'"""\nAuto-generated settings for test cases.\n"""\n')
-                for key, value in settings.items():
-                    file.write(f"{key.upper()} = {value}\n")
-        except Exception as e:
-            raise IOError(f"Error creating settings file: {e}")
-
-    def set_settings_file(self) -> None:
-        """Sets the environment variable for the settings module."""
-        os.environ["DUCK_SETTINGS_MODULE"] = (
-            f'{self.project_dir.replace("/", ".").strip(".")}.settings')
-
+        
     def _start_server(self, settings: Optional[dict[str, Any]] = None) -> None:
         """
         Starts the Duck server.
@@ -106,20 +66,11 @@ class TestBaseServer(unittest.TestCase):
         """
         self._server_port = random.randint(*self.PORT_RANGE)
         self._server_addr = "127.0.0.1"
-
-        if settings:
-            self.create_settings_file(settings)
-        self.set_settings_file()
+        
         subprocess.Popen(
             [
-                "python",
-                "-m",
-                "duck",
-                "runserver",
-                "-p",
-                str(self._server_port),
-                "-a",
-                self._server_addr,
+                "python", "-m", "duck", "runserver", "-p",
+                str(self._server_port), "-a", self._server_addr,
             ],
             start_new_session=False,
         )
@@ -153,15 +104,17 @@ class TestBaseServer(unittest.TestCase):
                 self.server_started = False
         self.assertTrue(self.server_started)
 
-    def tearDown(self):
-        shutil.rmtree(self.project_dir)
-
+    def set_settings(self, settings: Dict):
+        # Set extra settings
+        from duck.meta import Meta
+        Meta.set_metadata("DUCK_EXTRA_SETTINGS", settings)
+        
     def setUp(self) -> None:
         """Runs before every test."""
         warnings.simplefilter(
             "ignore",
             ResourceWarning)  # Suppress ResourceWarnings specifically
-        self.prepare_project()
+        self.set_settings(self.settings)
         self.start_server()
 
 

@@ -58,7 +58,7 @@ Documentation = "https://github.com/digreatbrian/duck/wiki"
 Createrpage = "https://brianmusakwa.link/digreatbrian"
 
 [project.entry-points.console_scripts]
-duck = "duck.__main__:main"
+duck = "duck.__main__:cli"
 
 [tool.setuptools.dynamic]
 version = {attr = "duck.__version__"}
