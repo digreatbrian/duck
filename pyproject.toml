@@ -15,14 +15,13 @@ maintainers = [
     { name = "Brian Musakwa", email = "digreatbrian@gmail.com" },
 ]
 dependencies = [
-    "Django==5.0.6",
-    "Jinja2==3.1.3",
-    "watchdog==4.0.1",
+    "Django>=5.1.5",
+    "Jinja2>=3.1.5",
+    "watchdog>=4.0.1",
     "requests>=2.31.0",
     "diskcache",
     "colorama",
     "tzdata",
-    "curio",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -40,14 +39,16 @@ classifiers = [
 ]
 keywords = [
     "webserver",
-    "framework",
+    "web-framework",
     "proxy",
     "Django",
     "Python",
     "HTTP",
     "WSGI",
     "Duck",
-    "reverse-proxy"
+    "reverse-proxy",
+    "flask",
+    "tornado"
 ]
 
 [project.urls]
@@ -55,7 +56,7 @@ Homepage = "https://github.com/digreatbrian/duck"
 Repository = "https://github.com/digreatbrian/duck"
 Issues = "https://github.com/digreatbrian/duck/issues"
 Documentation = "https://github.com/digreatbrian/duck/wiki"
-Createrpage = "https://brianmusakwa.link/digreatbrian"
+Createrpage = "https://brianmusakwa.link"
 
 [project.entry-points.console_scripts]
 duck = "duck.__main__:cli"

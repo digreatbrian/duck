@@ -92,7 +92,7 @@ def get_debug_error_as_html(exception: Exception, request: Optional = None):
     if not request:
        body = f"""
        <div class="request-info">
-         <h4 class="subheading" >Request</h4>
+         <h4 class="subheading">Request</h4>
          <ul class="inner">Failed to retreive request metadata.</ul>
        </div><br><div class="exception">{exception}</div>
        """
@@ -197,7 +197,7 @@ def get_404_error_response(request: HttpRequest):
             }
            div.registered-routes {
                border-radius: var(--border-radius);
-               background-color: #ff8c0033; /* light-orange */
+               background-color: #fdf2f2; /* Soft red background for better readability */
                padding: 5px;
            }
            

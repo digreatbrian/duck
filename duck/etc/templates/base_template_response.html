@@ -75,8 +75,8 @@
 <body>
   <main class="container">
     {% block main %}
-      <h1>{{heading}}</h1>
-      <div>{{body}}</div>
+      <h1 id="heading">{{heading}}</h1>
+      <div id="body">{{body}}</div>
       {% if debug %}
           <p>
               You are seeing this page because <code>DEBUG=True</code> in your Duck settings.  

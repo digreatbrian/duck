@@ -8,6 +8,7 @@ import subprocess
 from duck.logging import console
 from duck.utils.importer import x_import
 from duck.utils.path import joinpaths
+from duck.cli import add_to_pythonpath
 
 
 class DjangoCommand:
@@ -47,4 +48,4 @@ class DjangoCommand:
         command.extend(command_args)
         
         root_dir = os.path.abspath('.')
-        subprocess.call(command, cwd=root_dir, env={**os.environ, "PYTHONPATH": root_dir})
+        subprocess.call(command, cwd=root_dir, env={**os.environ, "PYTHONPATH": add_to_pythonpath(root_dir)})

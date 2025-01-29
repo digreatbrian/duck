@@ -49,8 +49,8 @@ def request_meta_update(func: Callable):
                 # Ensure the `duck_request` attribute exists on the request
                 # Synchronize Duck's request.META with Django's request.META
                 for key, value in request.duck_request.META.items():
-                    if key != "HTTP_ORIGIN" and key != "HTTP_HOST":
-                        # Don't remodify Origin and Host headers, they may cause CSRF issues.
+                    if key != "HTTP_ORIGIN" and key != "HTTP_HOST" and key != "HTTP_REFERER":
+                        # Don't remodify Origin, Referer and Host headers, they may cause CSRF issues.
                         request.META[key] = value
     return wrapper
 

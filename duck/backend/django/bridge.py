@@ -15,9 +15,11 @@ from importlib import import_module
 
 from duck.logging import logger
 from duck.settings import SETTINGS
+from duck.cli import add_to_pythonpath
 
 
 root_dir = os.path.abspath('.')
+
 
 # Attempt to import the local Django duck app module
 try:
@@ -59,7 +61,7 @@ def run_django_app_commands():
         argv = [SETTINGS["PYTHON_PATH"], manage_py, *command.split(" ")]
         logger.log(f"Running command: {command}",
                    level=logger.DEBUG)  # log command being run
-        process = subprocess.run(argv, check=True, cwd=root_dir, env={**os.environ, "PYTHONPATH": root_dir})
+        process = subprocess.run(argv, check=True, cwd=root_dir, env={**os.environ, "PYTHONPATH": add_to_pythonpath(root_dir)})
         logger.log_raw("\n")
 
 
@@ -82,5 +84,5 @@ def start_django_app(host_addr: str, port: int, uses_ipv6=False):
         f"{host_addr}:{port}",
         "--noreload",
     ]
-    process = subprocess.Popen(argv, cwd=root_dir, env={**os.environ, "PYTHONPATH": root_dir})
+    process = subprocess.Popen(argv, cwd=root_dir, env={**os.environ, "PYTHONPATH": add_to_pythonpath(root_dir)})
     return process

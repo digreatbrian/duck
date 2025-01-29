@@ -4,6 +4,7 @@ Main entry to Duck command-line tool.
 """
 import sys
 import click
+import os
 
 from duck.version import server_version
 from duck.logging import console
@@ -46,6 +47,10 @@ def cli(ctx, version):
     """
     Duck CLI - Manage your projects with ease.
     """
+    # Add current directory to python path
+    curdir = os.path.abspath('.')
+    sys.path.insert(0, curdir)
+    
     if version:
         # Show the version
         click.echo(server_version)

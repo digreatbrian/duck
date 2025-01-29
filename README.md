@@ -21,6 +21,8 @@ With **Duck**, developers can quickly deploy secure, high-performance applicatio
 - **Live Reloading**: Automatically restart the server on file changes with **DuckSight Reloader**.
 - **React Template Integration**: Seamlessly integrate **React** code into Django or Jinja2 templates.
 - **Dual Connection Mode**: Supports handling requests using both **keep-alive** and **close** connection modes.
+- **Threading & Async Support:** Duck supports both threading for CPU-bound tasks and asynchronous handling for I/O-bound tasks, providing flexibility and scalability for various types of applications.Defaults to asynchronous handling.
+
 
 ## 🔧 Upcoming Features
 
@@ -47,9 +49,9 @@ python3 install ./duck
 
 Before using Duck, ensure the following dependencies are installed:
 ```sh
-Django==5.0.6
-Jinja2==3.1.3
-watchdog==4.0.1
+Django>=5.1.5
+Jinja2>=3.1.5
+watchdog>=4.0.1
 requests>=2.31.0
 diskcache
 colorama
@@ -255,6 +257,7 @@ Duck modifies the following headers before sending the request to the Django ser
 ```
 Host  
 Origin (if present)
+Referer (if present)
 ```
 
 ### How can I obtain the headers modified by Duck in their original state? 🤔  

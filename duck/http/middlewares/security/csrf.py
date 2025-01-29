@@ -16,8 +16,9 @@ from duck.http.request import HttpRequest
 from duck.http.response import HttpForbiddenRequestResponse, TemplateResponse
 from duck.meta import Meta
 from duck.settings import SETTINGS
+from duck.utils.urlcrack import URL
 from duck.utils.safe_compare import constant_time_compare
-
+from duck.shortcuts import simple_response
 
 CSRF_USE_SESSIONS = SETTINGS["CSRF_USE_SESSIONS"]
 
@@ -215,7 +216,7 @@ class CSRFMiddleware(BaseMiddleware):
 
     """
 
-    debug_message: str = "CsrfProtectionMiddleware: CSRF token missing or invalid"
+    debug_message: str = "CSRFMiddleware: CSRF token missing or invalid"
 
     @classmethod
     @staticmethod
@@ -241,22 +242,19 @@ class CSRFMiddleware(BaseMiddleware):
 
         if not request_origin:
             raise OriginError("No Origin header found in request")
-
-        good_origin = "%s://%s:%d" % (
-            request.scheme,
-            request.domain,
-            request.port,
-        )
-        parsed_good_origin = urllib.parse.urlparse(good_origin)
-        parsed_request_origin = urllib.parse.urlparse(request_origin)
-
+            
+        parsed_good_origin = URL(request.host)
+        parsed_good_origin.scheme = request.scheme
+        
+        parsed_request_origin = URL(request_origin)
+        
         if parsed_request_origin.port:
             # there is port in origin header
             if parsed_request_origin.port != parsed_good_origin.port:
                 raise OriginError(
                     "Port specified in Origin header is not allowed")
 
-        if not (parsed_good_origin.hostname == parsed_request_origin.hostname
+        if not (parsed_good_origin.host == parsed_request_origin.host
                 and parsed_good_origin.scheme == parsed_request_origin.scheme):
             raise OriginError("Bad Origin header specified")
 
@@ -277,14 +275,11 @@ class CSRFMiddleware(BaseMiddleware):
 
         if not request_referer:
             raise OriginError("No Referer header found in request")
-
-        good_referer = "%s://%s:%d/" % (
-            request.scheme,
-            request.domain,
-            request.port,
-        )
-        parsed_good_referer = urllib.parse.urlparse(good_referer)
-        parsed_request_referer = urllib.parse.urlparse(request_referer)
+            
+        parsed_good_referer = URL(request.host)
+        parsed_good_referer.scheme = request.scheme
+        
+        parsed_request_referer = URL(request_referer)
 
         if parsed_request_referer.port:
             # there is port in referer header
@@ -292,7 +287,7 @@ class CSRFMiddleware(BaseMiddleware):
                 raise RefererError(
                     "Port specified in Referer header is not allowed")
 
-        if not (parsed_good_referer.hostname == parsed_request_referer.hostname
+        if not (parsed_good_referer.host == parsed_request_referer.host
                 and parsed_good_referer.scheme
                 == parsed_request_referer.scheme):
             raise RefererError("Bad Referer header specified")
@@ -337,6 +332,7 @@ class CSRFMiddleware(BaseMiddleware):
 
             if hasattr(request, "csrf_error_reason"):
                 csrf_error_context["reason"] = request.csrf_error_reason
+                cls.debug_message = f"CSRFMiddleware: {request.csrf_error_reason}"
 
             response = TemplateResponse(
                 request,
@@ -348,12 +344,12 @@ class CSRFMiddleware(BaseMiddleware):
             )
         else:
             body = None
-            response = make_simple_response(HttpForbiddenRequestResponse, body=body)
+            response = simple_response(HttpForbiddenRequestResponse, body=body)
         return response
 
     @classmethod
     def process_response(cls, response, request):
-        #[print(i, j) for i, j in request.META.items()]
+        # [print(i, j) for i, j in request.META.items()]
         
         if request.META.get("CSRF_COOKIE_NEEDS_UPDATE"):
             # csrf cookie needs to be sent to client
@@ -447,7 +443,7 @@ class CSRFMiddleware(BaseMiddleware):
             cls._check_origin_ok(request)
             cls._check_referer_ok(request)
         except Exception as e:
-            if not isinstance(err, (OriginError, RefererError)):
+            if not isinstance(e, (OriginError, RefererError)):
                 e = "Error in performing Origin and Referer header checks"
             request.csrf_error_reason = str(e)
             return cls.request_bad

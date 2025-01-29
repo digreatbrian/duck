@@ -49,6 +49,7 @@ class RunserverCommand:
          uses_ipv6: bool = False,
          reload: bool = False,
      ):
+        
         from duck.app import App
         from duck.settings import SETTINGS
         
@@ -73,7 +74,7 @@ class RunserverCommand:
                 command.extend(["--reload"])
             
             # Execute the command in a subprocess
-            subprocess.call(command, start_new_session=True)  # run command as child process
+            subprocess.call(command, start_new_session=False)  # run command as child process
         
         else:
             application = App(

@@ -31,6 +31,12 @@ class DjangoHeaderFixerMiddleware(BaseMiddleware):
             'host': host_obj.to_str(),
         }
         
+        if request.referer:
+            referer = URL(request.referer)
+            referer.host = secret_domain
+            referer.port = None
+            modify_headers['referer'] = referer.to_str()
+        
         if request.origin:
             origin = URL(request.origin)
             origin.host = secret_domain
