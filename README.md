@@ -646,7 +646,7 @@ The documentation may appear unclear or incomplete.
 We welcome contributions to improve it and make it more accessible for everyone.
 
 ## Support This Project
-![Duck Collaboration Image](./duck-collaboration.jpg)
+![Duck Collaboration Image](./images/duck-collaboration.jpg)
 [![Support me on Ko-fi](./images/support_me_on_kofi_red.png)](https://ko-fi.com/digreatbrian)
 **Your feedback is valuable! Share your ideas for new features or improvements you'd like to see in this amazing project.**
 
