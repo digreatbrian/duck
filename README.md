@@ -252,17 +252,22 @@ By using **Django** as the backend, an additional layer of security is introduce
 This layered security approach helps ensure that each request is thoroughly validated, enhancing the overall safety of your application. 🔐
 
 Duck modifies the following headers before sending the request to the Django server:  
+```
 Host  
 Origin (if present)
+```
 
 ### How can I obtain the headers modified by Duck in their original state? 🤔  
 Don't worry—Duck provides a solution!  
 When these headers are modified, the original headers will be set with a `D-` prefix. You can easily retrieve the real header by doing this:
-
+```py
 header = headers.get("D-Some-Header")
+```
 
-*You can also use Duck template tags and filters, which might not be built into Django's template engine, by using the following:*  
+*You can also use Duck template tags and filters, which might not be built into Django's template engine, by using the following:*
+```django
 {% load ducktags %}
+```
 
 **See the Duck full project documentation for more Django customization options.**
 
@@ -389,7 +394,7 @@ Duck uses **Jinja2** as the default templating engine, but you can also use **Dj
 - To use Duck’s custom tags or filters in a Django-rendered template, include the following at the top of the template:
   ```django
   {% load ducktags %}
- ```
+  ```
 
 
 ## HTML Components to Use in Templates
@@ -543,7 +548,7 @@ FRONTEND: dict[str, dict] = {
         "scripts_url": "/scripts",
     }
 }
-
+```
 
 ### Customization
 The default React configuration can be customized based on your project's needs.
@@ -563,7 +568,8 @@ Duck ensures the security of your React files and code when serving them, safegu
 
 
 ## Use React within your template using the following template tag:
-```html
+
+```django
 {% react_frontend %}
     Your JSX Code here
 {% endreact_frontend %}
