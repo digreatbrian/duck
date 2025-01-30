@@ -192,6 +192,8 @@ After running the `duck runserver` command, your terminal should display output 
 **For Larger Screens:**
 ![Duck local website terminal](./images/duck-local-site-large-terminal.jpg)
 
+## Don’t just clone or scroll—show your support by leaving a star! ⭐
+
 
 ## Example Application Files
 
@@ -599,7 +601,9 @@ python3 -m duck runserver -p 8080
 ### Django Disallowed Host Error
 
 If you encounter the following error when running the Duck application:
+```py
 Invalid HTTP_HOST header: 'sq7441iv4yyg1iczep3meyga1lbhpu.gkr.pxyecarnhz.com'. You may need to add 'sq7441iv4yyg1iczep3meyga1lbhpu.gkr.pxyecarnhz.com' to ALLOWED_HOSTS.
+```
 
 This typically indicates that another instance of Django launched by Duck is already running. This instance may be configured to allow only specific hosts. To resolve the issue, you need to stop the old Django process before starting the new instance.
 
