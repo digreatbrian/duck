@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A basic HTML template">
+    <meta name="author" content="Yannick Consultancy">
+    <title>Yannick</title>
+</head>
+
+<body id="root">
+{% react_frontend %}
+import React from "react";
+
+const App = () => {
+  return (
+    <div>
+      <h1>Hello, React!</h1>
+      <p>Welcome to your first React app!</p>
+    </div>
+  );
+};
+
+// Rendering the React app into the #root element
+ReactDOM.render(<App />, document.getElementById('root'));
+
+{% endreact_frontend %}
+</body>
+</html>
