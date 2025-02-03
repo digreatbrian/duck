@@ -106,18 +106,14 @@ def _restart_webserver():
     """
     Restart the webserver by terminating the current process and re-executing the command.
     """
-    server_data = (_cleanup_current_webserver()
-                   )  # cleanup the current running server
-
-    server_sys_argv = server_data.get(
-        "sys_argv")  # sys.argv for the cleaned webserver
+    server_data = _cleanup_current_webserver() # cleanup the current running server
+    server_sys_argv = server_data.get("sys_argv")  # sys.argv for the cleaned webserver
 
     def get_server_command() -> list:
         """
         Builds and returns the command to start a new Duck webserver instance, using arguments from the current instance.
         """
-        if (server_sys_argv[0].endswith(".py")
-                and not "runserver" in server_sys_argv):
+        if (server_sys_argv[0].endswith(".py") and not "runserver" in server_sys_argv):
             # server was started directly from py file
             cmd = [
                 PYTHON_PATH,

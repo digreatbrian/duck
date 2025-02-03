@@ -13,22 +13,21 @@ from duck.utils.urlcrack import URL
 
 class CollectScriptsCommand:
     # collectscripts command
+    
     @classmethod
-    @property
     def static_root(cls) -> str:
         """
         Returns the static root directory.
         """
-        from duck.settings import SETTINGS
+        from duck.settings.loaded import SETTINGS
         return str(SETTINGS["STATIC_ROOT"])
     
     @classmethod
-    @property
     def destination_dir(cls,) -> str:
         """
         Returns the destination directory for scripts.
         """
-        return joinpaths(cls.static_root, "react_frontend/scripts")
+        return joinpaths(cls.static_root(), "react_frontend/scripts")
     
     @classmethod
     def to_destination_local_path(cls, script: str):
@@ -42,10 +41,10 @@ class CollectScriptsCommand:
         
         if not parse_result.scheme:
              # script is a local path.
-             destination_script_path = joinpaths(cls.destination_dir, script.lstrip("."))
+             destination_script_path = joinpaths(cls.destination_dir(), script.lstrip("."))
         else:
              # script is a remote url.
-             destination_script_path = joinpaths(cls.destination_dir, script.split("://", 1)[-1])
+             destination_script_path = joinpaths(cls.destination_dir(), script.split("://", 1)[-1])
         return destination_script_path
         
     @classmethod

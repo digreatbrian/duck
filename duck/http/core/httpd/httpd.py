@@ -181,7 +181,7 @@ class BaseServer:
                         # logger.log(f"SSL error: {e}", level=logger.WARNING)
                         pass
             except Exception as e:
-                if not no_logs:
+                if not no_logs and "An operation was attempted on something that is not a socket" not in str(e):
                     logger.log_exception(e)
 
     def stop_server(self, log_to_console: bool = True):

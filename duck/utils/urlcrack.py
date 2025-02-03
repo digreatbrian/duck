@@ -148,11 +148,11 @@ class URL:
                else:
                     self.netloc = f'{host}:{port}'
         else:
-            raise InvalidURLAuthority("Cannot set port for URL without authority (port)")
+            raise InvalidURLAuthorityError("Cannot set port for URL without authority (port)")
     
     @classmethod
-    @staticmethod
     def urljoin(
+        cls,
         base_url: str,
         head_url: str,
         replace_authority: bool = False,
@@ -202,16 +202,14 @@ class URL:
         return base_url_obj.to_str()
     
     @classmethod
-    @staticmethod
-    def normalize_url_path(url_path: str):
+    def normalize_url_path(cls, url_path: str):
         """
         This normalizes the URL path.
         """
         return URL.normalize_url('/' + url_path)
         
     @classmethod
-    @staticmethod
-    def normalize_url(url: str):
+    def normalize_url(cls, url: str):
         """
         Normalizes a URL by removing consecutive slashes, adding a leading slash, removing trailing slashes, removing disallowed characters, e.g "<", string quotes (etc), replacing back slashes and lowercasing the scheme.
         """
@@ -258,7 +256,7 @@ class URL:
             scheme, netloc, leftover = self.split_scheme_and_authority(authority)
             if scheme:
                 raise InvalidURLAuthorityError("URL Authority or Netloc must not contain scheme (eg. 'https://').")
-        except URLNotValidError:
+        except InvalidURLError:
             raise InvalidURLAuthorityError("URL Authority or Netloc is not found, make sure authority doesn't start with 'scheme://' or forward slash ('/').")
         
         host, port = '', ''
