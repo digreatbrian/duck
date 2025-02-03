@@ -32,7 +32,7 @@ DEBUG: bool = True
 
 # Enable or disable autoreload for the server on file changes.
 # Autoreload is disabled on devices such as phones to optimize performance.
-AUTO_RELOAD: bool = False
+AUTO_RELOAD: bool = True
 
 
 # Auto reload poll
@@ -45,7 +45,7 @@ AUTO_RELOAD_WATCH_FILES = ["*.py"]
 
 
 # Path to the python interpreter or just the interpreter executable path
-PYTHON_PATH: str = "python"
+PYTHON_PATH: str = ".venv\Scripts\python.exe"
 
 
 # Web Server Gateway Interface (WSGI) to use within Duck.
