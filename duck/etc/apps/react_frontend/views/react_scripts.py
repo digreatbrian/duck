@@ -3,7 +3,6 @@ Module containing mediafiles view.
 """
 
 import os
-import urllib.parse
 
 from duck.settings import SETTINGS
 from duck.utils.path import (
@@ -13,34 +12,17 @@ from duck.contrib.responses import (
     template_response,
     simple_response,
 )
+from duck.utils.urlcrack import URL
 from duck.http.response import FileResponse, HttpBadRequestResponse
 from ..safescript import uncipher_script
-
-
-def to_destination_local_path(script: str):
-    """
-    Returns the destination local path for the provided script.
-        
-    Args:
-          script (str): Local path or remote url for the script e.g ./scripts/script.js or https://some.site/script.js
-    """
-    static_root = str(SETTINGS["STATIC_ROOT"])
-    destination_dir = joinpaths(static_root,  "react_fronted/scripts")
-    parse_result = urllib.parse.urlparse(script)
-        
-    if not parse_result.scheme:
-        # script is a local path.
-        destination_script_path = joinpaths(destination_dir, script.lstrip("."))
-    else:
-        # script is a remote url.
-        destination_script_path = joinpaths(destination_dir, script.split("://", 1)[-1])
-    return destination_script_path
-        
+    
 
 def react_scripts_view(request):
     """
     React scripts view for serving react scripts defined in settings.py
     """
+    from duck.cli.commands.collectscripts import CollectScriptsCommand
+    
     query = request.QUERY["URL_QUERY"]
     if "href" in query:
         script = query["href"][0]
@@ -53,7 +35,8 @@ def react_scripts_view(request):
         
         if script:
             # Script is provided e.g /react/scripts?href=http://some.site.com/some-script.js
-            script_path = to_destination_local_path(script)
+            script_path = CollectScriptsCommand.to_destination_local_path(script)
+            
             if not os.path.isfile(script_path):
                 if SETTINGS["DEBUG"]:
                     body = """<p>The provided script could not be resolved.

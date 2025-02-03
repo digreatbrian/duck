@@ -4,7 +4,7 @@ Module containing collectscripts command class.
 import os
 import requests
 import pathlib
-from typing import List
+from typing import List, Tuple
 
 from duck.logging import console
 from duck.utils.path import joinpaths, is_absolute_url
@@ -36,7 +36,7 @@ class CollectScriptsCommand:
         Returns the destination local path for the provided script.
         
         Args:
-            script (str): Local path or remote url for the script e.g ./scripts/script.js or https://some.site/script.js
+            script (str): Local destination path for scripts like ./scripts/script.js or https://some.site/script.js
         """
         parse_result = URL(script)
         
@@ -59,6 +59,30 @@ class CollectScriptsCommand:
         cls.collectscripts(skip_confirmation)
    
     @classmethod
+    def get_missing_scripts(cls) -> Tuple[List, List]:
+       """
+       Returns the scripts which are available in React Frontend setting but they are not locally available in scripts space
+       
+       Returns:
+           Tuple[List, List]: List of missing local scripts (scripts somewhere else in filesystem), Remote scripts (scripts hosted somewhere e.g on internet)
+       """
+       from duck.settings.loaded import FRONTEND
+       
+       scripts = FRONTEND["REACT"]["scripts"]
+       missing_remote_scripts = []  # local scripts missing in local destination directory.
+       missing_local_scripts = []  # local scripts missing in local destination directory.
+        
+       for script in scripts:
+            destination_script_path = cls.to_destination_local_path(script)
+            if not os.path.isfile(destination_script_path):
+                # script not available locally.
+                if is_absolute_url(script):
+                    missing_remote_scripts.append(script)
+                else:
+                    missing_local_scripts.append(script)
+       return (missing_local_scripts, missing_remote_scripts)
+    
+    @classmethod
     def collectscripts(cls, skip_confirmation: bool = False) -> None:
         """
         Collects scripts in FRONTEND and save them locally.
@@ -72,17 +96,7 @@ class CollectScriptsCommand:
             return
         
         scripts = FRONTEND["REACT"]["scripts"]
-        missing_remote_scripts = []  # local scripts missing in local destination directory.
-        missing_local_scripts = []  # local scripts missing in local destination directory.
-        
-        for script in scripts:
-            destination_script_path = cls.to_destination_local_path(script)
-            if not os.path.isfile(destination_script_path):
-                # script not available locally.
-                if is_absolute_url(script):
-                    missing_remote_scripts.append(script)
-                else:
-                    missing_local_scripts.append(script)
+        missing_local_scripts, missing_remote_scripts = cls.get_missing_scripts()
         
         if missing_local_scripts or missing_remote_scripts:
             if missing_local_scripts:
@@ -154,11 +168,15 @@ class CollectScriptsCommand:
             
             if not os.path.isfile(script):
                 # Local script is not available
-                raise FileNotFoundError(f"Script '{script}' is required but cannot be found")
+                console.log_raw(f"Script '{script}' is required but cannot be found", level=console.WARNING)
+                continue
             
-            with open(script, "rb") as fd:
-                # Save script to correct destination
-                save_script(script, fd.read())
+            try:
+                with open(script, "rb") as fd:
+                    # Save script to correct destination
+                    save_script(script, fd.read())
+            except Exception as e:
+                console.log_raw(f"Error saving script: {script}: {e}", level=console.WARNING)
             
     @classmethod
     def save_script(cls, script: str, content: bytes):
@@ -193,15 +211,19 @@ class CollectScriptsCommand:
         for script in scripts:
             if is_absolute_url(script):
                 # This is a remote script, lets download it.
-                response = requests.get(script, timeout=1)
-                status_code = response.status_code
-                
-                if status_code != 200:
-                    # Unexpected response
-                    console.log_raw(f"Received unexpected status code for script '{script}' [{response.status_code}]")
-                else:
-                    # Save script locally
-                    save_script(script, response.content)
+                try:
+                    response = requests.get(script, timeout=10)
+                    status_code = response.status_code
+                    
+                    if status_code != 200:
+                        # Unexpected response
+                        console.log_raw(f"Received unexpected status code for script '{script}' [{response.status_code}]")
+                    else:
+                        # Save script locally
+                        save_script(script, response.content)
+                except Exception as e:
+                    console.log_raw(f"Error downloading or saving script: {script}: {e}", level=console.WARNING)
+                    
             else:
                 # Script unexpected, expected a remote script but got a local script instead.
                 console.log_raw(f"Skipping, expected a remote url but got: {script}", custom_color=console.Fore.YELLOW)
