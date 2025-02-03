@@ -352,6 +352,11 @@ SESSION_STORAGE: str = "duck.utils.caching.KeyAsFolderCache"
 
 # STATIC FILES HANDLING
 
+# These are global static directories to lookup for static files when
+# `collectstatic` command is used
+GLOBAL_STATIC_DIRS: list[str] = [BASE_DIR / "static"]
+
+
 # The root directory for storing static files.
 # Auto created if it does'nt exist
 STATIC_ROOT: str = BASE_DIR / "assets/staticfiles"

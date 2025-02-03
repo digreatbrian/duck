@@ -161,6 +161,12 @@ myproject/
 └── views.py
 ```
 
+**Note: To collect static files from the root rather than blueprint directories, make sure you create and place the static files in `static` directory**
+
+### Logging
+Duck logs everything to both the console and files (in assets/.logs directory). You can customize logging configuration in settings.py.
+ 
+
 ### Running the Server
 
 To start the Duck server, navigate to your project directory and run:
@@ -556,6 +562,28 @@ FRONTEND: dict[str, dict] = {
         "scripts_url": "/scripts",
     }
 }
+```
+
+### Example Use Case
+```html
+<body id="root">
+{% react_frontend %}
+
+// React code goes here
+  const App = () => {
+    return (
+      <div>
+        <h1>Hello, React!</h1>
+        <p>Welcome to your first React app!</p>
+      </div>
+    );
+  };
+
+  // Rendering the React app into the #root element
+  ReactDOM.render(<App />, document.getElementById('root'));
+
+{% endreact_frontend %}
+</body>
 ```
 
 ### Customization

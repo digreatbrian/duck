@@ -1,12 +1,15 @@
 """
 Module containing collectstatic command class.
 """
+import os
 import shutil
 import pathlib
+
 from typing import List, Generator, Tuple
 
 from duck.routes import Blueprint
 from duck.utils.path import joinpaths
+from duck.logging import console
 
 
 class CollectStaticCommand:
@@ -30,16 +33,24 @@ class CollectStaticCommand:
         
         blueprint_static_dirs: List[str, Blueprint] = list(cls.find_blueprint_static_dirs())
         blueprint_staticfiles: List[str] = list(cls.get_blueprint_staticfiles(blueprint_static_dirs))
-        blueprint_staticfiles_len = len(blueprint_staticfiles)
-    
-        if blueprint_staticfiles_len == 0:
+        global_static_dirs = SETTINGS["GLOBAL_STATIC_DIRS"] or []
+        global_staticfiles = [] 
+        
+        for static_dir in global_static_dirs:
+            if os.path.isdir(static_dir):
+                staticfiles = list(cls.recursive_getfiles(static_dir))
+                global_staticfiles.extend(staticfiles)
+                
+        staticfiles_len = len(blueprint_staticfiles) + len(global_staticfiles)
+        
+        if staticfiles_len == 0:
             console.log_raw("\nNo staticfiles found!", level=console.WARNING)
             return
     
         if not skip_confirmation:
             # Show confirmation prompt
             console.log_raw(
-                f"\nWould you like to copy {blueprint_staticfiles_len} staticfile(s) to {static_root} (y/N): ",
+                f"\nWould you like to copy {staticfiles_len} staticfile(s) to {static_root} (y/N): ",
                 end="",
                 level=console.DEBUG)
             
@@ -49,7 +60,12 @@ class CollectStaticCommand:
             if not choice.lower().startswith("y"):
                 console.log_raw("\nCancelled, bye!", level=console.WARNING)
                 return
-    
+        
+        for static_dir in global_static_dirs:
+            dst = static_root
+            if os.path.isdir(static_dir):
+                shutil.copytree(static_dir, dst, dirs_exist_ok=True)
+            
         for static_dir, blueprint in blueprint_static_dirs:
             dst = joinpaths(
                 static_root,
@@ -59,11 +75,11 @@ class CollectStaticCommand:
             shutil.copytree(static_dir, dst, dirs_exist_ok=True)
     
         console.log_raw(
-            f"\nSuccessfully copied {blueprint_staticfiles_len} staticfile(s) to {static_root}",
+            f"\nSuccessfully copied {staticfiles_len} staticfile(s) to {static_root}",
             custom_color=console.Fore.GREEN)
         
     @classmethod
-    def recursive_getfiles(cls, directory: str) -> str:
+    def recursive_getfiles(cls, directory: str) -> Generator:
        """
        Returns a generator for all files and subfiles within the directory.
        """

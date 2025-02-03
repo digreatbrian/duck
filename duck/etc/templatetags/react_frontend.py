@@ -1,5 +1,25 @@
 """
 Module containing react_frontend template tag implementation.
+
+Example Use Case:
+    <body id="root">
+    {% react_frontend %}
+    
+    // React code goes here
+      const App = () => {
+        return (
+          <div>
+            <h1>Hello, React!</h1>
+            <p>Welcome to your first React app!</p>
+          </div>
+        );
+      };
+    
+      // Rendering the React app into the #root element
+      ReactDOM.render(<App />, document.getElementById('root'));
+    
+    {% endreact_frontend %}
+    </body>
 """
 from typing import Dict
 from urllib.parse import urljoin
