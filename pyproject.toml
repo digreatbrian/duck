@@ -22,6 +22,7 @@ dependencies = [
     "diskcache",
     "colorama",
     "tzdata",
+    "click",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",

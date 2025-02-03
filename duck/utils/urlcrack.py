@@ -285,7 +285,6 @@ class URL:
         new_url = URL.urljoin(self.to_str(), head_url)
         self.parse(new_url)
         
-        
     def split_scheme_and_authority(self, url: str) -> Tuple[str, str, str]:
         """
         Returns the scheme, authority  (netloc) and leftover (which might be the path most of the time) from a valid URL.

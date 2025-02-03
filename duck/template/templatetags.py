@@ -5,6 +5,9 @@ Module for creating user custom template tags and filters.
 from collections import defaultdict
 from typing import Callable
 
+from jinja2 import nodes
+from jinja2.ext import Extension
+
 from duck.exceptions.all import SettingsError
 from duck.utils.importer import import_module_once
 
@@ -195,7 +198,7 @@ class BlockTemplateTag(TemplateTag):
                 return CustomBlockNode(nodelist, *args, **kwargs)
             except Exception as e:
                 raise template.TemplateSyntaxError(f"Error parsing custom block tag: {e}")
-
+    
     def register_in_jinja2(self, environment):
         """
         Register this tag as a block-level tag in a Jinja2 environment.
@@ -203,58 +206,31 @@ class BlockTemplateTag(TemplateTag):
         Args:
             environment: The Jinja2 environment to register the tag with.
         """
-        from jinja2 import nodes
-        from jinja2.ext import Extension
-    
-        class BlockTagExtension(Extension):
-            """
-            Custom Jinja2 block extension for block-level tags.
-            """
-    
-            # This tag will be triggered with the name specified by `self.tagname`
-            tags = {self.tagname}
-    
+        root_tag = self
+        
+        class CustomBlockExtension(Extension):
+            # Define the tag name
+            tags = {root_tag.tagname}
+        
+            def __init__(self, environment):
+                super(CustomBlockExtension, self).__init__(environment)
+                
             def parse(self, parser):
-                """
-                Parse the custom block tag and its arguments.
-                """
                 lineno = next(parser.stream).lineno
-    
-                # Parse the tag arguments
-                args = []
-                kwargs = {}
-                while parser.stream.current.type != 'block_end':
-                    token = parser.stream.next()
-                    if token.test('name') and parser.stream.current.test('assign'):
-                        key = token.value
-                        parser.stream.next()  # Skip '='
-                        value = parser.parse_expression()
-                        kwargs[key] = value
-                    else:
-                        args.append(parser.parse_expression())
-    
-                # Parse the block content
-                body = parser.parse_statements(['name:end' + self.tagname], drop_needle=True)
-    
-                return nodes.CallBlock(
-                    self.call_method('_render_block', args=[nodes.List(args), nodes.Dict(kwargs.items())]),
-                    [], [], body
-                ).set_lineno(lineno)
-    
-            def _render_block(self, args, kwargs, caller):
-                """
-                Render the block content and pass it along with arguments to the tag callable.
-                """
-                # Get the block content
-                block_content = caller()
-                if self.takes_context:
-                    # Pass the context if `takes_context` is True
-                    context = environment.getattr('context')
-                    return self.tagcallable(context, block_content, *args, **kwargs)
-                return self.tagcallable(block_content, *args, **kwargs)
-    
-        # Register the block tag extension in the environment
-        environment.add_extension(BlockTagExtension)
+                body = parser.parse_statements([f'name:end{root_tag.tagname}'], drop_needle=True)
+                return nodes.CallBlock(self.call_method('_render_customblock', [nodes.ContextReference()]), [], [], body).set_lineno(lineno)
+        
+            def _render_customblock(self, context, caller):
+                # Access context data here
+                content = caller()
+                # Process the content as needed
+                if root_tag.takes_context:
+                    return root_tag.tagcallable(context, content)
+                return root_tag.tagcallable(content)
+        
+        # Dynamically register the extension
+        CustomBlockTagClass = type(f"CustomBlockTagExtension_{root_tag.tagname}", (CustomBlockExtension,), {})
+        environment.add_extension(CustomBlockTagClass)
 
 
 class TemplateFilter:

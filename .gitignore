@@ -5,6 +5,7 @@ __pycache__/
 .logs/
 .cache/
 Duck.egg-info/
+build/
 .ducksight-state
 .duck-processes.json
 

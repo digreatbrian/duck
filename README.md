@@ -55,10 +55,11 @@ watchdog>=4.0.1
 requests>=2.31.0
 diskcache
 colorama
+click
 tzdata # for django time conversions
 http.client # used by requests library
 ```
-**Additionally, you'll need to have OpenSSL installed on your system for SSL certificate generation**.
+**The above packages will be automatically installed when you do `pip install ./duck`**  
 
 ### Create a New Project
 
@@ -346,6 +347,8 @@ With **Duck CLI**, you can streamline your workflow, automate tasks, and quickly
 
 ## 🔒 HTTPS and SSL Guide
 Duck provides **built-in SSL configuration** with default server certificates and private keys for **development and testing** purposes.
+
+**Additionally, you'll need to have OpenSSL installed on your system for SSL certificate generation**.
 
 ### ✅ Enabling HTTPS  
 To activate HTTPS, set the following in your `settings.py`:  

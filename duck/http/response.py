@@ -1068,7 +1068,7 @@ class TemplateResponse(HttpResponse):
 
         self._template = Template(
             name=template,
-            context=context,
+            context=self.context,
             engine=engine,
         )
         super().__init__(

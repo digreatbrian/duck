@@ -87,12 +87,12 @@ class Engine:
         Returns the template directories for entire app scope.
         """
         template_dirs = []
-        custom_template_dirs = str(SETTINGS["TEMPLATE_DIRS"])
+        custom_template_dirs = SETTINGS["TEMPLATE_DIRS"] or []
         blueprint_template_dirs = self.get_blueprint_template_dirs()
 
         template_dirs.extend(custom_template_dirs)
         for i in blueprint_template_dirs:
-            template_dirs.append(i) if i not in template_dirs else None
+            template_dirs.append(str(i)) if i not in template_dirs else None
         return template_dirs
 
     def render_template(self, template: Template):
