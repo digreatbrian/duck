@@ -6,7 +6,7 @@ loadScript("myscript.jsx")
   .catch(() => console.error("Failed to load script"));
 */
 
-function loadScript(src, async = true, defer = false, extension_map = {".jsx": "text/babel", crossorigin = false}) {
+function loadScript(src, async = true, defer = false, extension_map = {".jsx": "text/babel"}, crossorigin = false) { // Moved crossorigin parameter out of extension_map
   return new Promise((resolve, reject) => {
     // Check if the script is already loaded
     if (document.querySelector(`script[src="${src}"]`)) {
@@ -21,8 +21,8 @@ function loadScript(src, async = true, defer = false, extension_map = {".jsx": "
     script.onload = resolve;
     script.onerror = reject;
 
-    if (crossorigin){
-      script.crossorigin = crossorigin;
+    if (crossorigin) {
+      script.crossOrigin = "anonymous"; // Proper attribute is crossOrigin, not crossorigin
     }
 
     // Loop through extension_map to determine the script type based on the file extension
@@ -38,7 +38,6 @@ function loadScript(src, async = true, defer = false, extension_map = {".jsx": "
   });
 }
 
-
 function loadStyle(href, async = true, defer = false, extension_map = {".css": "text/css"}) {
   return new Promise((resolve, reject) => {
     // Check if the style is already loaded
@@ -48,9 +47,9 @@ function loadStyle(href, async = true, defer = false, extension_map = {".css": "
     }
 
     const style = document.createElement("link");
-    style.style = style;
-    style.async = async;
-    style.defer = defer;
+    style.href = href; // Correctly assign href
+    style.rel = "stylesheet"; // Adding rel attribute for stylesheet
+    // async and defer attributes are not applicable for link elements; removed them
     style.onload = resolve;
     style.onerror = reject;
 

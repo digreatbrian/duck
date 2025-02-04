@@ -45,7 +45,7 @@ AUTO_RELOAD_WATCH_FILES = ["*.py"]
 
 
 # Path to the python interpreter or just the interpreter executable path
-PYTHON_PATH: str = ".venv\Scripts\python.exe"
+PYTHON_PATH: str = "python"
 
 
 # Web Server Gateway Interface (WSGI) to use within Duck.

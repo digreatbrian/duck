@@ -6,7 +6,7 @@ loadScript("myscript.jsx")
   .catch(() => console.error("Failed to load script"));
 */
 
-function loadScript(src, async = true, defer = false, extension_map = {".jsx": "text/babel", crossorigin = false}) {
+function loadScript(src, async = true, defer = false, extension_map = {".jsx": "text/babel", crossorigin: false}) {
   return new Promise((resolve, reject) => {
     // Check if the script is already loaded
     if (document.querySelector(`script[src="${src}"]`)) {

@@ -1,7 +1,7 @@
 __pycache__/
-# backend/django/duckapp/staticfiles/
-# staticfiles/
-# uploads/
+backend/django/duckapp/staticfiles/
+staticfiles/
+uploads/
 .venv/
 .logs/
 .cache/
