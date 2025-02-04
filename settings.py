@@ -392,6 +392,7 @@ HTML_COMPONENTS: dict[str, str] = {
     "Checkbox": "duck.html.components.checkbox.Checkbox",
     "Select": "duck.html.components.select.Select",
     "TextArea": "duck.html.components.textarea.TextArea",
+    # App specific components
 }
 
 # Enable Html Components
@@ -411,8 +412,9 @@ FRONTEND: dict[str, dict] = {
         # URLs or filepaths for loading React, ReactDOM, and Babel scripts (Javascript only).
         # **Note**: Babel script is required.
         "scripts": [
-            #"https://unpkg.com/react@17/umd/react.development.js",
-            #"https://unpkg.com/react-dom@17/umd/react-dom.development.js",
+            "https://unpkg.com/react@17/umd/react.development.js",
+            "https://unpkg.com/react-dom@17/umd/react-dom.development.js",
+            "https://unpkg.com/@babel/standalone/babel.min.js",
         ],
         # Root URL for the React application, this serves the jsx code in between "react_fronted" template tag.
         "root_url": "/react/serve",

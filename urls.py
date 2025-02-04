@@ -7,9 +7,9 @@ from duck.shortcuts import render
 
 def home_view(request):
     ctx = {}
-    return render(request, "index.html", ctx)
+    return render(request, "base.html", ctx, engine="django")
 
 
 urlpatterns = [
-    
+    path("/", home_view, name="home")
 ]

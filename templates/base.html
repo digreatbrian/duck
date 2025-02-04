@@ -5,25 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="A basic HTML template">
     <meta name="author" content="Yannick Consultancy">
-    <title>Yannick</title>
+    <title>{% block title %}Yannick{% endblock title %}</title>
+    {# Base scripts #}
+    {% block base_scripts %}
+      <script src="{% static 'js/duckjs.js' %}"></script>
+      
+      <!-- jQuery -->
+      <script src="{% static 'js/jquery.min.js' %}"></script>
+    {% endblock base_scripts %}
+    
+    {# Extra scripts #}
+    {% block extra_scripts %}
+    {% endblock extra_scripts %}
+    
+    {# Base styles #}
+    {% block base_style %}
+      <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}">
+      <!-- Bootstrap 5 -->
+      <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap5.min.css' %}"
+    {% endblock base_style %}
+    
+    {# Extra styles #}
+    {% block extra_style %}
+      
+    {% endblock extra_style %}
 </head>
 
-<body id="root">
-{% react_frontend %}
-import React from "react";
+<body>
+  {% block root %}
+    <main id="root">
+        {% react_frontend %}
+        
+        jsduck_import("./navbar.jsx");
 
-const App = () => {
-  return (
-    <div>
-      <h1>Hello, React!</h1>
-      <p>Welcome to your first React app!</p>
-    </div>
-  );
-};
-
-// Rendering the React app into the #root element
-ReactDOM.render(<App />, document.getElementById('root'));
-
-{% endreact_frontend %}
+        const App = () => {
+          return (
+            <>
+              {% block react_container %}
+              <Navbar/>
+              {% endblock react_container %}
+            </>
+          );
+        };
+        
+        // Rendering the React app into the #root element
+        ReactDOM.render(<App />, document.getElementById('root'));
+        
+        {% endreact_frontend %}
+    </main>
+  {% endblock root %}
 </body>
 </html>
