@@ -411,17 +411,8 @@ FRONTEND: dict[str, dict] = {
         # URLs or filepaths for loading React, ReactDOM, and Babel scripts (Javascript only).
         # **Note**: Babel script is required.
         "scripts": [
-            "https://unpkg.com/react@17/umd/react.development.js",
-            "https://unpkg.com/react-dom@17/umd/react-dom.development.js",
-            "https://unpkg.com/@babel/standalone/babel.min.js",
-            #"https://unpkg.com/react@17/umd/react.production.min.js"
-            #"https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"
-            "https://unpkg.com/react-helmet@6.1.0/lib/Helmet.js",
-            "https://unpkg.com/react-scroll@1.8.4/modules/index.js",
-            "https://unpkg.com/react-slick@0.28.1/dist/react-slick.min.js",
-            "https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js",
-            "https://unpkg.com/styled-components@5.3.1/dist/styled-components.min.js",
-            "https://unpkg.com/web-vitals@1.1.2/dist/web-vitals.umd.js",
+            #"https://unpkg.com/react@17/umd/react.development.js",
+            #"https://unpkg.com/react-dom@17/umd/react-dom.development.js",
         ],
         # Root URL for the React application, this serves the jsx code in between "react_fronted" template tag.
         "root_url": "/react/serve",
