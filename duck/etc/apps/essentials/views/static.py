@@ -28,8 +28,8 @@ def dev_find_staticfile(staticfile: str) -> Optional[str]:
         if os.path.isfile(staticfile):
             return staticfile
     
-    for file in blueprint_static_dirs:
-        staticfile = joinpaths(file, staticfile)
+    for static_dir in blueprint_static_dirs:
+        staticfile = joinpaths(static_dir, staticfile)
         if os.path.isfile(staticfile):
             return staticfile
             
