@@ -47,7 +47,7 @@ def staticfiles_view(request: HttpRequest):
     else:
         staticfile = joinpaths(STATIC_ROOT, staticfile)
     
-    if not os.path.isfile(staticfile):
+    if not os.path.isfile(staticfile or ""):
         response = not_found404(body=f"<p>Nothing matches the provided URI: {request.path}</p>Consider using command <strong>collectstatic</strong> to add this to static files.</p>")
         return response
     
