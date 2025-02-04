@@ -86,7 +86,7 @@ class CollectStaticCommand:
        directory = pathlib.Path(directory)
        
        if directory.is_dir():
-           for dir_entry in directory._scandir():
+           for dir_entry in os.scandir(directory):
                 if dir_entry.is_file():
                     yield dir_entry.path
                 else:

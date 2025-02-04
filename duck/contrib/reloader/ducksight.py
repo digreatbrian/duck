@@ -126,7 +126,7 @@ def _restart_webserver():
             ]
         else:
             # server was started through terminal
-            cmd = [PYTHON_PATH] + list(server_sys_argv[:])
+            cmd = server_sys_argv[:]
             if "--reload" not in cmd:
                 cmd.extend(["--reload"])
         return cmd

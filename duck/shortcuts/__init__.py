@@ -183,7 +183,7 @@ def not_found404(
     body: Optional[str] = None,
     content_type="text/html",
     **kw):
-    """Returns a 404 HttpNotFoundResponse object
+    """Returns a 404 HttpNotFoundResponse object either a simple response or a template response given DEBUG mode is on or off.
 
     Args:
         content (Optional[body]): Body for the response, defaults to None

@@ -4,6 +4,7 @@ This includes sending response to client and logging the response.
 """
 
 import socket
+
 from typing import Optional, Union, Callable, Dict
 
 from duck.http.request import HttpRequest
