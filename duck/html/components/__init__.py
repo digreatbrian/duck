@@ -35,7 +35,7 @@ Example Usage:
 
 import re
 
-from typing import Dict
+from typing import Dict, List
 
 
 class PropertiesStore(dict):
@@ -284,6 +284,7 @@ class InnerHtmlComponent(HtmlComponent):
             style=style,
             **kwargs,
         )
+        self.children = []
     
     def add_child(self, child: HtmlComponent):
         """
@@ -294,7 +295,7 @@ class InnerHtmlComponent(HtmlComponent):
         """
         self.children.append(child)
 
-    def add_children(self, children: list):
+    def add_children(self, children: List[HtmlComponent]):
         """
         Adds multiple child components to this HTML component.
 
