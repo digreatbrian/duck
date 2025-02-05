@@ -3,7 +3,6 @@ File containing settings for Duck application.
 """
 # yapf: disable
 import os
-import json
 import pathlib
 
 from duck.etc.middlewares import middlewares

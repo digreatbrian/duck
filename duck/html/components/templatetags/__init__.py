@@ -111,37 +111,66 @@ class HtmlComponentTemplateTag(TemplateTag):
                 content = self._normalize_content(content)
                 
                 # Convert content to appropriate data type.
-                args, kwargs = self.resolve_content(content)
+                args, kwargs = self.parse_args_kwargs(content)
                 try:
                     # return the MarkupSafe string
                     return mark_safe(root_tag.component_cls(*args, **kwargs).to_string())
                 except Exception as e:
                     raise HtmlComponentError(f"Error invoking html component '{root_tag.tagname}': {e} ")
-            
-            def resolve_content(self, content: str) -> Tuple[List[str], Dict[str, Any]]:
+
+            def parse_args_kwargs(self, content: str) -> Tuple[List[Any], Dict[str, Any]]:
                 """
-                Resolves the content/string and converts it to appropriate data type.
+                Parses a string of arguments and keyword arguments and returns them as a tuple of (args, kwargs).
+                
+                Args:
+                    content (str): The string representation of the arguments and keyword arguments.
                 
                 Returns:
-                    Tuple[List[str], Dict[str, Any]]:
-                        A tuple containing positional arguments in a 
-                        list and keyword arguments in a dictionary.
+                    Tuple[List[Any], Dict[str, Any]]: A tuple containing positional arguments in a list and keyword arguments in a dictionary.
                 """
-                # Expected content => properties = { 1: "Hello props" }, style = { "Hello" }
+                def accept_all(*args, **kwargs):
+                    """Accept and returns all arguments and keyword arguments."""
+                    return args, kwargs
+                
+                # Initialize empty args list and kwargs dictionary
                 args = []
                 kwargs = {}
+
+                if not content.strip():
+                    return args, kwargs
+
                 try:
-                    for line in content.split(','):
-                        line = line.strip()
-                        if "=" not in line:
-                            args.append(ast.literal_eval(line))
+                    content = content.strip().replace("\n", "").replace("\r", "").replace("\t", "").replace(" ", "")
+                    
+                    # Evaluate the content as a tuple
+                    content = f"accept_all({content})"
+                    
+                    evaluated_content = eval(content, {"accept_all": accept_all, "__builtins__": None}, {})
+                    
+                    for item in evaluated_content:
+                        # Handle keyword arguments (dictionaries)
+                        if isinstance(item, dict):
+                            kwargs.update(item)
+                        # Handle positional arguments (lists or single values)
                         else:
-                            key, value = line.split('=', 1)
-                            kwargs[key.strip()] = ast.literal_eval(value) # add keyword arg to kwargs
+                            args.append(item)
+                            
+                except SyntaxError as e:
+                    line_number = content.count('\n', 0, e.offset) + 1
+                    raise ValueError(
+                        f"Syntax error in content '{content}' for component '{root_tag.component_name}' at line {line_number}: {e}"
+                    ) from e
+                
+                except ValueError as e:
+                    line_number = content.count('\n', 0, e.offset) + 1
+                    raise ValueError(
+                        f"Value error in content '{content}' for component '{root_tag.component_name}' at line {line_number}: {e}"
+                    ) from e
+                
                 except Exception as e:
-                    raise template.TemplateSyntaxError(
-                        f"Encountered an error whilst converting content for html component tag '{root_tag.tagname}' to appropriate data type: {e}"
-                    )
+                    raise ValueError(
+                        f"Unexpected error whilst parsing content '{content}' for component '{root_tag.component_name}': {e}"
+                    ) from e
                 return args, kwargs
             
             def _normalize_content(self, content: str) -> str:
@@ -177,7 +206,7 @@ class HtmlComponentTemplateTag(TemplateTag):
                 nodelist = parser.parse((f"end{tag_name}",))
                 parser.delete_first_token()
                 return HtmlComponentNode(nodelist)
-            except Exception:
+            except Exception as e:
                 raise template.TemplateSyntaxError(f"Error parsing html component tag: {e}")
             
     def register_in_jinja2(self, environment):
