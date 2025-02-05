@@ -210,7 +210,7 @@ class HtmlComponent:
     def __str__(self) -> str:
         """
         Returns:
-                        str: A string representation of the Html Element witn style and properties.
+            str: A string representation of the Html Element witn style and properties.
         """
         return self.to_string()
 
@@ -223,14 +223,14 @@ class NoInnerHtmlComponent(HtmlComponent):
     This is the HTML component with no Inner Body.
 
     Form:
-            <mytag> or <mytag/>
+        <mytag> or <mytag/>
 
-            Example:
-                    <input>
-                    <textarea>
+        Example:
+            <input>
+            <textarea>
 
     Notes:
-            - The html components that fall in this category are usually HTML Input elements.
+        - The html components that fall in this category are usually HTML Input elements.
     """
 
     def __init__(
@@ -254,15 +254,15 @@ class InnerHtmlComponent(HtmlComponent):
     This is the HTML component with Inner Body presence.
 
     Form:
-            <mytag>Text here</mytag>
+        <mytag>Text here</mytag>
 
-            Example:
-                    <p>Text here</p>
-                    <h2>Text here</h2>
-                    <ol>List elements here</ol>
+        Example:
+            <p>Text here</p>
+            <h2>Text here</h2>
+            <ol>List elements here</ol>
 
     Notes:
-            - The html components that fall in this category are usually basic HTML elements.
+        - The html components that fall in this category are usually basic HTML elements.
     """
 
     def __init__(
@@ -284,6 +284,70 @@ class InnerHtmlComponent(HtmlComponent):
             style=style,
             **kwargs,
         )
+    
+    def add_child(self, child: HtmlComponent):
+        """
+        Adds a child component to this HTML component.
+
+        Args:
+            child (HtmlComponent): The child component to add.
+        """
+        self.children.append(child)
+
+    def add_children(self, children: list):
+        """
+        Adds multiple child components to this HTML component.
+
+        Args:
+            children (list): The list of child components to add.
+        """
+        for child in children:
+            self.add_child(child)
+    
+    def remove_child(self, child: HtmlComponent):
+        """
+        Removes a child component from this HTML component.
+
+        Args:
+            child (HtmlComponent): The child component to remove.
+        """
+        if child in self.children:
+            self.children.remove(child)
+        else:
+            raise ValueError(f"Child component {child} not found in children list.")
+    
+    def to_string(self, add_style: bool = True):
+        """
+        Returns the string representation of the HTML component.
+
+        Args:
+            add_style (bool, optional): Whether to add CSS style to the HTML element. Defaults to True.
+
+        Returns:
+            str: The string representation of the HTML component.
+        """
+        inner_prop_string = self.get_inner_properties_string()
+        elem_string = f"<{self.element}"
+        
+        if inner_prop_string:
+            elem_string += f" {inner_prop_string}"
+        
+        if add_style:
+            css = self.get_inner_css_string()
+            if css:
+                elem_string += f' style="{css}"'
+
+        elem_string += ">"
+        
+        if self.accept_inner_body:
+            elem_string += f'{self.inner_body or ""}'
+        
+        # Add child components
+        for child in self.children:
+            elem_string += child.to_string(add_style)
+
+        elem_string += f'</{self.element}>'
+        return elem_string
 
 
 class DefaultTheme:
