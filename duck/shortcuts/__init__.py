@@ -68,10 +68,8 @@ def jinja2_render(
     Returns:
         TemplateResponse: The response object with the rendered content.
     """
-    template = (
-        sanitize_path_segment(template).lstrip("/")
-        if template else template)
-    
+    template = sanitize_path_segment(template).lstrip("/") if template else template
+
     return TemplateResponse(
         request=request,
         template=template,
@@ -99,10 +97,8 @@ def django_render(
     Returns:
         TemplateResponse: The response object with the rendered Django template.
     """
-    template = (
-        sanitize_path_segment(template).lstrip("/")
-        if template else template)
-    
+    template = sanitize_path_segment(template).lstrip("/") if template else template
+
     return TemplateResponse(
         request=request,
         template=template,
@@ -133,7 +129,7 @@ def render(
             TemplateResponse: Http response rendered using Django or Jinja2.
     """
     allowed_engines = {"jinja2", "django"}
-    
+
     if engine not in allowed_engines:
         raise TemplateError(
             f"Provided engine not recognized, should be one of ['jinja2', 'django'] not '{engine}' "
@@ -154,11 +150,7 @@ def render(
             raise _e  # reraise error
 
 
-def redirect(
-    location: str,
-    permanent: bool = False,
-    content_type="text/html",
-    **kw):
+def redirect(location: str, permanent: bool = False, content_type="text/html", **kw):
     """
     Returns a HttpRedirectResponse object
 
@@ -179,10 +171,7 @@ def redirect(
     )
 
 
-def not_found404(
-    body: Optional[str] = None,
-    content_type="text/html",
-    **kw):
+def not_found404(body: Optional[str] = None, content_type="text/html", **kw):
     """Returns a 404 HttpNotFoundResponse object either a simple response or a template response given DEBUG mode is on or off.
 
     Args:
@@ -225,8 +214,7 @@ def merge(
     )  # add all content headers from take_response to base response
 
     if merge_headers:
-        base_response.header_obj.headers.update(
-            take_response.header_obj.headers)
+        base_response.header_obj.headers.update(take_response.header_obj.headers)
 
     return base_response
 
@@ -241,21 +229,22 @@ def content_replace(
     Replaces response content with new content.
 
     Args:
-                response (HttpResponse): Response to replace content for.
-                new_data (Union[bytes, str]): String or bytes to set for content.
-                new_content_type (str): The new content type, Defaults to `auto` to automatically determine the content type.
-                new_content_filepath (str): Filepath to the content, Defaults to "use_existing" to use the already set filepath.
+        response (HttpResponse): Response to replace content for.
+        new_data (Union[bytes, str]): String or bytes to set for content.
+        new_content_type (str): The new content type, Defaults to `auto` to automatically determine the content type.
+        new_content_filepath (str): Filepath to the content, Defaults to "use_existing" to use the already set filepath.
 
     """
     assert isinstance(new_data, str) or isinstance(
-        new_data, bytes), "Only string or bytes allowed for new_data"
+        new_data, bytes
+    ), "Only string or bytes allowed for new_data"
 
-    new_data = (new_data.encode("utf-8")
-                if isinstance(new_data, str) else new_data)
+    new_data = new_data.encode("utf-8") if isinstance(new_data, str) else new_data
     if not new_content_type:
         raise ValueError(
             "Please provide new_content_type or any of these `use_existing` for no change, `auto` to "
-            "automatically determine content type or any valid content type.")
+            "automatically determine content type or any valid content type."
+        )
     elif new_content_type == "auto":
         new_content_type = None
 
@@ -265,8 +254,7 @@ def content_replace(
     if new_content_filepath == "use_existing":
         new_content_filepath = response.content_obj.filepath
 
-    response.content_obj.set_content(new_data, new_content_filepath,
-                                     new_content_type)
+    response.content_obj.set_content(new_data, new_content_filepath, new_content_type)
 
     # update content type header
     response.set_content_type_header()
@@ -274,13 +262,15 @@ def content_replace(
     return response
 
 
-def resolve(name: str, absolute: bool = True) -> str:
+def resolve(name: str, absolute: bool = True, fallback_url: Optional[str] = None) -> str:
     """
     This resolves a URL based on name.
 
     Args:
+        name (str): The name of the URL to resolve.
         absolute (bool): This will return the absolute url instead of registered path only but it requires the app to be in running state
-
+        fallback_url (Optional[str]): The fallback url to use if the URL is not found.
+        
     Notes:
         It only works on URL's that were registered as plain urls in form:
             pattern = '/url/path'
@@ -299,7 +289,8 @@ def resolve(name: str, absolute: bool = True) -> str:
 
         if not is_good_url_path(url):
             raise URLResolveError(
-                f"Only plain URL's associated with the name '{name}' is malformed or invalid")
+                f"Only plain URL's associated with the name '{name}' is malformed or invalid"
+            )
 
         if absolute:
             # build absolute url
@@ -310,26 +301,27 @@ def resolve(name: str, absolute: bool = True) -> str:
         return "/" + url if not url.startswith("/") else url
 
     except RouteNotFoundError:
-        raise URLResolveError(
-            f"No URL in registry is associated with name '{name}' ")
+        if fallback_url:
+            return fallback_url
+        raise URLResolveError(f"No URL in registry is associated with name '{name}' ")
 
 
 def to_response(value: Any) -> Union[BaseResponse, HttpResponse]:
     """
     Converts any value to http response.
-    
+
     Notes:
         - If value is already a response object, nothing will be done.
-        
+
     Raises:
         TypeError: If the value is not convertable to http response.
     """
     allowed_types = (int, str, float, dict, list, set)
-    
+
     if not isinstance(value, BaseResponse):
         if not isinstance(value, allowed_types):
-              raise TypeError(
-                  f"Value '{value}' cannot be converted to http response. Consider these types: {allowed_types}"
-               )
+            raise TypeError(
+                f"Value '{value}' cannot be converted to http response. Consider these types: {allowed_types}"
+            )
         value = HttpResponse("%s" % value)
     return value
