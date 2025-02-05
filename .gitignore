@@ -4,7 +4,7 @@ __pycache__/
 .venv/
 .logs/
 .cache/
-./Duck.egg-info/
+Duck.egg-info/
 build/
 .ducksight-state
 .duck-processes.json
