@@ -1,3 +1,66 @@
+Metadata-Version: 2.1
+Name: Duck
+Version: 1.0.1
+Summary: Duck is a Python-based webserver, framework, and proxy that integrates seamlessly with Django.
+Author-email: Brian Musakwa <digreatbrian@gmail.com>
+Maintainer-email: Brian Musakwa <digreatbrian@gmail.com>
+License: Copyright (c) 2024 Brian Musakwa
+        All rights reserved.
+        
+        Redistribution and use in source and binary forms, with or without modification,
+        are permitted provided that the following conditions are met:
+        
+            1. Redistributions of source code must retain the above copyright notice,
+               this list of conditions and the following disclaimer.
+        
+            2. Redistributions in binary form must reproduce the above copyright
+               notice, this list of conditions and the following disclaimer in the
+               documentation and/or other materials provided with the distribution.
+        
+            3. Neither the name of Duck nor the names of its contributors may be used
+               to endorse or promote products derived from this software without
+               specific prior written permission.
+        
+        THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+        ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+        WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+        DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+        ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+        (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+        LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+        ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+        (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+        SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Project-URL: Homepage, https://github.com/digreatbrian/duck
+Project-URL: Repository, https://github.com/digreatbrian/duck
+Project-URL: Issues, https://github.com/digreatbrian/duck/issues
+Project-URL: Documentation, https://github.com/digreatbrian/duck/wiki
+Project-URL: Createrpage, https://brianmusakwa.link
+Keywords: webserver,web-framework,proxy,Django,Python,HTTP,WSGI,Duck,reverse-proxy,flask,tornado
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Framework :: Django
+Classifier: Topic :: Internet :: WWW/HTTP :: WSGI :: Server
+Classifier: Topic :: Software Development :: Libraries :: Application Frameworks
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+License-File: LICENSE
+License-File: AUTHORS.md
+Requires-Dist: Django>=5.1.5
+Requires-Dist: Jinja2>=3.1.5
+Requires-Dist: watchdog>=4.0.1
+Requires-Dist: requests>=2.31.0
+Requires-Dist: diskcache
+Requires-Dist: colorama
+Requires-Dist: tzdata
+Requires-Dist: click
+
 # 🦆 Duck Webserver and Proxy
 ![Duck image](./images/duck-cover.png)  
 
@@ -492,27 +555,24 @@ If you want to create your own HTML components, you can subclass one of Duck's b
 ```py
 from duck.html.components import InnerHtmlComponent
 
-
 class CustomButton(InnerHtmlComponent):
     """
     CustomHTML Button component.
     """
-    def get_element(self):
-        return "button"
-    
-    def on_create(self):
-         # Modify or update style and properties
-         
-         # update style here using setdefaults
-         # Note: there is an "s" for setdefaults for dictionary instead of key and value
-         self.style.setdefaults({
-             "color": "white",
-             "background-color": "red",
-         })
-         
-         if "onclick" self.kwargs:
-             self.properties.setdefault("onclick", self.kwargs.get("onclick")) # you can optionally modify props and style absolutely by using update or indexing
+    def __init__(self, properties: dict[str, str] = {}, style: dict[str, str] = {}):
+        """
+        Initialize the Button component with optional properties and style.
+        """
+        btn_style = {
+            "padding": "10px 20px",
+            "cursor": "pointer",
+            "transition": "background-color 0.3s ease",
+            "border": "none",
+        }  # Default style
 
+        btn_style.update(style) if style else None  # Update default style with custom styles
+
+        super().__init__("button", properties, btn_style)
 ```
 
 **InnerHtmlComponent:** This is used when your HTML component has inner content, like a button or a div. You can define the content and the styles inside this component.
@@ -528,7 +588,7 @@ class CustomButton(InnerHtmlComponent):
 
 ---
 
-This setup makes it easy to add reusable HTML components to your templates and customize their appearance and behavior by simply passing `properties`, `inner_body` and `styles`. You can also extend this by creating custom components to suit your needs.
+This setup makes it easy to add reusable HTML components to your templates and customize their appearance and behavior by simply passing properties and styles. You can also extend this by creating custom components to suit your needs.
 
 
 ## React Integration
@@ -573,17 +633,17 @@ FRONTEND: dict[str, dict] = {
 {% react_frontend %}
 
 // React code goes here
-const App = () => {
+  const App = () => {
     return (
       <div>
-       <h1>Hello, React!</h1>
-       <p>Welcome to your first React app!</p>
-     </div>
-   );
-};
+        <h1>Hello, React!</h1>
+        <p>Welcome to your first React app!</p>
+      </div>
+    );
+  };
 
-// Rendering the React app into the #root element
-ReactDOM.render(<App />, document.getElementById('root'));
+  // Rendering the React app into the #root element
+  ReactDOM.render(<App />, document.getElementById('root'));
 
 {% endreact_frontend %}
 </body>
@@ -599,7 +659,7 @@ To ensure smooth integration of React with Duck, run the following command in yo
 
 ```bash
 cd yourproject
-python3 -m duck collectscripts
+duck collectscripts
 ```
 
 ### Security

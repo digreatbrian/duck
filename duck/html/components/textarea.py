@@ -9,19 +9,14 @@ class TextArea(InnerHtmlComponent):
     """
     HTML TextArea component.
     """
-
-    def __init__(self,
-                 properties: dict[str, str] = {},
-                 style: dict[str, str] = {}):
-        """
-        Initialize the Textarea component.
-        """
+    def get_element(self):
+        return "textarea"
+    
+    def on_create(self):
         textarea_style = {
             "padding": "10px",
             "border": "1px solid #ccc",
-            "border-radius": "4px",
-            "font-size": "14px",
+            "border-radius": DefaultTheme.border_radius,
+            "font-size": DefaultTheme.normal_font_size,
         }
-        textarea_style.update(style) if style else None  # update default style
-
-        super().__init__("textarea", properties, textarea_style)
+        self.style.setdefaults(textarea_style)

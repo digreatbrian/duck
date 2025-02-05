@@ -9,90 +9,47 @@ class Button(InnerHtmlComponent):
     """
     HTML Button component.
     """
-
-    def __init__(self,
-                 properties: Dict[str, str] = {},
-                 style: Dict[str, str] = {}):
-        """
-        Initialize the FlatButton component.
-        """
+    def get_element(self):
+        return "button"
+    
+    def on_create(self):
         btn_style = {
             "padding": "10px 20px",
             "cursor": "pointer",
             "transition": "background-color 0.3s ease",
             "border": "none",
         }  # default style
+        
+        self.style.setdefaults(btn_style)
+        self.style.setdefaults(DefaultTheme.get_base_style())
 
-        btn_style.update(style) if style else None  # update default style
 
-        super().__init__("button", properties, btn_style)
-
-
-class RoundedButton(InnerHtmlComponent):
+class RoundedButton(Button):
     """
     HTML Rounded Button component.
     """
-
-    def __init__(self,
-                 properties: Dict[str, str] = {},
-                 style: Dict[str, str] = {}):
-        """
-        Initialize the CircularButton component.
-        """
-        btn_style = {
-            "padding": "10px 20px",
-            "cursor": "pointer",
-            "transition": "background-color 0.3s ease",
-            "border-radius": "50%",
-        }
-        btn_style.update(DefaultTheme.get_base_style())
-        btn_style.update(style) if style else None  # update default style
-
-        super().__init__("button", properties, btn_style)
+    def on_create(self):
+        super().on_create()
+        self.style["border-radius"] = "50%" # update button radius nomatter what
 
 
-class FlatButton(InnerHtmlComponent):
+class FlatButton(Button):
     """
     HTML FlatButton component.
     """
-
-    def __init__(self,
-                 properties: dict[str, str] = {},
-                 style: dict[str, str] = {}):
-        """
-        Initialize the FlatButton component.
-        """
-        btn_style = {
-            "padding": "10px 20px",
-            "cursor": "pointer",
-            "transition": "background-color 0.3s ease",
-            "border": "none",
+    def on_create(self):
+        super().on_create()
+        
+        self.style.setdefaults({
             "background-color": "transparent",
             "color": DefaultTheme.bg_color,
-        }
-        btn_style.update(style) if style else None  # update default style
-
-        super().__init__("button", properties, btn_style)
-
-
-class RaisedButton(InnerHtmlComponent):
+        })
+    
+    
+class RaisedButton(Button):
     """
     HTML RaisedButton component.
     """
-
-    def __init__(self,
-                 properties: dict[str, str] = {},
-                 style: dict[str, str] = {}):
-        """
-        Initialize the RaisedButton component.
-        """
-        btn_style = {
-            "padding": "10px 20px",
-            "cursor": "pointer",
-            "transition": "background-color 0.3s ease",
-            "box-shadow": "0 2px 2px rgba(0, 0, 0, 0.2)",
-        }
-        btn_style.update(DefaultTheme.get_base_style())
-        btn_style.update(style) if style else None  # update default style
-
-        super().__init__("button", properties, btn_style)
+    def on_create(self):
+        super().on_create()
+        self.style["box-shadow"] = "0 2px 2px rgba(0, 0, 0, 0.2)" # override box shadow nomatter what

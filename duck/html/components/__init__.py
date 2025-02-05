@@ -35,7 +35,7 @@ Example Usage:
 
 import re
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 
 class PropertiesStore(dict):
@@ -74,6 +74,13 @@ class PropertiesStore(dict):
         """
         return f"<{self.__class__.__name__} {super().__repr__()}>"
 
+    def setdefaults(self, data: Dict):
+        """
+        Method setdefault on multiple items
+        """
+        for key, value in data.items():
+            self.setdefault(key, value)
+
 
 class HtmlComponentError(Exception):
     """
@@ -88,8 +95,8 @@ class HtmlComponent:
 
     def __init__(
         self,
-        element: str,
-        accept_inner_body: bool,
+        element: Optional[str] = None,
+        accept_inner_body: bool = False,
         inner_body: str = None,
         properties: Dict[str, str] = {},
         style: Dict[str, str] = {},
@@ -99,7 +106,7 @@ class HtmlComponent:
         Initialize an HTML component.
 
         Args:
-            element (str): The HTML element tag name (e.g., textarea, input, button).
+            element (Optional[str]): The HTML element tag name (e.g., textarea, input, button). Can be None, but make sure element is returned by get_element method.
             accept_inner_body (bool): Whether the HTML component accepts an inner body (e.g., <strong>inner-body-here</strong>).
             inner_body (str, optional): Inner body to add to the HTML component. Defaults to None.
             properties (dict, optional): Dictionary for properties to initialize the component with.
@@ -109,6 +116,9 @@ class HtmlComponent:
         Raises:
             HtmlComponentError: If 'element' is not a string or 'inner_body' is set but 'accept_inner_body' is False.
         """
+        
+        element = element or self.get_element()
+        
         if not isinstance(element, str) or not re.findall(
                 r"\b[a-zA-Z]+\b", element):
             raise HtmlComponentError(
@@ -121,7 +131,7 @@ class HtmlComponent:
             )
         
         # Set roperties and style for the HTML element/component
-        self.__properties = (PropertiesStore())
+        self.__properties = PropertiesStore() # Basic properties
         self.__style = PropertiesStore()  # Properties for CSS styling
         
         self.element = element
@@ -137,6 +147,8 @@ class HtmlComponent:
         # add some properties and style
         self.__properties.update(properties)
         self.__style.update(style)
+        self.kwargs = kwargs
+        self.on_create()
 
     @property
     def properties(self):
@@ -158,6 +170,17 @@ class HtmlComponent:
         """
         return self.__style
 
+    def get_element(self):
+        """
+        Fallback method to retrieve the html element tag.
+        """
+        raise NotImplementedError(f"Method `get_element` is not implemented yet the element argument is empty or None. This is a fallback method.")
+    
+    def on_create(self):
+        """
+        Called on component creation or initialization
+        """
+    
     def get_inner_css_string(self):
         """
         Retrieves the CSS string for the styles set on the HTML component.
@@ -235,17 +258,17 @@ class NoInnerHtmlComponent(HtmlComponent):
 
     def __init__(
         self,
-        element: str,
+        element: Optional[str] = None,
         properties: Dict[str, str] = {},
         style: Dict[str, str] = {},
-         **kwargs,
+        **kwargs,
     ):
         super().__init__(
             element,
             accept_inner_body=False,
             properties=properties,
             style=style,
-             **kwargs,
+            **kwargs,
         )
 
 
@@ -267,25 +290,23 @@ class InnerHtmlComponent(HtmlComponent):
 
     def __init__(
         self,
-        element: str,
+        element: Optional[str] = None,
         properties: Dict[str, str] = {},
         style: Dict[str, str] = {},
+        inner_body: str = "",
         **kwargs,
     ):
-        value = ""
-        if "value" in properties:
-            value = properties.pop("value")
+        self.children = [] # initialize the children list
         
         super().__init__(
             element,
             accept_inner_body=True,
-            inner_body=value,
+            inner_body=inner_body,
             properties=properties,
             style=style,
             **kwargs,
         )
-        self.children = []
-    
+        
     def add_child(self, child: HtmlComponent):
         """
         Adds a child component to this HTML component.

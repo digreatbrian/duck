@@ -2,51 +2,42 @@
 Input Html Component
 """
 
-from duck.html.components import NoInnerHtmlComponent
+from duck.html.components import (
+    NoInnerHtmlComponent,
+    DefaultTheme,
+)
 
 
 class Input(NoInnerHtmlComponent):
     """
     HTML Input component.
     """
-
-    def __init__(self,
-                 properties: dict[str, str] = {},
-                 style: dict[str, str] = {}):
-        """
-        Initialize the Input component.
-
-        Args:
-            input_type (str): The type of input (e.g., text, password, email). Defaults to "text".
-        """
-        input_style = {
+    def get_element(self):
+        return "input"
+    
+    def on_create(self):
+         style = {
             "padding": "10px",
             "border": "1px solid #ccc",
-            "border-radius": "4px",
-            "font-size": "14px",
-        }
-        input_style.update(style) if style else None  # update default style
+            "border-radius": DefaultTheme.border_radius,
+            "font-size": DefaultTheme.normal_font_size,
+         }
+         self.style.setdefaults(style)
+         
+         if self.kwargs.get("value"):
+             self.properties.setdefault("value", self.kwargs.get("value"))
 
-        super().__init__("input", properties, input_style)
 
-
-class CSRFInput(NoInnerHtmlComponent):
+class CSRFInput(Input):
     """
     Csrf HTML Input component.
     """
-
-    def __init__(self, request):
-        """
-        Initialize the Input component.
-
-        Args:
-            request : The request object
-        """
+    def on_create(self):
         from duck.settings import SETTINGS
         from duck.template.security.csrf import get_csrf_token
-
-        super().__init__("input", False)
+        
+        # empty all styles and props
+        self.style = {}
         self.properties["type"] = "hidden"
-        self.properties["id"] = self.properties["name"] = SETTINGS[
-            "CSRF_COOKIE_NAME"]
+        self.properties["id"] = self.properties["name"] = SETTINGS["CSRF_COOKIE_NAME"]
         self.properties["value"] = get_csrf_token(request)

@@ -251,23 +251,28 @@ TEMPLATETAGS_MODULE: str = ""
 # Do help on how these two classes work
 # 
 # Example:
+# from duck.html.components import InnerHtmlComponent
+# 
 # class CustomButton(InnerHtmlComponent):
 #    """
-#    HTML Button component.
+#    CustomHTML Button component.
 #    """
-#    def __init__(self, properties: dict[str, str]={}, style: dict[str, str]={}, **kwargs):
-#        """
-#        Initialize the Custom Button html component.
-#        """
-#        btn_style = {
-#            "padding": "10px 20px",
-#            "cursor": "pointer",
-#            "transition": "background-color 0.3s ease",
-#            "border": "none",
-#        } # default style
-#
-#        btn_style.update(style) if style else None # update default style
-#        super().__init__("button", properties, btn_style, **kwargs)
+#    def get_element(self):
+#        return "button"
+#    
+#    def on_create(self):
+#         # Modify or update style and properties
+#         
+#         # update style here using setdefaults
+#         # Note: there is an "s" for setdefaults for dictionary instead of key and value
+#         self.style.setdefaults({
+#             "color": "white",
+#             "background-color": "red",
+#         })
+#         
+#         if "onclick" self.kwargs:
+#             self.properties.setdefault("onclick", self.kwargs.get("onclick")) # you can optionally modify props and style absolutely by using update or indexing
+
 HTML_COMPONENTS: dict[str, str] = {
     "Button": "duck.html.components.button.Button",
     "FlatButton": "duck.html.components.button.FlatButton",

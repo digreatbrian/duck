@@ -119,24 +119,6 @@ DUCK_EXPLICIT_URLS: list = [
 TEMPLATE_DIRS: list[str | pathlib.Path] = [pathlib.Path("templates/").resolve()]
 
 
-# Frontend Integration
-# Currently, only React is supported.
-FRONTEND: dict[str, dict] = {
-    "REACT": {
-        # URLs or filepaths for loading React, ReactDOM, and Babel scripts (Javascript only).
-        # **Note**: Babel script is required.
-        "scripts": [
-            "https://unpkg.com/react@17/umd/react.development.js",
-            "https://unpkg.com/react-dom@17/umd/react-dom.development.js",
-            "https://unpkg.com/@babel/standalone/babel.min.js"
-        ],
-        # Root URL for the React application, this serves the jsx code in between "react_fronted" template tag.
-        "root_url": "/react/serve",
-        "scripts_url": "/scripts", # URL for serving the above scripts. Final Route = root_url + scripts_url.
-    }
-}
-
-
 # List of all middlewares as strings in form "middleware.MiddlewareClass"
 # WARNING: The middlewares should be arranged in order at this point.
 MIDDLEWARES: list[str] = middlewares
