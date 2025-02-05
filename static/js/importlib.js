@@ -35,6 +35,7 @@ function loadScript(src, async = true, defer = false, extension_map = {".jsx": "
 
     // Append the script tag to the document body
     document.body.appendChild(script);
+    console.log("Script loaded successfully: ", src);
   });
 }
 
@@ -63,5 +64,6 @@ function loadStyle(href, async = true, defer = false, extension_map = {".css": "
 
     // Append the style tag to the document body
     document.body.appendChild(style);
+    console.log("Style loaded successfully: ", href);
   });
 }

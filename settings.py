@@ -134,7 +134,7 @@ REQUEST_HANDLING_TASK_EXECUTOR_KWARGS: dict = {
 # Determines whether to use asynchronous request handling.
 # If set to False, the framework defaults to multithreaded request handling.
 # Example: ASYNC_HANDLING=True enables async handling; False uses threads.
-ASYNC_HANDLING: bool = True
+ASYNC_HANDLING: bool = False
 
 
 # Server Buffer
@@ -392,7 +392,9 @@ HTML_COMPONENTS: dict[str, str] = {
     "Checkbox": "duck.html.components.checkbox.Checkbox",
     "Select": "duck.html.components.select.Select",
     "TextArea": "duck.html.components.textarea.TextArea",
+    
     # App specific components
+    "Navbar": "templates.components.navbar.Navbar",
 }
 
 # Enable Html Components
@@ -412,9 +414,9 @@ FRONTEND: dict[str, dict] = {
         # URLs or filepaths for loading React, ReactDOM, and Babel scripts (Javascript only).
         # **Note**: Babel script is required.
         "scripts": [
+            "https://unpkg.com/babel-standalone@6.26.0/babel.min.js",
             "https://unpkg.com/react@17/umd/react.development.js",
             "https://unpkg.com/react-dom@17/umd/react-dom.development.js",
-            "https://unpkg.com/@babel/standalone/babel.min.js",
         ],
         # Root URL for the React application, this serves the jsx code in between "react_fronted" template tag.
         "root_url": "/react/serve",
@@ -462,7 +464,7 @@ CORS_HEADERS: dict = {
 
 # List of all middlewares as strings in form "middleware.MiddlewareClass"
 # WARNING: The middlewares should be arranged in order at this point.
-MIDDLEWARES: list[str] = middlewares
+MIDDLEWARES: list[str] = []
 
 
 # Middleware Failure default behavior.
