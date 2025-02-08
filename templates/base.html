@@ -38,27 +38,92 @@
 
 <body>
   <main>
-    {% block content %}
+    <div id="root" class="d-flex vh-100">
+    
+     <!-- Sidebar -->
+     <div id="sidebar" class="display-none bg-color-primary text-white p-3 flex-shrink-0" style="width: 250px;">
+         <h4>Sidebar</h4>
+         <ul class="nav flex-column">
+             <li class="nav-item"><a href="#" class="nav-link text-white">Home</a></li>
+             <li class="nav-item"><a href="#" class="nav-link text-white">About</a></li>
+         </ul>
+     </div>
 
-    {% Navbar %}
-      brand = {
-        "image_src": "{% static 'images/logo.png' %}",
-        "alt": "Yannick Consultancy Logo",
-        "on_click": "() => {
-          window.location = ```{% resolve 'home' fallback_url='#' %}```;
-        }
-        ",
-      },
-      links = [
-          {"name": "Home", "url": "{% resolve 'home' fallback_url='#' %}"},
-          {"name": "About", "url": "{ % resolve 'about' fallback_url='#' %}"},
-          {"name": "Services", "url": "{% resolve 'services' fallback_url='#' %}"},
-          {"name": "Contact", "url": "{% resolve 'contact' fallback_url='#' %}"},
-          {"name": "Jobs", "url": "{% resolve 'portfolio' fallback_url='#' %}"},
-      ],
-    {% endNavbar %}
-
-    {% endblock content %}
+     <!-- Main Content -->
+     <div id="main-content" class="flex-grow-1">
+         <section class="nav-hero-section">
+           {% Navbar %}
+              brand = {
+               "image_src": "{% static 'images/logo.png' %}",
+               "alt": "Yannick Consultancy Logo",
+               "url": '{% resolve "home" fallback_url="#" %}'
+             },
+             links = [
+               {"text": "Home", "url": "{% resolve 'home' fallback_url='#' %}"},
+               {"text": "About", "url": "{ % resolve 'about' fallback_url='#' %}"},
+               {"text": "Services", "url": "{% resolve 'services' fallback_url='#' %}"},
+               {"text": "Contact", "url": "{% resolve 'contact' fallback_url='#' %}"},
+               {"text": "Jobs", "url": "{% resolve 'portfolio' fallback_url='#' %}"},
+            ],
+           {% endNavbar %}
+         
+           <!-- Add Hero -->
+           {% Hero %}
+             heading = "Yannick Consultancy.",
+             subheading = "Your next best consultancy firm",
+           {% endHero %}
+         </section>
+         
+         <div id="main-content-inner">
+           <!-- Add Services -->
+           <section id="services-section">
+             <h1 id="services-heading">Our Consulting Services</h1>
+             <p class="text-color-grey">Take a look at the services we provide!</p>
+             {% ServiceCards %}
+               services = [
+                {"heading": "Business Strategy & Growth", "subheading": "Helping businesses scale, optimize operations, and improve profitability."},
+                {"heading": "Technology & IT Solutions", "subheading": "Providing expert guidance on software, cloud, cybersecurity, and digital transformation."},
+                {"heading": "Human Resources & Talent Management", "subheading": "Optimizing recruitment, employee engagement, and performance management."},
+                {"heading": "Financial & Legal Advisory", "subheading": "Ensuring financial stability, investment planning, and legal compliance."}
+              ]
+             {% endServiceCards %}
+           </section>
+           
+           <!-- About us -->
+           <section id="about-us-section">
+             {% AboutUs %}
+             {% endAboutUs %}
+           </section>
+           
+           <!-- Add Consultation cta button -->
+           <div class="cta-btn-container display-flex flex-justify-content-center">
+             {% RaisedButton %}
+               properties = {
+                 'class': 'cta-btn bg-color-secondary',
+               },
+               inner_body = 'Schedule a consultation'
+             {% endRaisedButton %}
+           </div>
+         </div>
+         <!-- End main-content-inner  -->
+         
+         <!-- Add Footer -->
+         {% Footer %}
+           footer_items = {
+             "Company": [
+               '{% Link %}text="About Us", url="/about"{% endLink %}',
+               '{% Link %}text="Services", url="/services"{% endLink %}',
+               '{% Link %}text="Contact", url="/contact"{% endLink %}'
+             ], # Quick links
+             "Legal": [
+               '{% Link %}text="Privacy Policy", url="/privacy"{% endLink %}',
+               '{% Link %}text="Terms & Conditions", url="/terms"{% endLink %}',
+             ],
+           }
+         {% endFooter %}
+     </div>
+    
+    </div>
   </main>
 </body>
 </html>

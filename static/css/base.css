@@ -1,271 +1,193 @@
- html, body, div, span, applet, object, iframe,
-  h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-  a, abbr, acronym, address, big, cite, code,
-  del, dfn, em, img, ins, kbd, q, s, samp,
-  small, strike, strong, sub, sup, tt, var,
-  b, u, i, center,
-  dl, dt, dd, ol, ul, li,
-  fieldset, form, label, legend,
-  table, caption, tbody, tfoot, thead, tr, th, td,
-  article, aside, canvas, details, embed, 
-  figure, figcaption, footer, header, hgroup, 
-  menu, nav, output, ruby, section, summary,
-  time, mark, audio, video {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    vertical-align: baseline;
-    box-sizing: border-box;
-  }
-  /* HTML5 display-role reset for older browsers */
-  article, aside, details, figcaption, figure, 
-  footer, header, hgroup, menu, nav, section {
-    display: block;
-  }
-  ol, ul {
-    list-style: none;
-  }
-  blockquote, q {
-    quotes: none;
-  }
-  blockquote:before, blockquote:after,
-  q:before, q:after {
-    content: '';
-    content: none;
-  }
-  table {
-    border-collapse: collapse;
-    border-spacing: 0;
-  }
-  a {
-    text-decoration: none!important;
-    color: #0B093B;
-  }
-  a:hover {
-    color: #7620FF;
-  }
-  input:-webkit-autofill {
-    -webkit-box-shadow:0 0 0 50px #fff inset; /* Change the color to your own background color */
-    box-shadow: transparent;
-    -webkit-text-fill-color: #fff;
-  }
-  body {
-    background: #fff;
-    color: #0B093B;
-    font-family: 'Khula', sans-serif;
-    overflow-x: hidden;
-    font-size: 16px;
-    font-weight: 400;
-  }
-  .container {
-    width: 100%;
-    max-width: 1220px;
-    margin: 0 auto;
-    padding: 0px 30px;
-  }
-  @media only screen and (max-width: 859px) {
-    .container {
-      padding: 0 15px;
-    }
-  }
-  .regular {
-    font-weight: 400!important;
-  }
-  .semiBold {
-    font-weight: 600!important;
-  }
-  .extraBold {
-    font-weight: 800!important;
-  }
 
-  /* HELLPERS */
-  .textCenter {
-    text-align: center
-  }
-  .animate {
-    transition: 0.3s ease;
-  }
-  .pointer {
-    cursor: pointer;
-  }
-  .relative {
-    position: relative;
-  }
-  .textCenter {
-    text-align: center;
-  }
-  .textLeft {
-    text-align: left;
-  }
-  .textRight {
-    text-align: right;
-  }
-  .x100 {
-    width: 100%;
-  }
-  .active {
-    border-bottom: 2px solid #7620FF;
-    color: #7620FF;
-  }
-  .tag {
-    padding: 5px 10px;
-    margin: 10px 0;
-  }
-  .shadow {
-    box-shadow: 0 0 11px rgba(237, 232, 237, 0.5)  ; 
-    -webkit-box-shadow: 0 0 11px rgba(237, 232, 237, 0.5)  ; 
-    -moz-box-shadow: 0 0 11px rgba(237, 232, 237, 0.5)  ; 
-  }
-  /* FLEXBOX */
-  .flex {
-    display: flex;
-  }
-  .flexSpaceCenter {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .flexNullCenter {
-    display: flex;
-    align-items: center;
-  }
-  .flexColumn {
-    flex-direction: column;
-  }
-  .flexCenter {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  .flexSpaceNull {
-    display: flex;
-    justify-content: space-between;
-  }
+:root {
+  --primary-color: #4B4E75 !important;
+  --secondary-color: black !important;
+  --background-color: #FFFFFF;
+  --text-color: #333333;
+  --font-family: Arial, sans-serif;
+  --padding: 10px;
+  --border-radius: 15px;
+  --button-background-color: var(--primary-color);
+  --button-text-color: #FFFFFF;
+  --button-border-radius: var(--border-radius);
+  --button-padding: 10px 20px;
+}
 
-  /* FONT SIZES */
-  .font11 {
-    font-size: 0.688rem;
+@font-face {
+    font-family: 'Khula-Regular', 'Khula-ExtraBold', 'Khula-SemiBold';
+    src: url('../fonts/Khula-Regular.ttf') format('truetype'),
+         url('../fonts/Khula-ExtraBold.ttf') format('truetype'),
+         url('../fonts/Khula-SemiBold.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@media (max-width: 768px) {
+  .card {
+    width: 90%;
+    height: auto;
+    padding: 15px;
   }
-  .font12 {
-    font-size: 0.75rem;
-  }
-  .font13 {
-    font-size: 0.813rem;
-  }
-  .font14 {
-    font-size: 0.875rem;
-  }
-  .font15 {
-    font-size: 0.938rem;
-  }
-  .font18 {
-    font-size: 1.125rem;
-  }
-  .font20 {
-    font-size: 1.25rem;
-  }
-  .font25 {
-    font-size: 1.563rem;
-  }
-  .font30 {
-    font-size: 1.875rem;
-  }
-  .font40 {
-    font-size: 2.5rem;
-  }
-  .font60 {
-    font-size: 3.75rem;
-    line-height: 4.5rem;
-  }
-  @media only screen and (max-width: 859px) {
-    .font11 {
-      font-size: 0.688rem;
-    }
-    .font12 {
-      font-size: 0.688rem;
-    }
-    .font13 {
-      font-size: 0.75rem;
-    }
-    .font14 {
-      font-size: 0.813rem;
-    }
-    .font15 {
-      font-size: 0.813rem;
-    }
-    .font18 {
-      font-size: 0.938rem;
-    }
-    .font20 {
-      font-size: 1.125rem;
-    }
-    .font25 {
-      font-size: 1.25rem;
-    }
-    .font30 {
-      font-size: 1.5rem;
-    }
-    .font40 {
-      font-size: 1.875rem;
-    }
-    .font60 {
-      font-size: 2.8rem;
-    }
-  }
-  /* BORDER RADIUS */
-  .radius8 {
-    border-radius: 1rem;
-  }
-  .radius6 {
-    border-radius: 0.6rem;
-  }
-  /* COLORS */
-  .darkColor {
-    color: #0B093B;
-  }
-  .purpleColor {
-    color: #7620FF;
-  }
-  .orangeColor {
-    color: #F2B300;
-  }
-  .lightColor {
-    color: #F5F5F5;
-  }
-  .coralColor {
-    color: #C4FFFF;
-  }
-  .greenColor {
-    color: #49CB86;
-  }
-  .greyColor {
-    color: #707070;
-  }
-  .whiteColor {
-    color: #fff;
-  }
-  /* BACKGROUNDS */
-  .darkBg {
-    background-color: #0B093B;
-  }
-  .purpleBg {
-    background-color: #7620FF;
-  }
-  .orangeBg {
-    background-color: #F2B300;
-  }
-  .lightBg {
-    background-color: #F5F5F5;
-  }
-  .coralBg {
-    background-color: #C4FFFF;
-  }
-  .greenBg {
-    background-color: #49CB86;
-  }
-  .greyBg {
-    background-color: #707070;
-  }
-  .whiteBg {
-    background-color: #fff;
-  }
+}
+
+/* Apply to all elements */
+* {
+    font-family: 'Khula-Regular' !important;
+}
+
+body {
+  min-width: 100%;
+  max-width: 100%;
+  color: var(--text-color);
+}
+
+button {
+  padding: var(--button-padding);
+}
+
+.bg-color-primary {
+  background-color: var(--primary-color) !important;
+}
+
+.bg-color-secondary {
+  background-color: var(--secondary-color) !important;
+}
+
+.text-color-primary {
+  color: var(--text-color) !important;
+}
+
+.text-color-secondary {
+  color: var(--secondary-color) !important;
+}
+
+.text-color-ccc {
+  color: #ccc;
+}
+
+.text-color-grey {
+  color: rgba(100, 100, 100, .8)
+}
+
+.display-none {
+  display: none;
+}
+
+.card {
+    width: 350px;
+    background: rgba(255, 255, 255, 0.1); /* Glassmorphism effect */
+    backdrop-filter: blur(10px);
+    border-radius: var(--border-radius) !important;
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+}
+
+.cta-btn-container {
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+#main-content {
+  min-width: 100%;
+  max-width: 100%;
+}
+
+#main-content-inner {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  gap: 10px;
+  background-image: url('../images/bg-white-gradient.png');
+  background-size: fill;
+  background-repeat: repeat;
+  
+}
+
+/* Sidebar */
+#sidebar {
+  border-radius: 0px 0px var(--border-radius) 0px;
+}
+
+/* Navbar */
+.nav-hero-section {
+  min-height: 100vh;
+  background-image: url('../images/hero.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 0px 0px var(--border-radius) var(--border-radius);
+}
+
+/* Hero */
+.hero {
+  z-index: -1;
+  border-radius: 0px 0px var(--border-radius) var(--border-radius);
+}
+
+.hero-image {
+  border-radius: var(--border-radius);
+  object-fit: cover;
+  height: 100vh;
+}
+
+.hero-heading {
+  color: white;
+  font-family: 'Khula-ExtraBold' !important;
+  font-size: 5rem;
+}
+
+.hero-subheading {
+  color: #ccc;
+  font-family: 'Khula-ExtraBold';
+  font-size: 2rem;
+  border: .25px solid #ccc;
+  border-radius: var(--border-radius);
+  padding: var(--padding);
+}
+
+/* Services section */
+#services-heading {
+  font-size: 1.8rem;
+}
+
+.service-card {
+  width: 33%;
+  height: 300px;
+  backdrop-filter: blur(50px);
+  background-color: transparent !important;
+}
+
+.service-card heading{
+  font-size: 1.1rem;
+}
+
+/* About Us */
+#about-intro {
+  font-size: 1.5rem;
+}
+
+/* Footer */
+footer {
+  background-color: var(--secondary-color) !important;
+  padding: 10px;
+}
+
+footer > div {
+  justify-content: space-around;
+}
+
+footer .footer-heading {
+  font-size: 1.2rem;
+  font-family: 'Khula-ExtraBold',
+}
+
+footer * {
+  color: #ccc !important;
+}

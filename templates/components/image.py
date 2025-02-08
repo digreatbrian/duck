@@ -5,26 +5,18 @@ class Image(NoInnerHtmlComponent):
     """
     HTML Image component.
     """
-    def __init__(self, properties: dict[str, str] = {}, style: dict[str, str] = {}, **kwargs):
-        """
-        Initialize the Image html component.
-        """
-        # Call the parent class (NoInnerHtmlComponent) initializer
-        super().__init__("img", properties, style, **kwargs)
+    def get_element(self):
+        return "img"
         
-        if kwargs.get("onclick"):
-            self.properties["onclick"] = kwargs.get("onclick")
-          
-        if kwargs.get("src"):
-            self.properties["src"] = kwargs.get("src")
+    def on_create(self):
+        if self.kwargs.get("source"):
+            self.properties["src"] = self.kwargs.get("source", '')
         
-        if kwargs.get("alt"):
-            self.properties["alt"] = kwargs.get("alt")
+        if self.kwargs.get("alt"):
+            self.properties["alt"] = self.kwargs.get("alt", '')
             
-        if kwargs.get("width"):
-            self.properties["width"] = kwargs.get("width")
+        if self.kwargs.get("width"):
+            self.properties["width"] = self.kwargs.get("width", '')
             
-        if kwargs.get("height"):
-            self.properties["height"] = kwargs.get("height")
-        
-        
+        if self.kwargs.get("height"):
+            self.properties["height"] = self.kwargs.get("height", '')

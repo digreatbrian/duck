@@ -1,36 +1,24 @@
 from duck.html.components import InnerHtmlComponent
-
-LINK_STYLE = {
-    "color": "blue",
-    "text-decoration": "none",
-}
-
-
-LINK_PROPS = {
-    "classname": "link",
-}
+from theme import Theme
 
 class Link(InnerHtmlComponent):
     """
     HTML Link component.
     """
-    def __init__(self, properties: dict[str, str] = {}, style: dict[str, str] = {}, **kwargs):
-        """
-        Initialize the Link html component.
-        """
+    def get_element(self):
+        return "a"
         
-        link_style = LINK_STYLE.copy()
-        link_props = LINK_PROPS.copy()
+    def on_create(self):
+        link_props = {"classname": "link"}
+        link_style = {
+            "color": Theme.primary_color,
+            "text-decoration": "none",
+        }
+        self.style.setdefaults(link_style)
+        self.properties.setdefaults(link_props)
         
-        # Update default style with provided style
-        link_style.update(style) if style else None
-        link_props.update(properties) if properties else None
+        if self.kwargs.get("url"):
+            self.properties.setdefault("url", self.kwargs.get("url", ''))
         
-        if kwargs.get("href"):
-            self.properties["href"] = kwargs.get("href")
-            
-        # Call the parent class (InnerHtmlComponent) initializer
-        super().__init__("a", properties, style, **kwargs)
-        
-        if kwargs.get("text"):
-            self.inner_body += kwargs.get("text")
+        if self.kwargs.get("text"):
+            self.inner_body += self.kwargs.get("text", '')

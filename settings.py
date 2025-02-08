@@ -32,7 +32,7 @@ DEBUG: bool = True
 
 # Enable or disable autoreload for the server on file changes.
 # Autoreload is disabled on devices such as phones to optimize performance.
-AUTO_RELOAD: bool = True
+AUTO_RELOAD: bool = False
 
 
 # Auto reload poll
@@ -394,7 +394,13 @@ HTML_COMPONENTS: dict[str, str] = {
     "TextArea": "duck.html.components.textarea.TextArea",
     
     # App specific components
+    "Link": "templates.components.link.Link",
     "Navbar": "templates.components.navbar.Navbar",
+    "Hero": "templates.components.hero.Hero",
+    "Image": "templates.components.image.Image",
+    "ServiceCards": "templates.components.card.ServiceCards",
+    "Footer": "templates.components.footer.Footer",
+    "AboutUs": "templates.components.about_us.AboutUs",
 }
 
 # Enable Html Components
@@ -464,7 +470,7 @@ CORS_HEADERS: dict = {
 
 # List of all middlewares as strings in form "middleware.MiddlewareClass"
 # WARNING: The middlewares should be arranged in order at this point.
-MIDDLEWARES: list[str] = []
+MIDDLEWARES: list[str] = middlewares
 
 
 # Middleware Failure default behavior.
