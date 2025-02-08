@@ -106,10 +106,7 @@ class HtmlComponentTemplateTag(TemplateTag):
             def render(self, context):
                 # Resolve and evaluate the dictionaries
                 content = self.nodelist.render(context)
-                
-                # Normalize content to avoid syntax errors
-                content = self._normalize_content(content)
-                
+               
                 # Convert content to appropriate data type.
                 args, kwargs = self.parse_args_kwargs(content)
                 try:
@@ -140,7 +137,7 @@ class HtmlComponentTemplateTag(TemplateTag):
                     return args, kwargs
 
                 try:
-                    content = content.strip().replace("\n", "").replace("\r", "").replace("\t", "").replace(" ", "")
+                    content = content.strip()
                     
                     # Evaluate the content as a tuple
                     content = f"accept_all({content})"
@@ -172,29 +169,6 @@ class HtmlComponentTemplateTag(TemplateTag):
                         f"Unexpected error whilst parsing content '{content}' for component '{root_tag.component_name}': {e}"
                     ) from e
                 return args, kwargs
-            
-            def _normalize_content(self, content: str) -> str:
-                """
-                Cleans up and normalizes content to ensure it is valid for parsing with ast.literal_eval.
-                Behaves like most formatters to handle nested and indented structures.
-                """
-                # Step 1: Split lines and strip unnecessary spaces
-                lines = content.splitlines()
-                stripped_lines = [line.strip() for line in lines if line.strip()]  # Remove blank lines
-            
-                # Step 2: Join lines into a single string
-                joined_content = " ".join(stripped_lines)
-            
-                # Step 3: Fix common issues
-                # Remove trailing commas in dicts and lists
-                normalized_content = re.sub(r",\s*}", "}", joined_content)  # Remove trailing commas in dicts
-                normalized_content = re.sub(r",\s*]", "]", normalized_content)  # Remove trailing commas in lists
-            
-                # Ensure consistent spacing around colons and commas
-                normalized_content = re.sub(r"\s*:\s*", ": ", normalized_content)  # Space after colons
-                normalized_content = re.sub(r"\s*,\s*", ", ", normalized_content)  # Space after commas
-            
-                return normalized_content.strip()
             
         @library.tag(name=self.component_name)
         def django_tag_wrapper(parser, token):
