@@ -122,14 +122,9 @@ button {
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
-  border-radius: 0px 0px var(--border-radius) var(--border-radius);
 }
 
 /* Hero */
-.hero {
-  z-index: -1;
-  border-radius: 0px 0px var(--border-radius) var(--border-radius);
-}
 
 .hero-image {
   border-radius: var(--border-radius);

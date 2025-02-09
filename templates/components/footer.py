@@ -37,7 +37,6 @@ class Footer(InnerHtmlComponent):
     def on_create(self):
         self.style["padding"] = Theme.padding
         self.style["width"] = "100%"
-        self.style["margin-top"] = "10px"
         self.footer_items = FooterItems(**self.kwargs)
         
         # Add footer items

@@ -101,8 +101,7 @@ class HeroBackground(FlexContainer):
         super().on_create()
         self.properties["class"] = "hero-background"
         self.style["flex-direction"] = "column"
-        self.style['border-radius'] = Theme.border_radius
-
+        
 
 class Hero(FlexContainer):
     """
