@@ -13,12 +13,18 @@ from duck.http.response import (
     HttpResponse,
     StreamingHttpResponse,
     StreamingRangeHttpResponse,
+    HttpRangeNotSatisfiableResponse,
 )
 from duck.logging.logger import (
     handle_exception as log_failsafe,
 )
 from duck.settings import SETTINGS
 from duck.utils.dateutils import gmt_date
+from duck.shortcuts import (
+    replace_response,
+    template_response,
+    simple_response,
+)
 
 
 if SETTINGS["ENABLE_HTTPS"]:
@@ -176,12 +182,17 @@ class ResponseFinalizer:
         Raises:
             ValueError: If the 'Range' header is malformed or invalid.
         """
+        
         if not request:
             return  # If no request is provided, exit early.
     
         range_header = request.get_header('Range')
         
         if not range_header:
+            if isinstance(response, StreamingRangeHttpResponse):
+                if response.status_code == 206:
+                    response.payload_obj.parse_status(200) # modify the response to correct status
+                    response.clear_content_range_headers() # clear range headers
             return  # If no Range header exists, no need to set streaming range.
         
         if not isinstance(response, StreamingRangeHttpResponse):
@@ -193,15 +204,34 @@ class ResponseFinalizer:
             
             # Set the start and end positions on the response object
             response.parse_range(start, end)
+            stream_size = response._stream.tell()
+            
+            if stream_size == (end-start):
+                # This means full response
+                if response.status_code == 206:
+                    # Change response
+                    response.parse_status(200)
+                    response.clear_content_range_headers() # clear content range headers
+                    return
             
             if end - start > 0:
                 # Only set content length if result is greater than 1
                 response.headers.setdefault("Content-Length", str(end-start))
             
-        except ValueError as e:
-            # Log the error and ensure that the error is handled gracefully
-            logger.log_raw(f"Error parsing range header: {range_header}: {str(e)}", level=logger.WARNING)
+        except ValueError:
+            # replace response data
+            new_response = None
             
+            if SETTINGS["DEBUG"]:
+                new_response = template_response(
+                    HttpRangeNotSatisfiableResponse,
+                    body=f"<p>Range is not satisfiable, could not resolve: {range_header}</p>")
+            else:
+                new_response = simple_response(HttpRangeNotSatisfiableResponse)
+            
+            # Replace response with new data
+            replace_response(response, new_response)
+
     def finalize_response(self, response: HttpResponse, request: HttpRequest):
         """
         Puts the final touches to the response.

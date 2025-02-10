@@ -40,6 +40,17 @@ class Headers(dict):
         """
         return self.__setitem__(header, value)
 
+    def delete_header(self, header: str, failsafe: bool = True):
+        """
+        Deletes a header and if failsafe is True, no error will be raised if header doesn't exist
+        """
+        if failsafe:
+            for hd in set(self.keys()): # convert keys to set to avoid dictionary changed size error.
+                if hd.lower() == header.lower():
+                    self.pop(hd)
+        else:
+             self.pop(hd)
+        
     def parse_from_bytes(self, data: bytes, delimeter="\r\n"):
         """
         Load headers from bytes.

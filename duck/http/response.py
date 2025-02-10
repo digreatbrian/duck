@@ -380,7 +380,13 @@ class BaseResponse:
         Returns the case-insensitive header value or fallback to default value if not found.
         """
         return self.payload_obj.headers.get(header, default_value)
-        
+    
+    def delete_header(self, header: str, failsafe: bool = True):
+        """
+        Deletes a header and if failsafe is True, no error will be raised if header doesn't exist
+        """
+        self.payload_obj.headers.delete_header(header, failsafe=failsafe)
+    
     def __repr__(self):
         return f"<{self.__class__.__name__} (" f"'{self.status_code}'" f")>"
 
@@ -656,7 +662,14 @@ class StreamingRangeHttpResponse(StreamingHttpResponse):
         """
         self.set_header('Content-Range', f"bytes {self.start_pos}-{self.end_pos-1}/*")
         self.set_header('Accept-Ranges', 'bytes')
-
+    
+    def clear_content_range_headers(self):
+        """
+        Clear or deletes the content range headers.
+        """
+        self.headers.delete_header("Content-Range", failsafe=True)
+        self.headers.delete_header("Accept-Ranges", failsafe=True)
+        
     @classmethod
     def extract_range(cls, range_header: str) -> Optional[Tuple[int, int]]:
         """
@@ -860,6 +873,25 @@ class HttpErrorRequestResponse(HttpResponse):
             headers=headers,
             content_type=content_type,
         )
+
+
+class HttpRangeNotSatisfiableResponse(HttpErrorRequestResponse):
+    """
+    Class representing an http range not satisfiable response.
+    """
+
+    def __init__(
+        self,
+        content: Optional[Union[str, bytes]] = None,
+        headers: Dict = {},
+        content_type: Optional[str] = None,
+    ):
+        status_code = 416
+
+        super().__init__(content,
+                         status_code,
+                         headers=headers,
+                         content_type=content_type)
 
 
 class HttpBadRequestResponse(HttpErrorRequestResponse):

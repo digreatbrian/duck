@@ -39,6 +39,7 @@ __all__ = [
     "not_found404",
     "merge",
     "content_replace",
+    "replace_response",
     "resolve",
     "to_response",
 ]
@@ -260,6 +261,19 @@ def content_replace(
     response.set_content_type_header()
 
     return response
+
+
+def replace_response(old_response, new_response) -> HttpResponse:
+    """
+    Replaces/transforms the old response into a new response object but with some old
+    fields except for headers, status and content.
+    
+    Returns:
+        HttpResponse: The old response but transformed to a new response
+    """
+    old_response.payload_obj = new_response.payload_obj
+    old_response.content_obj = new_response.content_obj
+    return old_response
 
 
 def resolve(name: str, absolute: bool = True, fallback_url: Optional[str] = None) -> str:
