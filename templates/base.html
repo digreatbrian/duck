@@ -30,6 +30,7 @@
       
       <!-- Bootstrap 5 -->
       <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.min.css' %}">
+      <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap-icons.min.css' %}">
     {% endblock base_styles %}
     
     {# Extra styles #}
@@ -81,7 +82,7 @@
            <!-- Add Services -->
            <section id="services-section">
              <h1 id="services-heading">Our Consulting Services</h1>
-             <p class="text-color-grey">Take a look at the services we provide!</p>
+             <p>Take a look at the services we provide!</p>
              {% ServiceCards %}
                services = [
                 {"heading": "Business Strategy & Growth", "subheading": "Helping businesses scale, optimize operations, and improve profitability."},

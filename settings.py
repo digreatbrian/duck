@@ -404,7 +404,12 @@ HTML_COMPONENTS: dict[str, str] = {
     "AboutUs": "templates.components.about_us.AboutUs",
     
     # About us page
-    "AboutUsStyle": "templates.components.style.AboutUsStyle"
+    "AboutUsStyle": "templates.components.style.AboutUsStyle",
+    
+    # Contact us page
+    "ContactUs": "templates.components.contact_us.ContactUs",
+    "ContactUsStyle": "templates.components.style.ContactUsStyle",
+    
 }
 
 # Enable Html Components

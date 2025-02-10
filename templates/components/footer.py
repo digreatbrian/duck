@@ -1,7 +1,10 @@
 from duck.html.components import InnerHtmlComponent
+from duck.etc.templatetags import static
 
 from theme import Theme
 from .container import FlexContainer
+from .link import Link
+from .image import Image
 
 
 class FooterBlock(FlexContainer):
@@ -30,6 +33,22 @@ class FooterItems(FlexContainer):
                  self.add_child(footer_block)
 
 
+class MadeWithDuck(FlexContainer):
+    def on_create(self):
+        super().on_create()
+        self.style["gap"] = "10px"
+        self.style["align-items"] = "center"
+        self.style["justify-content"] = "center"
+        
+        # Add image left
+        image = Image(source=static('images/duck-logo.png'))
+        image.style["object-fit"] = "contain"
+        self.inner_body += image.to_string()
+        
+        # Add info
+        self.inner_body += "Proudly made with Duck"
+        
+
 class Footer(InnerHtmlComponent):
     def get_element(self):
         return "footer"
@@ -41,6 +60,11 @@ class Footer(InnerHtmlComponent):
         
         # Add footer items
         self.inner_body += self.footer_items.to_string()
+        
+        # Add made with Duck
+        self.inner_body += Link(
+            inner_body=MadeWithDuck().to_string(),
+            url="https://github.com/digreatbrian/duck").to_string()
         
         # Add copyright info
         self.inner_body += "<p class='text-center'>&copy; 2025 Yannick Consultany. All rights reserved.</p>"

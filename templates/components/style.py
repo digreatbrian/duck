@@ -21,3 +21,20 @@ class AboutUsStyle(Style):
             padding: 30px 15px 15px 15px !important;
         }
         """
+        
+class ContactUsStyle(Style):
+    def on_create(self):
+        self.inner_body = """
+        #contact-us-container {
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            margin-top: 10px;
+        }
+        
+        #contact-us {
+            background-image: none !important;
+            color: #ccc !important;
+            padding: 30px 15px 15px 15px !important;
+        }
+        """

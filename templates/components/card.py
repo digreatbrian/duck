@@ -26,7 +26,7 @@ class ServiceCard(Card):
         self.style["justify-content"] = "center"
         self.style["border"] = "1px solid #ccc"
         
-        self.properties["class"] = 'service-card card text-color-grey'
+        self.properties["class"] = 'service-card card'
         # Add service card image
         
         # Add heading and subheading to card

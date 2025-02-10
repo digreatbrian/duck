@@ -104,9 +104,11 @@ button {
   flex-direction: column;
   padding: 10px;
   gap: 10px;
-  background-image: url('../images/bg-purple-fluid.png');
+  background-image: url('../images/bg-black-gradient.png');
   background-size: cover;
-  background-repeat: repeat;
+  background-repeat: no-repeat;
+  background-position: center;
+  color: #ccc
   
 }
 

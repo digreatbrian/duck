@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block extra_styles  %}
+  {% ContactUsStyle %}
+  {% endContactUsStyle %}
+{% endblock extra_styles %}
+
+
+{% block hero %}
+  <div id="contact-us-container">
+   {% ContactUs %}
+   {% endContactUs %}
+  </div>
+{% endblock hero %}
+
+{% block main_content_inner %}
+{% endblock main_content_inner %}

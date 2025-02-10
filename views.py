@@ -9,3 +9,8 @@ def home_view(request):
 def about_view(request):
     ctx = {}
     return render(request, "about.html", ctx, engine="django")
+
+
+def contact_view(request):
+    ctx = {}
+    return render(request, "contact.html", ctx, engine="django")
