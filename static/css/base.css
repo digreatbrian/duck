@@ -104,8 +104,8 @@ button {
   flex-direction: column;
   padding: 10px;
   gap: 10px;
-  background-image: url('../images/bg-white-gradient.png');
-  background-size: fill;
+  background-image: url('../images/bg-purple-fluid.png');
+  background-size: cover;
   background-repeat: repeat;
   
 }

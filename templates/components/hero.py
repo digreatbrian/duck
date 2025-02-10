@@ -121,5 +121,3 @@ class Hero(FlexContainer):
         # Add Hero Content
         hero_content = HeroContent(**self.kwargs)
         self.add_child(hero_content)
-        
-        

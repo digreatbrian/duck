@@ -18,7 +18,7 @@ class Link(InnerHtmlComponent):
         self.properties.setdefaults(link_props)
         
         if self.kwargs.get("url"):
-            self.properties.setdefault("url", self.kwargs.get("url", ''))
+            self.properties.setdefault("href", self.kwargs.get("url", '#'))
         
         if self.kwargs.get("text"):
             self.inner_body += self.kwargs.get("text", '')

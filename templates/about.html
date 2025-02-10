@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block extra_styles  %}
+  {% AboutUsStyle %}
+  {% endAboutUsStyle %}
+{% endblock extra_styles %}
+
+{% block hero %}
+  <div id="about-us-container">
+   {% AboutUs %}
+     extra_content = """
+       <h2>Mission</h2>
+       <p>Our mission is to empower businesses with strategic, data-driven insights and solutions that drive growth, optimize operations, and enhance overall performance. 
+       We aim to build long-lasting partnerships with our clients by delivering tailored, actionable strategies that align with their unique needs and objectives. 
+       Through innovation, expertise, and integrity, we help organizations navigate challenges and seize opportunities to achieve sustainable success.
+       </p>
+       
+       <h2>Vision</h2>
+       <p>
+         To be the most trusted and innovative consultancy firm, recognized for our ability to transform businesses into leaders in their industries. 
+         We envision a future where our clients thrive through smart decision-making, operational excellence, and strategic agility, creating a positive impact on their communities and the global economy
+       </p>
+       
+       <h2>Careers</h2>
+       {% Link %}
+         url='{% resolve "jobs" fallback_url="#" %}',
+         inner_body='''
+         {% Card %}
+           inner_body="""
+           {% Image %}
+             source='{% static "images/join-us.png" %}',
+             style={
+               'width': '100%',
+               'object-fit': 'contain',
+               'border-radius': 'var(--border-radius)',
+             },
+           {% endImage %}
+           """,
+           style={
+             "border": "1px solid #ccc;"
+           }
+        {% endCard %}
+        '''
+       {% endLink %}
+     """
+   {% endAboutUs %}
+  </div>
+{% endblock hero %}
+
+{% block main_content_inner %}
+{% endblock main_content_inner %}

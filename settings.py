@@ -398,9 +398,13 @@ HTML_COMPONENTS: dict[str, str] = {
     "Navbar": "templates.components.navbar.Navbar",
     "Hero": "templates.components.hero.Hero",
     "Image": "templates.components.image.Image",
+    "Card": "templates.components.card.Card",
     "ServiceCards": "templates.components.card.ServiceCards",
     "Footer": "templates.components.footer.Footer",
     "AboutUs": "templates.components.about_us.AboutUs",
+    
+    # About us page
+    "AboutUsStyle": "templates.components.style.AboutUsStyle"
 }
 
 # Enable Html Components

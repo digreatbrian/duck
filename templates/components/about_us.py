@@ -28,18 +28,45 @@ class CarouselItem(Container):
     def on_create(self):
         super().on_create()
         self.properties["class"] = "carousel-item"
-        self.style["height"] = "300px"
+        self.style["min-height"] = "300px"
         self.style["backdrop-filter"] = "blur(100px)"
         self.style["background-color"] = "transparent"
         self.style["border-radius"] = Theme.border_radius
         self.style["border"] = "1px solid #ccc"
+        self.style["padding"] = Theme.padding
         
         if "active" in self.kwargs:
             if self.kwargs.get('active'):
                 self.properties["class"] += " active"
+       
+        item_card = Card()
+        item_card.style["flex-direction"] = "column"
+        item_card.style["justify-content"] = "center"
+        item_card.style["align-items"] = "center"
+        item_card.style["height"] = "100%"
+        item_card.style["gap"] = "10px"
+        
+        if "image_source" in self.kwargs:
+            image_source = self.kwargs.get('image_source', '')
+            image = Image(source=image_source)
+            image.style["width"] = "250px"
+            image.style["height"] = "250px"
+            image.style["border-radius"] = Theme.border_radius
+            image.properties["class"] = "about-carousel-item-image"
+            item_card.inner_body += image.to_string()
+        
+        if "heading" in self.kwargs:
+            heading = self.kwargs.get('heading', '')
+            item_card.inner_body += f"<h3 class='about-carousel-item-heading'>{heading}</h3>"
+        
+        if "subheading" in self.kwargs:
+            subheading = self.kwargs.get('subheading', '')
+            item_card.inner_body += f"<p class='about-carousel-item-subheading'>{subheading}</p>"
+        
+        self.add_child(item_card)
 
 
-class LeftContent(FlexContainer):
+class TopContent(FlexContainer):
     def on_create(self):
         super().on_create()
         self.style["flex-direction"] = "column"
@@ -53,44 +80,36 @@ class LeftContent(FlexContainer):
         self.inner_body += f"<p id='about-intro'>{intro}</p>"
 
 
-class RightContent(FlexContainer):
+class BottomContent(FlexContainer):
     def on_create(self):
         super().on_create()
         self.style["flex-direction"] = "column"
+        self.style["gap"] = "10px"
         
         # Add heading
         self.inner_body += "<h2>Why choose us</h2>"
         
         # Add carousel and carousel items 
-        first_item = CarouselItem(active=True,)
-        first_item_card = Card()
-        first_item_card.style["flex-direction"] = "column"
-        first_item_card.style["justify-content"] = "center"
-        first_item_card.style["align-items"] = "center"
-        first_item_card.style["height"] = "100%"
-        first_item_card.inner_body = """
-        <h3>Tailored Solutions</h3>
-        <p>Strategies designed specifically for your business</p>"""
-        first_item.add_child(first_item_card)
+        first_item = CarouselItem(
+            active=True,
+            heading="Tailored Solutions",
+            subheading="Strategies designed specifically for your business",
+            image_source=static('images/puzzle-pieces.png'))
         
-        # Second carousel item
-        second_item = CarouselItem()
-        second_item_card = Card()
-        second_item_card.style["flex-direction"] = "column"
-        second_item_card.style["justify-content"] = "center"
-        second_item_card.style["align-items"] = "center"
-        second_item_card.style["height"] = "100%"
-        second_item_card.inner_body = """
-        <h3>Results-Driven</h3>
-        <p>We focus on delivering measurable outcomes</p>"""
-        second_item.add_child(second_item_card)
+        second_item = CarouselItem(
+            heading="Results-Driven",
+            subheading="We focus on delivering measurable outcomes",
+            image_source=static('images/rocket.png'))
         
         carousel_items = [
             first_item,
             second_item,
         ]
         carousel = Carousel(items=carousel_items)
-        self.add_child(carousel)
+        self.inner_body += carousel.to_string()
+        
+        if "extra_content" in self.kwargs:
+            self.inner_body += self.kwargs.get("extra_content", '')
         
 
 class AboutUs(FlexContainer):
@@ -100,25 +119,23 @@ class AboutUs(FlexContainer):
         self.style["min-height"] = "200px"
         self.style["border"] = "1px solid #ccc"
         self.style['border-radius'] = Theme.border_radius
-        self.style["padding"] = Theme.padding
+        self.style["padding"] = "20px"
         self.style["margin-top"] = "0px"
         self.style["background-image"] = f'url({static("images/bg-orange-purple-gradient.png")})'
-        self.style["flex-wrap"] = "wrap"
-        self.style["text-wrap"] = "break-word"
         self.style["color"] = "var(--secondary-color)"
         self.style["backdrop-filter"] = "blur(20px)"
         self.style["font-size"] = "1.8rem"
         self.style["background-size"] = "cover"
         self.style["background-repeat"] = "no-repeat"
         self.style["flex-direction"] = "column"
-        self.style["gap"] = "5px"
+        self.style["gap"] = "15px"
         self.properties["id"] = "about-us"
         
-        # Add left content
-        left_content = LeftContent()
-        self.add_child(left_content)
+        # Add top content
+        top_content = TopContent(**self.kwargs)
+        self.add_child(top_content)
         
-        # Add right content
-        right_content = RightContent()
-        self.add_child(right_content)
+        # Add bottom content
+        bottom_content = BottomContent(**self.kwargs)
+        self.add_child(bottom_content)
         

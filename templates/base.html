@@ -24,16 +24,16 @@
     {% block extra_scripts %}{% endblock extra_scripts %}
     
     {# Base styles #}
-    {% block base_style %}
+    {% block base_styles %}
       <!-- Custom Base CSS -->
       <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}">
       
       <!-- Bootstrap 5 -->
       <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.min.css' %}">
-    {% endblock base_style %}
+    {% endblock base_styles %}
     
     {# Extra styles #}
-    {% block extra_style %}{% endblock extra_style %}
+    {% block extra_styles %}{% endblock extra_styles %}
 </head>
 
 <body>
@@ -60,7 +60,7 @@
              },
              links = [
                {"text": "Home", "url": "{% resolve 'home' fallback_url='#' %}"},
-               {"text": "About", "url": "{ % resolve 'about' fallback_url='#' %}"},
+               {"text": "About", "url": "{% resolve 'about' fallback_url='#' %}"},
                {"text": "Services", "url": "{% resolve 'services' fallback_url='#' %}"},
                {"text": "Contact", "url": "{% resolve 'contact' fallback_url='#' %}"},
                {"text": "Jobs", "url": "{% resolve 'portfolio' fallback_url='#' %}"},
@@ -68,12 +68,15 @@
            {% endNavbar %}
          
            <!-- Add Hero -->
-           {% Hero %}
-             heading = "Yannick Consultancy.",
-             subheading = "Your next best consultancy firm",
-           {% endHero %}
+           {% block hero %}
+             {% Hero %}
+               heading = "Yannick Consultancy.",
+               subheading = "Your next best consultancy firm",
+             {% endHero %}
+           {% endblock hero %}
          </section>
          
+         {% block main_content_inner %}
          <div id="main-content-inner">
            <!-- Add Services -->
            <section id="services-section">
@@ -105,13 +108,13 @@
              {% endRaisedButton %}
            </div>
          </div>
-         <!-- End main-content-inner  -->
+         {% endblock main_content_inner %}
          
          <!-- Add Footer -->
          {% Footer %}
            footer_items = {
              "Company": [
-               '{% Link %}text="About Us", url="/about"{% endLink %}',
+               '{% Link %}text="About Us", url="{% resolve 'about' fallback_url='#' %}"{% endLink %}',
                '{% Link %}text="Services", url="/services"{% endLink %}',
                '{% Link %}text="Contact", url="/contact"{% endLink %}'
              ], # Quick links
