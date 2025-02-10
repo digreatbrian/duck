@@ -93,7 +93,7 @@ TEMPLATES = [
             "libraries": {
                 "ducktags": "duck.backend.django.templatetags.ducktags",
             }, #!: duck-modified
-            "debug": DUCK_SETTINGS["TEMPLATE_DEBUG"],  #!: duck-modified
+            "debug": DUCK_SETTINGS["DEBUG"],  #!: duck-modified
         },
     },
 ]
