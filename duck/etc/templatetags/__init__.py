@@ -5,6 +5,7 @@ from urllib.parse import urljoin
 
 from duck.template.templatetags import (
     TemplateTag,
+    TemplateFilter,
     BlockTemplateTag,
 )
 from duck.utils.path import (
@@ -113,7 +114,6 @@ react_fronted_tag = BlockTemplateTag(
 )
 
 BUILTIN_TEMPLATETAGS = [
-    # builtin template tags following
     csrf_tag,
     static_tag,
     media_tag,

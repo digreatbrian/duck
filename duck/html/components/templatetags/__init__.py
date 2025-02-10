@@ -85,7 +85,7 @@ class HtmlComponentTemplateTag(TemplateTag):
         super().__init__(
             component_name,
            self.component_cls,
-           takes_context=False,
+           takes_context=True,
        )
        
     def register_in_django(self, library):
@@ -109,6 +109,8 @@ class HtmlComponentTemplateTag(TemplateTag):
                
                 # Convert content to appropriate data type.
                 args, kwargs = self.parse_args_kwargs(content)
+                kwargs["context"] = context # set context
+                
                 try:
                     # return the MarkupSafe string
                     return mark_safe(root_tag.component_cls(*args, **kwargs).to_string())
@@ -142,7 +144,7 @@ class HtmlComponentTemplateTag(TemplateTag):
                     # Evaluate the content as a tuple
                     content = f"accept_all({content})"
                     
-                    evaluated_content = eval(content, {"accept_all": accept_all, "__builtins__": None}, {})
+                    evaluated_content = eval(content, {"accept_all": accept_all, "__builtins__": {}}, {})
                     
                     for item in evaluated_content:
                         # Handle keyword arguments (dictionaries)

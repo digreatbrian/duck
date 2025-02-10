@@ -451,7 +451,7 @@ By leveraging Duck's automation framework, you can save time, reduce manual inte
 
 ## Templates
 
-Duck uses **Jinja2** as the default templating engine, but you can also use **Django templates** if preferred. Additionally, you can create custom template tags and filters within Duck, which will be available for use in both Jinja2 and Django templates.
+Duck uses **Django** as the default templating engine, but you can also use **Jinja2 templates** if preferred. Duck uses Django template engine by default because there is a wide variety of templatetags and filters. Additionally, you can create custom template tags and filters within Duck, which will be available for use in both Jinja2 and Django templates.
 
 **Note**:
 - To use Duck’s custom tags or filters in a Django-rendered template, include the following at the top of the template:

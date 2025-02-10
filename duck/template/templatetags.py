@@ -10,6 +10,7 @@ from jinja2.ext import Extension
 
 from duck.exceptions.all import SettingsError
 from duck.utils.importer import import_module_once
+from duck.utils.safemarkup import MarkupSafeString
 
 
 class TemplateTagError(Exception):
@@ -292,29 +293,21 @@ class TemplateFilter:
         Register this filter in a Django template library.
 
         Args:
-            library: The Django template library to register the tag with.
+            library: The Django template library to register the filter with.
         """
         
-        @library.filter(name=self.tagname)
-        def django_tag_wrapper(*args, **kwargs) -> MarkupSafeString:
-            return self.tagcallable(*args, **kwargs)
+        @library.filter(name=self.filtername)
+        def django_filter_wrapper(_obj, *args, **kwargs) -> MarkupSafeString:
+            return self.filtercallable(_obj, *args, **kwargs)
 
     def register_in_jinja2(self, environment):
         """
-        Register this tag in a Jinja2 environment.
+        Register this filter in a Jinja2 environment.
 
         Args:
-            environment: The Jinja2 environment to register the tag with.
+            environment: The Jinja2 environment to register the filter with.
         """
-        from jinja2 import pass_context
-        
-        if self.takes_context:
-            @pass_context
-            def jinja2_tag_wrapper(*args, **kwargs):
-                return self.tagcallable(*args, **kwargs)
-            environment.globals[self.tagname] = jinja2_tag_wrapper
-        else:
-            environment.globals[self.tagname] = self.tagcallable
+        environment.filters[self.filtername] = self.filtercallable
 
     def __repr__(self):
         """

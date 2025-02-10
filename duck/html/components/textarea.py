@@ -2,8 +2,7 @@
 Textarea Html Component
 """
 
-from duck.html.components import InnerHtmlComponent
-
+from duck.html.components import InnerHtmlComponent, DefaultTheme
 
 class TextArea(InnerHtmlComponent):
     """

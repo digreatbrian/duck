@@ -32,12 +32,17 @@ class CSRFInput(Input):
     """
     Csrf HTML Input component.
     """
+    def __init__(self, request,):
+        self.request = request
+        super().__init__()
+        
     def on_create(self):
         from duck.settings import SETTINGS
-        from duck.template.security.csrf import get_csrf_token
+        from duck.template.csrf import get_csrf_token
         
         # empty all styles and props
-        self.style = {}
+        self.style.clear()
+        self.properties.clear()
         self.properties["type"] = "hidden"
         self.properties["id"] = self.properties["name"] = SETTINGS["CSRF_COOKIE_NAME"]
-        self.properties["value"] = get_csrf_token(request)
+        self.properties["value"] = get_csrf_token(self.request)
