@@ -197,7 +197,7 @@ class ResponseFinalizer:
             if end - start > 0:
                 # Only set content length if result is greater than 1
                 response.headers.setdefault("Content-Length", str(end-start))
-                
+            
         except ValueError as e:
             # Log the error and ensure that the error is handled gracefully
             logger.log_raw(f"Error parsing range header: {range_header}: {str(e)}", level=logger.WARNING)

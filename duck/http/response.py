@@ -750,7 +750,7 @@ class FileResponse(StreamingRangeHttpResponse):
         self,
         filepath: str,
         headers: Dict = {},
-        status_code: int = 200,
+        status_code: int = 206,
         content_type: Optional[str] = None,
         chunk_size: int = 2 * 1024 * 1024,
         start_pos: int = 0,
