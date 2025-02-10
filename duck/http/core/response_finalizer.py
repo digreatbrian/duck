@@ -190,14 +190,14 @@ class ResponseFinalizer:
         try:
             # Extract start and end positions from the Range header
             start, end = StreamingRangeHttpResponse.extract_range(range_header)
-    
+            
             # Set the start and end positions on the response object
-            response.start_pos = start
-            response.end_pos = end
-    
-            # Set content headers based on the range
-            response.set_content_headers()
-    
+            response.parse_range(start, end)
+            
+            if end - start > 0:
+                # Only set content length if result is greater than 1
+                response.headers.setdefault("Content-Length", str(end-start))
+                
         except ValueError as e:
             # Log the error and ensure that the error is handled gracefully
             logger.log_raw(f"Error parsing range header: {range_header}: {str(e)}", level=logger.WARNING)

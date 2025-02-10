@@ -609,26 +609,10 @@ class StreamingRangeHttpResponse(StreamingHttpResponse):
         if not isinstance(stream, io.IOBase):
             raise ValueError("The 'stream' argument must be a file-like object (io.IOBase).")
         
+        assert isinstance(start_pos, int), "Argument start_pos must be an integer"
+        assert isinstance(end_pos, int), "Argument end_pos must be an integer"
+        
         self._stream = stream
-        
-        # If end_pos is -1, calculate it based on the stream length
-        if end_pos == -1:
-            if hasattr(stream, 'seek') and hasattr(stream, 'tell'):
-                stream.seek(0, io.SEEK_END)
-                end_pos = stream.tell()
-            else:
-                raise ValueError("Stream must support seeking to determine end position.")
-        
-        # Handle negative start_pos (e.g., -n means starting from the last n bytes)
-        if start_pos < 0:
-            if hasattr(stream, 'seek') and hasattr(stream, 'tell'):
-                stream.seek(0, io.SEEK_END)
-                start_pos = stream.tell() + start_pos  # Calculate offset from the end of the stream
-            else:
-                raise ValueError("Stream must support seeking to handle negative start_pos.")
-        
-        self.start_pos = start_pos
-        self.end_pos = end_pos
         
         # Initialize the base StreamingHttpResponse
         super().__init__(
@@ -638,14 +622,39 @@ class StreamingRangeHttpResponse(StreamingHttpResponse):
             content_type=content_type,
             chunk_size=chunk_size,
         )
+        self.parse_range(start_pos, end_pos)
+        
+    def parse_range(self, start_pos: int, end_pos: int):
+        """
+        Parse response range.
+        """
+        # If end_pos is -1, calculate it based on the stream length
+        if end_pos == -1:
+            if hasattr(self._stream, 'seek') and hasattr(self._stream, 'tell'):
+                self._stream.seek(0, io.SEEK_END)
+                end_pos = self._stream.tell()
+            else:
+                raise ValueError("Stream must support seeking to determine end position.")
+        
+        # Handle negative start_pos (e.g., -n means starting from the last n bytes)
+        if start_pos < 0:
+            if hasattr(self._stream, 'seek') and hasattr(self._stream, 'tell'):
+                self._stream.seek(0, io.SEEK_END)
+                start_pos = self._stream.tell() + start_pos  # Calculate offset from the end of the stream
+            else:
+                raise ValueError("Stream must support seeking to handle negative start_pos.")
+        
+        self.start_pos = start_pos
+        self.end_pos = end_pos
+        
+        # Set content headers
         self.set_content_range_headers()
-     
+        
     def set_content_range_headers(self):
         """
         Sets the content range headers based on current content range.
         """
         self.set_header('Content-Range', f"bytes {self.start_pos}-{self.end_pos-1}/*")
-        self.set_header('Content-Length', str(self.end_pos - self.start_pos))
         self.set_header('Accept-Ranges', 'bytes')
 
     @classmethod

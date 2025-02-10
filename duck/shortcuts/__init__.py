@@ -112,7 +112,7 @@ def render(
     request,
     template: str,
     context: dict = {},
-    engine: str = "jinja2",
+    engine: str = "django",
     **kw,
 ) -> TemplateResponse:
     """
@@ -122,7 +122,7 @@ def render(
             request (HttpRequest): Http request object.
             template (str): Template path within the TEMPLATE_DIR.
             context (dict, optional): Dictionary respresenting template context.
-            engine (str, optional): Template engine to use for rendering template, defaults to 'jinja2'.
+            engine (str, optional): Template engine to use for rendering template, defaults to 'django'.
             **kw: Additional keywords to parse to the http response for the current template engine.
 
     Returns:
