@@ -22,6 +22,11 @@ With **Duck**, developers can quickly deploy secure, high-performance applicatio
 - **React Template Integration**: Seamlessly integrate **React** code into Django or Jinja2 templates.
 - **Dual Connection Mode**: Supports handling requests using both **keep-alive** and **close** connection modes.
 - **Threading & Async Support:** Duck supports both threading for CPU-bound tasks and asynchronous handling for I/O-bound tasks, providing flexibility and scalability for various types of applications.Defaults to asynchronous handling.
+- **Micro App Support:** Create lightweight, independent sub-applications with their own servers and ports. Each micro app can handle its own requests, providing a flexible architecture for microservices. HttpsRedirectMicroApp included for seamless HTTP to HTTPS redirection.
+- **Content Compression**: Support for content compression using **gzip**, **Brotli**, and **deflate** for faster delivery of web assets, improving performance.
+- **Streaming Support**: Provides support for **StreamingHttpResponse**, which allows for the efficient delivery of large files or data in chunks. Also supports **StreamingRangeHttpResponse**, which enables the delivery of partial content (ranges) for large files, allowing clients to request specific portions of a file (e.g., video or audio streaming), making it ideal for scenarios like media playback or large data transfers.
+- **Built-in Caching Implementations**: Duck includes caching utilities in `duck.utils.caching` to optimize data retrieval and performance. You can use in-memory caching or configure file-based or database-backed caching for better performance, especially for frequently accessed data.
+- **Duck Utilities**: The `duck.utils` module includes a wide range of helper functions and utilities, such as those for URL parsing, managing ports, handling request parameters, and more. These utilities simplify common tasks and enhance your development experience when building applications with Duck
 
 
 ## 🔧 Upcoming Features
@@ -33,7 +38,6 @@ With **Duck**, developers can quickly deploy secure, high-performance applicatio
 - **Elevate Duck's Online Presence**: Build a dedicated website to foster a thriving community, share knowledge, and streamline access to resources.
 - **Remote Server Backends**: Enable proxy compatibility to seamlessly handle client requests via remote servers (currently supports only Django).
 - **Admin Site**: Effortlessy manage Duck using customizable administration site.
-- **Reusable React Components**: Quickly integrate prebuilt, dynamic, and flexible React components.
 
 
 ## 🚀 Getting Started
@@ -341,6 +345,51 @@ BLUEPRINTS = [
     "some_name.blueprint.ProductsBlueprint",  
 ]
 ```
+
+## Micro Apps in Duck Framework
+## What is a Micro App?
+
+A **Micro App** is a small, independent application that runs on its own server (HTTP or HTTPS) and port. It can be part of a larger Duck-powered project but operates separately, handling its own requests and responses.
+
+## Key Features
+
+- **Independent Servers**: Each micro app runs on its own server, meaning it does not affect other parts of the application.
+- **Custom Ports**: You can assign a specific port for your micro app, so it won’t interfere with other services.
+- **Custom Views**: Micro apps handle their own requests through a `view` method, allowing you to define custom behavior.
+- **Redirect HTTP to HTTPS**: Duck includes a built-in **HttpsRedirectMicroApp**, which automatically redirects HTTP traffic to HTTPS for better security.
+
+## How to Use Micro Apps
+
+1. **Creating a Micro App**: To create a micro app, simply instantiate the `MicroApp` class and configure its address and port.
+
+```python
+from duck.microapp import MicroApp
+
+# Create a simple micro app running on port 8081
+app = MicroApp(port=8081)
+app.run()
+```
+2. **Defining a View:** Define a view method within your micro app to handle incoming requests and generate responses.
+```py
+
+class MyMicroApp(MicroApp):
+    def view(self, request, processor):
+        return HttpResponse("Hello from My Micro App!")
+```
+
+3. **Handling HTTP to HTTPS Redirects:** Duck provides a built-in HttpsRedirectMicroApp, which automatically redirects HTTP traffic to HTTPS. This can be controlled via the configuration in Duck's settings, so you don't need to manually implement it.  
+
+To enable **HTTPS redirection**, simply configure Duck to use the HttpsRedirectMicroApp in your settings:
+
+```py
+DUCK_SETTINGS = {
+    "FORCE_HTTPS": True,
+    "ENABLE_HTTPS": True,
+}
+```
+
+4. **Running the Micro App:** Once your micro app is configured, you can run it independently, and it will handle requests on its own port.
+
 
 ## Duck CLI
 
