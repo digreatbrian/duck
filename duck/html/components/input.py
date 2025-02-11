@@ -44,5 +44,5 @@ class CSRFInput(Input):
         self.style.clear()
         self.properties.clear()
         self.properties["type"] = "hidden"
-        self.properties["id"] = self.properties["name"] = SETTINGS["CSRF_COOKIE_NAME"]
+        self.properties["name"] = 'csrfmiddlewaretoken'
         self.properties["value"] = get_csrf_token(self.request)

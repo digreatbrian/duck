@@ -157,8 +157,8 @@ class BaseServer:
                 logger.log(
                     f"Started Duck ProServer on {server_url}\n  └──  PRODUCTION SERVER (domain: {domain or 'Not set'}) \n  "
                     f"  └── This is a production server, always stay secure! ",
-                     level=logger.DEBUG,
-                )
+                     level=logger.DEBUG)
+        
         # listen and accept incoming connections
         while self.running:
             try:
@@ -201,8 +201,11 @@ class BaseServer:
             logger.log(
                 f"{bold_start}Duck server stopped!{bold_end}",
                 level=logger.INFO,
-                custom_color=logger.Fore.MAGENTA,
-            )
+                custom_color=logger.Fore.MAGENTA,)
+            
+            # redo socket close to ensure server stopped.
+            self.running = False
+            self.close_socket(self.sock)
             
     def accept_and_handle_ipv6(self):
         """
