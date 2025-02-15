@@ -3,18 +3,19 @@ Caching module which leverages the use of diskcache python library. Essential me
 """
 
 import datetime
-import os
 import random
 import shutil
 import string
 import time
 import uuid
+import os
+
+import diskcache
+
 from collections import defaultdict, deque
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
-
-import diskcache
 
 
 class CacheBase:
@@ -59,19 +60,30 @@ class InMemoryCache(CacheBase):
             )
         self.cache[key] = value
 
-    def get(self, key: str) -> Any:
+    def get(self, key: str, pop:bool = False) -> Any:
         """
         Get a value from the cache.
+        
+        Args:
+            key (str): The target key
+            pop (bool): Whether to remove key after removing it.
 
         Returns:
                 None if the key is not found or expired.
         """
         if key in self.expiry_map.keys():
             expiry_date = self.expiry_map.get(key)
-            if datetime.datetime.now() >= expiry_date:
+            if key and datetime.datetime.now() >= expiry_date:
                 self.cache.pop(key)
                 return
-        value = self.cache.get(key)
+        
+        if not pop:
+            value = self.cache.get(key)
+        else:
+            try:
+                value = self.cache.pop(key)
+            except Exception:
+                value = None
         return value
 
     def delete(self, key: str):

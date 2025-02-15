@@ -217,6 +217,9 @@ class RequestProcessor:
             raise TypeError(f"Invalid data received from response view for URL '{url}'") from e
         
         # Return the http response object.
+        if str(self.request.method).upper() == "HEAD":
+            # Reset content
+            self.request.set_content(b"", auto_add_content_headers=True)
         return response
 
     def get_django_response(self) -> HttpProxyResponse:
@@ -248,6 +251,10 @@ class RequestProcessor:
                 uses_ipv6=uses_ipv6,
                 uses_ssl=False,
             ) # build a proxy handler
+            
+            # Ensure http version is HTTP/1.1
+            if "/2" in str(self.request.http_version):
+                self.request.http_version = "HTTP/1.1"
             
             # Retrieve the http response from django server.
             streaming_proxy_response = proxy_handler.get_response(

@@ -849,7 +849,40 @@ class HttpRedirectResponse(HttpResponse):
             status_code,
             headers=headers,
             content_type=content_type)
-            
+
+
+class HttpSwitchProtocolResponse(HttpResponse):
+    """
+    Class representing an HTTP response for switching protocols (101 Switching Protocols).
+    """
+
+    def __init__(
+        self,
+        upgrade_to: str,
+        headers: Dict = {},
+        content_type: Optional[str] = None,
+    ):
+        """
+        Initialize an HTTP 101 Switching Protocols response.
+        
+        Args:
+            upgrade_to (str): The protocol to upgrade to (e.g., "h2c" for HTTP/2 cleartext).
+            headers (Dict): Additional headers to include in the response.
+            content_type (str): Content-Type header (not usually needed for 101 response).
+        """
+        headers = {
+            "Connection": "Upgrade",
+            "Upgrade": upgrade_to,
+            **headers,
+        }
+
+        super().__init__(
+            content="",
+            status_code=101,  # 101 Switching Protocols
+            headers=headers,
+            content_type=content_type,
+        )  
+
 
 class HttpErrorRequestResponse(HttpResponse):
     """

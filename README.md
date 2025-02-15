@@ -9,6 +9,7 @@ With **Duck**, developers can quickly deploy secure, high-performance applicatio
 ## ✨ Features
 
 - **Django Integration**: Effortlessly connect with Django projects.
+- **HTTP/2 Support**: Enables efficient multiplexing, header compression, and improved performance over HTTP/1.1. This feature allows multiple streams to be handled simultaneously over a single connection, reducing latency and improving resource loading. It also includes automatic negotiation for clients that support HTTP/2 while maintaining backward compatibility with HTTP/1.1.
 - **HTTPS & SSL**: Easily generate and manage SSL certificates for secure connections.
 - **Quick Setup**: Minimal configuration needed to start development.
 - **Enhanced Security**: Offers a strong security layer for production servers.
@@ -57,6 +58,7 @@ Django>=5.1.5
 Jinja2>=3.1.5
 watchdog>=4.0.1
 requests>=2.31.0
+h2==4.2.0 # for http/2 support
 diskcache
 colorama
 click
@@ -197,10 +199,10 @@ You can use **--ipv6** argument to start server on ipv6 address.
 
 After running the `duck runserver` command, your terminal should display output similar to the examples below:
 
-**For Smaller Screens:**
+**For Smaller Terminals:**
 ![Duck local website terminal](./images/duck-local-site-small-terminal.jpg)
 
-**For Larger Screens:**
+**For Larger Terminals:**
 ![Duck local website terminal](./images/duck-local-site-large-terminal.jpg)
 
 ## Don’t just clone or scroll—show your support by leaving a star! ⭐
@@ -238,17 +240,52 @@ urlpatterns = [
 
 ```
 
-## Django Integration 🐍  
-Duck has seamless Django integration which enables more control and customization of the web development process. You can use Django and Duck interchangeably within the same project.  
+## 🚀 HTTP/2 Support  
 
-While Duck does not currently support database models, which would enable data migration, etc., **Django ORM** is a good option to use. This means you can define `urlpatterns` that rely on databases, which will be handled by the Django backend, while lightweight routes can be managed by Duck—more likely used as a CDN.
+Duck supports **HTTP/2** using the `h2` Python package, enabling faster and more efficient communication compared to HTTP/1.1. With features like multiplexing, header compression, and lower latency, HTTP/2 significantly improves performance. 
+
+⚠️ **Warning:** It is strongly recommended to use HTTP/2 only over a **secure HTTPS** connection. Running HTTP/2 over an unencrypted connection (h2c) in production may expose your data to security risks.
+
+### 🔧 Getting Started  
+To enable HTTP/2 in Duck, simply set the following in your configuration:  
+```python
+HTTP_2_SUPPORT = True
+```
+
+### 🔄 Switching to HTTP/2  
+
+There are **two** ways to enable HTTP/2 in your Duck web app:  
+
+1️⃣ **Enable HTTPS** by setting:  
+   ```python
+   ENABLE_HTTPS = True
+   ```
+This ensures secure communication and automatically enables HTTP/2 support.
+
+2️⃣ **Send an Upgrade Header to Duck**:
+
+```py
+Upgrade: h2c
+```
+
+This allows **HTTP/1.1 clients** to request an upgrade to h2c (HTTP/2 over cleartext).
+
+By using either of these methods, **Duck** will seamlessly switch to **HTTP/2**, improving **speed**, **efficiency**, and **overall performance**. 🚀🔥
+
+
+## Django Integration 🐍  
+**Duck** has seamless Django integration which enables more control and customization of the web development process. You can use **Django and Duck** interchangeably within the same project.  
+
+While **Duck** does not currently support database models, which would enable data migration, etc., **Django ORM** is a good option to use. This means you can define `urlpatterns` that rely on databases, which will be handled by the **Django backend**, while lightweight routes can be managed by Duck—more likely used as a CDN.
 
 Alternatively, if you want to access Django ORM without defining separate `urlpatterns` (on both the Duck and Django sides), you can convert a Duck request to a Django request using:  
+```py
 duck.backend.django.utils.duck_to_django_request  
 duck.backend.django.django_to_duck_request  
+```
 or vice-versa. The `duck.backend.django.utils` module provides more functions that help facilitate the interaction between Duck and Django. Keep in mind that using these tools may ensure only essential fields are transferred, but not all attributes from one request/response object may be preserved.
 
-Feel free to use an alternate ORM, as Duck is not limited to Django's ORM.
+Feel free to use an alternate ORM, as **Duck** is not limited to Django's ORM.
 
 ### Getting Started with Django 🚀  
 To enable Django, set `USE_DJANGO = True` in your `settings.py` file. Once this is done, all HTTP traffic will be forwarded to the Django server, even for `urlpatterns` defined in Duck. This behavior can be stopped by setting `DUCK_EXPLICIT_URLS` in `settings.py`.  
@@ -403,7 +440,8 @@ With **Duck CLI**, you can streamline your workflow, automate tasks, and quickly
 ## 🔒 HTTPS and SSL Guide
 Duck provides **built-in SSL configuration** with default server certificates and private keys for **development and testing** purposes.
 
-**Additionally, you'll need to have OpenSSL installed on your system for SSL certificate generation**.
+⚠️ **Notice:** If you're using **Duck's default SSL configuration**, your browser may display a warning about an "attacker" or an untrusted certificate. This happens because the default SSL setup is meant for **development purposes only** and uses a self-signed certificate. You can safely ignore this warning during development, but for production, it's recommended to use a valid **SSL certificate** from a trusted **Certificate Authority** (CA).
+
 
 ### ✅ Enabling HTTPS  
 To activate HTTPS, set the following in your `settings.py`:  

@@ -6,10 +6,17 @@ import socket
 from typing import Dict, Optional, Tuple
 
 from duck.etc.ssl_defaults import SSL_DEFAULTS
+from duck.settings import SETTINGS
 from duck.exceptions.all import SettingsError
 from duck.http.core.httpd.httpd import BaseMicroServer, BaseServer
+from duck.http.core.httpd.http2 import BaseHttp2Server
 from duck.utils.object_mapping import map_data_to_object
-from duck.utils.sockservers import Socket, SSLSocket
+from duck.utils.sockservers import Socket, SSLSocket, xsocket
+
+
+SUPPORT_HTTP_2 = SETTINGS["SUPPORT_HTTP_2"]
+
+BaseServer = BaseHttp2Server if SUPPORT_HTTP_2 else BaseServer
 
 
 class BaseHttpServer(BaseServer):
@@ -35,7 +42,7 @@ class BaseHttpServer(BaseServer):
         Args:
                 socket_obj (socket.socket): The server's socket object.
                 enable_ssl (bool): Whether to use SSL
-                ssl_params (Optional[Dict]): Dictionary containing ssl parameters to parse to duck.socks.socks.SSLSocket..
+                ssl_params (Optional[Dict]): Dictionary containing ssl parameters to parse to SSLSocket..
                 application (App | MicroApp): The application that is using this server. Can be either duck main app or micro app.
                 **kwargs: Extra keyword arguments like `poll`, `connection_mode`, `request_timeout` and `buffer`.
         """
@@ -66,7 +73,7 @@ class BaseHttpServer(BaseServer):
             application, (App, MicroApp)
         ), f"Argument application should be an instance of App or MicroApp, not {type(application)}"
 
-        if not isinstance(socket_obj, socket.socket):
+        if not isinstance(socket_obj, (socket.socket, xsocket)):
             raise TypeError(
                 f"Argument socket_obj should be an instance socket.socket, not {type(socket_obj)}"
             )
@@ -74,9 +81,16 @@ class BaseHttpServer(BaseServer):
         # creating socket
         if enable_ssl:
             try:
-                self.sock = SSLSocket(socket_obj=socket_obj,
-                                      server_side=True,
-                                      **self.ssl_params)
+                alpn_protocols = ["http/1.1", "http/1.0"]
+                
+                if SETTINGS['SUPPORT_HTTP_2']:
+                    alpn_protocols.insert(0, "h2")
+                
+                self.sock = SSLSocket(
+                    socket_obj=socket_obj,
+                    server_side=True,
+                    alpn_protocols=alpn_protocols,
+                    **self.ssl_params)
             except:
                 raise SettingsError(
                     "An error occurred whilst creating SSL socket, please make sure certfile and "
@@ -84,6 +98,7 @@ class BaseHttpServer(BaseServer):
         else:
             self.sock = socket_obj or Socket(
                 family=socket.AF_INET6 if uses_ipv6 else socket.AF_INET)
+        
         self.running: bool = False
         self.__instances += 1
         map_data_to_object(self, kwargs)

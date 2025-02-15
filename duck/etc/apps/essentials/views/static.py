@@ -14,6 +14,7 @@ from duck.utils.path import joinpaths, normalize_url_path
 
 STATIC_ROOT = str(SETTINGS["STATIC_ROOT"])
 
+
 def dev_find_staticfile(staticfile: str) -> Optional[str]:
     """
     Find staticfile in development mode.
@@ -28,7 +29,7 @@ def dev_find_staticfile(staticfile: str) -> Optional[str]:
         if os.path.isfile(staticfile):
             return staticfile
     
-    for static_dir in blueprint_static_dirs:
+    for static_dir, blueprint in blueprint_static_dirs:
         staticfile = joinpaths(static_dir, staticfile)
         if os.path.isfile(staticfile):
             return staticfile
@@ -39,6 +40,7 @@ def staticfiles_view(request: HttpRequest):
     Staticfiles view.
     """
     staticfile = normalize_url_path(request.path)
+    
     if staticfile.count("/") > 1:
         staticfile = "/".join(staticfile.split("/", 2)[2:])
     

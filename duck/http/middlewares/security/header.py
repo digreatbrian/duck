@@ -94,7 +94,7 @@ class HostMiddleware(BaseMiddleware):
         
         if not valid:
             request.host_error_msg = reason
-        
+            
         for allowed_host in cls.allowed_hosts:
             if process_wildcards(allowed_host, [host]):
                 # host is allowed

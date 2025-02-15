@@ -1,9 +1,31 @@
 import os
+import struct
 import subprocess
 
 from duck.exceptions.all import SettingsError
 from duck.logging import logger
 from duck.settings import SETTINGS
+
+
+def is_ssl_data(data: bytes) -> bool:
+    """
+    Checks if the given data is an SSL/TLS record.
+
+    :param data: Raw bytes received from a socket.
+    :return: True if data appears to be SSL/TLS, False otherwise.
+    """
+    if len(data) < 3:
+        return False  # Not enough data to determine SSL
+
+    first_byte, version_major, version_minor = struct.unpack("!BBB", data[:3])
+
+    # SSL/TLS content types (Handshake, ChangeCipherSpec, Alert, Application Data)
+    if first_byte in {0x14, 0x15, 0x16, 0x17}:
+        # Check for valid SSL/TLS versions
+        if (version_major == 0x03 and version_minor in {0x00, 0x01, 0x02, 0x03, 0x04}):
+            return True
+
+    return False
 
 
 def generate_server_cert():

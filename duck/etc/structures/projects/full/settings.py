@@ -30,6 +30,10 @@ SECRET_KEY: str = os.environ.get("DUCK_SECRET_KEY", DUCK_SECRET)
 DEBUG: bool = True
 
 
+# Support HTTP/2 Protocol
+SUPPORT_HTTP_2: bool = True
+
+
 # Enable or disable autoreload for the server on file changes.
 # Autoreload is disabled on devices such as phones to optimize performance.
 AUTO_RELOAD: bool = True

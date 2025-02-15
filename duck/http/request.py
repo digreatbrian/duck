@@ -1,10 +1,11 @@
 """
 Module containing Request class which represents an http request.
 """
-import hashlib
 import json
 import random
 import socket
+import hashlib
+
 from typing import Dict, Optional, Tuple
 from urllib.parse import parse_qs
 
@@ -20,23 +21,28 @@ from duck.http.content import Content
 from duck.http.fileuploads.multipart import BytesMultiPartParser
 from duck.http.headers import Headers
 from duck.http.querydict import FixedQueryDict, QueryDict
+from duck.http.request_data import RequestData, RawRequestData
 from duck.utils.importer import import_module_once
 from duck.utils.object_mapping import map_data_to_object
 from duck.utils.urldecode import url_decode
 from duck.utils.urlcrack import URL
 
 
+SUPPORTED_HTTP_VERSIONS = ["HTTP/1.0", "HTTP/1.1"]
+
+if SETTINGS["SUPPORT_HTTP_2"]:
+    SUPPORTED_HTTP_VERSIONS.append('HTTP/2')
+
+
 class Request:
     """
     Http Request object to represent a request
     """
-    SUPPORTED_HTTP_VERSIONS: list = [
-        "HTTP/1.0",
-        "HTTP/1.1",
-    ]
+    
+    SUPPORTED_HTTP_VERSIONS: list = SUPPORTED_HTTP_VERSIONS
     """
-    List of all supported http versions eg HTTP/1.1.
-    WARNING: Use caps for the http_version
+    List of all supported http versions e.g HTTP/1.1.
+    WARNING: This is case-sensitive, only caps allowed.
     """
 
     def __init__(self, **kwargs):
@@ -82,6 +88,7 @@ class Request:
         self.error: Exception = None
         self.content_obj: Content = Content(b"", suppress_errors=True)
         self.topheader: str = ""  # topheader .e.g GET / HTTP/1.1
+        self.request_data: RequestData = None # Will be set when Request.parse is used
         self.AUTH: dict = dict()
         self.META: dict = self.__meta
         self.FILES: dict = dict()
@@ -491,8 +498,10 @@ class Request:
     
         # Add Authorization headers if not already set
         self._set_auth_headers()
+        
         # Start constructing the request with the method, path, and HTTP version
         request = self._build_request_line()
+        
         # Add headers to the request
         request += self._build_headers()
         request = request.strip()
@@ -523,9 +532,11 @@ class Request:
               attribute or method).
         """
         cookies_header = request.get_header("Cookie", "")
+        cookies = {}
+        
         if not cookies_header:
             return {}
-        cookies = {}
+        
         for cookie in cookies_header.split(";"):
             if "=" in cookie:
                 key, value = map(str.strip, cookie.split("=", 1))
@@ -878,7 +889,42 @@ class Request:
                 self.get_header("content-type")
                 or self.content_obj.content_type,
             )
-
+    
+    def parse(self, request_data: RequestData):
+        """
+        Parses request data to the request object
+        """
+        self.request_data = request_data
+        
+        if isinstance(request_data, RawRequestData):
+            self.parse_raw_request(request_data.data)
+        else:
+            topheader = request_data.headers.pop("topheader")
+            self.parse_request(
+                topheader=topheader,
+                headers=request_data.headers,
+                content=request_data.content)
+    
+    def parse_request(self, topheader: str, headers: Dict[str, str], content: bytes):
+        """
+        Parse request from topheader, headers and content
+        
+        Args:
+            topheader (str): The request line or topheader containing method, path and http version
+            headers (Dict[str, str]): The request headers
+            content (bytes): The request body or content
+            
+        Sets:
+            Optional[Exception]): If an error occurs during parsing, it is stored here.
+        """
+        try:
+            self._parse_request(topheader, headers, content)
+        except Exception as e:
+            if not isinstance(e, RequestSyntaxError) and not isinstance(
+                    e, RequestUnsupportedVersionError):
+                e = RequestError(f"General request parse error: {e}")
+            self.error = e
+    
     def parse_raw_request(self, raw_request: bytes):
         """Parse raw request in bytes. If error occurs during parsing, it will be recorded.
     
@@ -892,13 +938,220 @@ class Request:
             self.error (Optional[Exception]): If an error occurs during parsing, it is stored here.
         """
         try:
-            self._parse_request(raw_request)
+            self._parse_raw_request(raw_request)
         except Exception as e:
+            raise
             if not isinstance(e, RequestSyntaxError) and not isinstance(
                     e, RequestUnsupportedVersionError):
                 e = RequestError(f"General request parse error: {e}")
             self.error = e
+    
+    def _parse_raw_headers(self, raw_headers: bytes):
+        """
+        Parses raw HTTP headers from bytes into structured attributes.
+    
+        This method processes the raw HTTP request headers (excluding content) passed as 
+        bytes, and sets relevant instance attributes such as the HTTP method, full path, 
+        HTTP version, and individual headers.
+    
+        It performs the following tasks:
+        - Decodes and extracts the HTTP method, path, and version from the top header.
+        - Decodes each header line, validates its format, and assigns them to instance headers.
+        - Ensures that the HTTP version is supported by the server.
+    
+        Args:
+            raw_headers (bytes): The raw HTTP headers in byte format, typically received
+                                  from a client request. The first line contains the HTTP
+                                  method, path, and version, followed by headers.
+    
+        Raises:
+            RequestSyntaxError: If the top header or any header is incorrectly formatted.
+            RequestUnsupportedVersionError: If the HTTP version is not supported.
+        """
+        headers_part = raw_headers
+        topheader = headers_part[0].strip()
+        headers = headers_part[1:]
+        
+        # Setting some attributes
+        topheader = topheader.decode("utf-8").strip()
+        
+        # Extract method, path, http_version
+        if topheader:
+            max_splits = 3
+            if len(topheader.split(" ", max_splits)) == 3:
+                method, path, http_version = topheader.split(" ")
+                
+                # Decode Fields
+                self.method = method
+                self.fullpath = url_decode(path)
+                self.http_version = http_version
+                
+            else:
+                raise RequestSyntaxError("Bad topheader or payload")
+        
+        if headers:
+            for header in headers:
+                if not header.strip():
+                    headers_done = True
+                
+                if len(header.split(b":", 1)) != 2:
+                    raise RequestSyntaxError("Bad headers format")
+                
+                header, value = header.split(b":", 1)
+                header, value = (
+                    header.decode("utf-8").strip(),
+                    value.decode("utf-8").strip(),
+                )
+                
+                # Set Cleaned Headers
+                self.set_header(header, value)
+        
+        # Validate HTTP version
+        if self.http_version.upper() not in self.SUPPORTED_HTTP_VERSIONS:
+            raise RequestUnsupportedVersionError("Http version not supported")
+    
+    def _parse_content(self, raw_content: bytes):
+        """
+        Parses the raw content from a request and sets it as the instance content.
+    
+        This method processes the raw content passed as bytes, strips any leading and 
+        trailing carriage returns or newlines (`\r\n`), and sets it as the content of 
+        the request. It does so by calling the `set_content` method, with an option to 
+        avoid adding content-related headers automatically.
+    
+        Args:
+            raw_content (bytes): The raw content in byte format that was sent with the 
+                                  request. It may represent the body of a POST or PUT 
+                                  request, or any data transmitted after the headers.
+    
+        Notes:
+            - This method assumes the content is properly formatted in the request.
+            - The stripping of `\r\n` ensures that no unnecessary line breaks remain before 
+              storing the content.
+            - The method does not automatically add content-related headers (e.g., 
+              `Content-Length`) by setting `auto_add_content_headers=False` in the call to 
+              `set_content`.
+        """
+        content = raw_content
+        
+        if content:
+            content = content.strip(b"\r\n")
+            self.set_content(content, auto_add_content_headers=False)
+    
+    def _parse_request(self, topheader: str, headers: Dict[str, str], content: bytes):
+        """
+        Parses a HTTP request into its components, including headers and body.
+    
+        Raises:
+            RequestSyntaxError: If the request has an invalid format or contains errors.
+            RequestUnsupportedVersionError: If the HTTP version is not supported.
+        
+        Updates:
+            - self.COOKIES: Extracted cookies from the request.
+            - self.AUTH: Extracted authentication data from the request.
+            - self.QUERY: Updated global QueryDict with URL and content query data.
+            - self.method.upper(): A QueryDict containing the combined URL and content queries.
+        """
+        # Setting some attributes
+        topheader = topheader.strip()
+        
+        # Extract method, path, http_version
+        max_splits = 3
+        
+        if len(topheader.split(" ", max_splits)) == 3:
+            self.method, self.fullpath, self.http_version = topheader.split(" ")
+        else:
+             raise RequestSyntaxError("Bad topheader or payload")
+        
+        # Update Headers
+        self.headers.update(headers)
+        
+        # Validate HTTP version
+        if self.http_version.upper() not in self.SUPPORTED_HTTP_VERSIONS:
+            raise RequestUnsupportedVersionError("Http version not supported")
+    
+        # Parse Content
+        self._parse_content(content)
+        
+        # Extract and process request data
+        self._extract_and_process_request_data()
+        
+    def _parse_raw_request(self, raw_request: bytes,):
+        """
+        Parses a raw HTTP request in byte format into its components, including headers and body.
+    
+        This method is responsible for taking a raw HTTP request (as bytes) and splitting it 
+        into its respective parts: headers, content, and other request data. It then processes 
+        each part, including parsing the headers, parsing the content, and extracting necessary 
+        data (such as cookies, authentication, and query parameters).
+    
+        Args:
+            raw_request (bytes): The raw HTTP request data in byte format, typically received 
+                                  from a client. This includes the HTTP method, path, headers, 
+                                  and body/content.
+    
+        Raises:
+            RequestSyntaxError: If the request has an invalid format or contains errors.
+        
+        Updates:
+            - self.COOKIES: Extracted cookies from the request.
+            - self.AUTH: Extracted authentication data from the request.
+            - self.QUERY: Updated global QueryDict with URL and content query data.
+            - self.method.upper(): A QueryDict containing the combined URL and content queries.
+        """
+        request_parts = raw_request.split(b"\r\n\r\n", 1)
 
+        headers_part = request_parts[0].strip().split(b"\r\n")
+        content = request_parts[1] if len(request_parts) > 1 else b""
+        
+        # Parse Headers
+        self._parse_raw_headers(headers_part)
+        
+        # Parse Content
+        self._parse_content(content)
+        
+        # Extract and process request data
+        self._extract_and_process_request_data()
+        
+    def _extract_and_process_request_data(self):
+        """
+        Extracts and processes session, authentication, URL queries, and content queries 
+        from the incoming request and updates the global QueryDict.
+        
+        This method handles:
+        - Extracting cookies and authentication data from the request.
+        - Extracting URL and content-related query parameters.
+        - Updating the global `QUERY` dictionary with extracted values.
+        - Combining the URL and content queries into a single query and attaching it 
+          to the request method as a QueryDict.
+    
+        Updates:
+            - self.COOKIES: Extracted cookies from the request.
+            - self.AUTH: Extracted authentication data from the request.
+            - self.QUERY: Updated global QueryDict with URL and content query data.
+            - self.method.upper(): A QueryDict containing the combined URL and content queries.
+        """
+        # Extract session, auth, and query data
+        self.COOKIES = self.extract_cookies_from_request(self)
+        self.AUTH = self.extract_auth_from_request(self)
+    
+        # Extract URL and Content Queries
+        self.path, url_query = self.extract_url_queries(self.fullpath)
+        content_query = self.extract_content_queries(self)
+        
+        # Update topheader with decoded url path
+        self.topheader = " ".join(
+            [self.method.upper(), self.path, self.http_version])
+        
+        # Update the global QueryDict
+        self.QUERY.update({"URL_QUERY": url_query})
+        self.QUERY.update({"CONTENT_QUERY": content_query})
+        
+        # Combine the queries and set as a method attribute (e.g., GET, POST)
+        combined_query = url_query.copy()
+        combined_query.update(content_query)
+        setattr(self, self.method.upper(), QueryDict(combined_query))
+        
     def _set_auth_headers(self):
         """Sets 'Authorization' and 'Proxy-Authorization' headers if not already present"""
         auth = self.AUTH.get("auth")
@@ -921,77 +1174,6 @@ class Request:
             headers += f"{header.title()}: {value.strip()}\r\n".encode("utf-8")
         return headers
     
-    def _parse_request(self, raw_request: bytes,):
-        """Parse raw HTTP request from bytes.
-        
-        This function parses a raw HTTP request in the form of bytes into its components,
-        such as the HTTP method, path, headers, and body. It is a fundamental step in 
-        interpreting incoming HTTP requests.
-    
-        Args:
-            raw_request (bytes): The raw HTTP request data in byte format.
-        """
-        self._parsed_request = raw_request
-        request_parts = raw_request.split(b"\r\n\r\n", 1)
-
-        headers_part = request_parts[0].strip().split(b"\r\n")
-
-        topheader = headers_part[0].strip()
-        headers = headers_part[1:]
-        content = request_parts[1] if len(request_parts) > 1 else b""
-
-        # setting some attributes
-        self.topheader = topheader.decode("utf-8")
-
-        if content:
-            content = content.strip(b"\r\n")
-            self.set_content(content, auto_add_content_headers=False)
-
-        if topheader:
-            if len(topheader.split(b" ")) == 3:
-                method, path, http_version = topheader.split(b" ")
-                # decoding values
-                self.method = method.decode("utf-8")
-                self.fullpath = url_decode(path.decode("utf-8"))
-                self.http_version = http_version.decode("utf-8")
-                # updating topheader to set path to url decoded path
-                self.topheader = " ".join(
-                    [self.method.upper(), self.path, self.http_version])
-            else:
-                raise RequestSyntaxError("Bad topheader or payload")
-        if headers:
-            for header in headers:
-                if not header.strip():
-                    headers_done = True
-                if len(header.split(b":", 1)) != 2:
-                    raise RequestSyntaxError("Bad headers format")
-                header, value = header.split(b":", 1)
-                header, value = (
-                    header.decode("utf-8").strip(),
-                    value.decode("utf-8").strip(),
-                )
-                # set cleaned headers
-                self.set_header(header, value)
-        
-        # checking if http version supported
-        if self.http_version.upper() not in self.SUPPORTED_HTTP_VERSIONS:
-            raise RequestUnsupportedVersionError("Http version not supported")
-        
-        # SESSION, AUTH, QUERY, GET, POST, FILES extraction
-        self.COOKIES = self.extract_cookies_from_request(self)
-        self.AUTH = self.extract_auth_from_request(self)
-        # build request META
-        self.build_meta()
-        # extract url and content queries
-        self.path, url_query = self.extract_url_queries(self.fullpath)
-        content_query = self.extract_content_queries(self)
-        # update the global querydict
-        self.QUERY.update({"URL_QUERY": url_query})
-        self.QUERY.update({"CONTENT_QUERY": content_query})
-        combined_query = url_query.copy()
-        combined_query.update(content_query)
-        setattr(self, self.method.upper(), QueryDict(combined_query))
-
     def __repr__(self):
         return (f"<{self.__class__.__name__} ("
                 f'{self.protocol!r} '

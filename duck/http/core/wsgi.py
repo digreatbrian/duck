@@ -6,7 +6,7 @@ This module will define the WSGI callable that the server will use to serve requ
 """
 
 import socket
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, Union
 
 from duck.exceptions.all import (
     SettingsError,
@@ -24,6 +24,7 @@ from duck.http.core.proxyhandler import (
 )
 from duck.http.core.response_finalizer import ResponseFinalizer
 from duck.http.request import HttpRequest
+from duck.http.request_data import RequestData
 from duck.http.response import (
     HttpBadGatewayResponse,
     HttpResponse,
@@ -245,7 +246,7 @@ def get_method_not_allowed_error_response(request: HttpRequest, route_info: Opti
     return response
 
 
-def get_bad_request_error_response(exception: Exception, request: Optional[HttpRequest]):
+def get_bad_request_error_response(exception: Exception, request: Optional[HttpRequest] = None):
     """
     Returns HttpBadRequest Response for the request.
     
@@ -317,7 +318,7 @@ class WSGI:
     def get_request(
         client_socket: socket.socket,
         client_address: Tuple[str, int],
-        request_data: bytes,
+        request_data: RequestData,
     ) -> HttpRequest:
         """
         Construct a Request object from the data received from the client
@@ -325,7 +326,10 @@ class WSGI:
         Args:
                 client_socket (socket.socket): The client socket object.
                 client_address (tuple): The client address tuple.
-                request_data (bytes): The raw request data from the client.
+                request_data (RequestData): The request data object
+                     
+        Returns:
+            HttpRequest: The request object
         """
         from duck.settings.loaded import REQUEST_CLASS
 
@@ -335,11 +339,15 @@ class WSGI:
             raise SettingsError(
                 f"REQUEST_CLASS set in settings.py should be an instance of Duck HttpRequest not {request_class}"
             )
+        
         request = request_class(
             client_socket=client_socket,
             client_address=client_address,
         )
-        request.parse_raw_request(request_data)
+        
+        # Parse request data
+        request.parse(request_data)
+        
         return request
 
     def finalize_response(self,
@@ -555,14 +563,14 @@ class WSGI:
                 request,
                 disable_logging=True,
              )  # send response to client
-            raise e  # reraise error so that it will be logged
-
+            raise e  # reraise error so that it will be logged 
+    
     def __call__(
         self,
         application,
         client_socket: socket.socket,
         client_address: Tuple[str, int],
-        request_data: bytes,
+        request_data: RequestData,
     ) -> Optional[HttpRequest]:
         """
         WSGI Application callable for handling requests
@@ -575,27 +583,33 @@ class WSGI:
                 application (App): The Duck application instance.
                 client_socket (socket.socket): The client socket object.
                 client_address (tuple): The client address tuple.
-                request_data (bytes): The raw request data from the client.
-
+                request_data (RequestData): The request data object
+                
         Returns:
                 HttpRequest: The handled request object.
         """
         from duck.app.app import App
         from duck.app.microapp import MicroApp
-
+        
+        # Run Assertations/Checks
         assert application is not None, "Application not provided."
+        
+        # Check if application is an instance of App or MicroApp
         assert isinstance(
             application,
             (App, MicroApp)), "Invalid application instance provided."
-
+        
+        # Check if request data is bytes representing request or tuple containing headers and content/body respectively
+        assert isinstance(request_data, RequestData), f'Request data should be an instance of RequestData not "{type(request_data)}"'
+        
         try:
             request = self.get_request(
                 client_socket,
                 client_address,
-                 request_data,
+                request_data,
             )
         except Exception as e:
-            #!: server error
+            #!: Server Error
             response = get_server_error_response(e, None)
             self.send_response(
                 response,

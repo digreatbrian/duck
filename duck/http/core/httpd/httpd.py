@@ -12,6 +12,7 @@ import select
 import socket
 import asyncio
 import threading
+
 from typing import Optional, Tuple, Coroutine, Union, Callable
 
 from duck.contrib.responses import (
@@ -24,6 +25,10 @@ from duck.http.core.handler import (
 )
 from duck.http.core.processor import RequestProcessor
 from duck.http.request import HttpRequest
+from duck.http.request_data import (
+    RawRequestData,
+    RequestData,
+)
 from duck.http.response import (
     HttpRequestTimeoutResponse,
     HttpResponse,
@@ -32,6 +37,8 @@ from duck.utils.dateutils import (
     django_short_local_date,
     short_local_date,
 )
+from duck.utils.ssl import is_ssl_data
+from duck.utils.sockservers import xsocket
 from duck.settings import SETTINGS
 from duck.logging import logger
 from duck.meta import Meta
@@ -62,6 +69,7 @@ def call_request_handling_executor(task: Union[threading.Thread, Coroutine]):
     request handling executor keyword arguments set in settings.py.
     """
     from duck.settings.loaded import REQUEST_HANDLING_TASK_EXECUTOR
+    
     REQUEST_HANDLING_TASK_EXECUTOR.execute(task) # execute thread or coroutine.
 
 
@@ -138,7 +146,7 @@ class BaseServer:
         """
         host, port = self.addr
         self.sock.bind(self.addr)  # bind socket to (address, port)
-
+        
         # continue
         self.running = True
         duck_host = domain or Meta.get_metadata("DUCK_SERVER_HOST")
@@ -149,6 +157,7 @@ class BaseServer:
 
         if SETTINGS["DEBUG"]:
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         
         if not no_logs:
             if SETTINGS["DEBUG"]:
@@ -181,7 +190,7 @@ class BaseServer:
                         # logger.log(f"SSL error: {e}", level=logger.WARNING)
                         pass
             except Exception as e:
-                if not no_logs and "An operation was attempted on something that is not a socket" not in str(e):
+                if not no_logs:
                     logger.log_exception(e)
 
     def stop_server(self, log_to_console: bool = True):
@@ -206,31 +215,34 @@ class BaseServer:
             # redo socket close to ensure server stopped.
             self.running = False
             self.close_socket(self.sock)
-            
+    
     def accept_and_handle_ipv6(self):
         """
         Accepts and handle IPV6 connection.
         """
-        args = self.sock.accept()
-        args = (self.handle_conn, *args)
-        
-        if ASYNC_HANDLING:
-            self._start_async_task(*args)
-        else:
-            self._start_thread(*args)
-    
-    def accept_and_handle_ipv4(self):
-        """
-        Accepts and handle IPV4 connection.
-        """
-        args = self.sock.accept()
-        args = (self.handle_conn, *args)
+        sock, (host, port, flowinfo, scopeid)  = self.sock.accept()
+        sock = xsocket.from_socket(sock)
+        addr = (host, port)
+        args = (self.handle_conn, sock, addr, flowinfo, scopeid)
         
         if ASYNC_HANDLING:
             self._start_async_task(*args)
         else:
             self._start_thread(*args)
             
+    def accept_and_handle_ipv4(self):
+        """
+        Accepts and handle IPV4 connection.
+        """
+        sock, addr = self.sock.accept()
+        sock = xsocket.from_socket(sock)
+        args = (self.handle_conn, sock, addr)
+        
+        if ASYNC_HANDLING:
+            self._start_async_task(*args)
+        else:
+            self._start_thread(*args)
+        
     def handle_conn(
         self,
         sock: socket.socket,
@@ -252,8 +264,7 @@ class BaseServer:
             data = self.receive_full_request(sock, self.request_timeout)
         except TimeoutError:
             # For the first request, client took too long to respond.
-            if not self.is_socket_closed(sock):
-                self.do_request_timeout(sock, addr)
+            self.do_request_timeout(sock, addr)
             return
         
         if not data:
@@ -261,9 +272,22 @@ class BaseServer:
             self.close_socket(sock)
             return
         
-        # Process and handle the request dynamically
+        # Process data/request 
+        self.process_data(sock, addr, data)
+    
+    def process_data(self, sock, addr, data: bytes):
+        """
+        Process and handle the request dynamically
+        """
+        if is_ssl_data(data):
+            logger.log(
+                "Data should be decoded at this point but it seems like its ssl data",
+                level=logger.WARNING)
+            logger.log(f"Client may be trying to connect with https on http server or vice-versa\n", level=logger.WARNING)
+            return
+            
         try:
-            self.process_and_handle_request(sock, addr, data)
+            self.process_and_handle_request(sock, addr, RawRequestData(data))
         except Exception as e:
             # processing and handling error resulted in an error
             # log the error message
@@ -281,7 +305,7 @@ class BaseServer:
             
             # Finally close the socket if everything is finished
             self.close_socket(sock)
-
+            
     def handle_keep_alive_conn(
         self,
         sock: socket.socket,
@@ -302,7 +326,7 @@ class BaseServer:
                     break
                 
                 # Process and handle the complete request using appropriate WSGI
-                self.process_and_handle_request(sock, addr, data)
+                self.process_and_handle_request(sock, addr, RawRequestData(data))
             
             except TimeoutError:
                 # Client sent nothing in expected time it was suppose to
@@ -344,22 +368,19 @@ class BaseServer:
         """
         # Send timeout error message to client.
         timeout_response = get_timeout_error_response(timeout=self.request_timeout)
-        ResponseHandler.send_response(timeout_response, sock)
-
-        self.close_socket(sock)  # close client socket
-
-        if not no_logs:
-            # log the response
-            log_response(
-                timeout_response,
-                debug_message=f"Client sent nothing",
-            )
+        
+        # Send timeout response
+        ResponseHandler.send_response(
+            timeout_response,
+            sock,
+            disable_logging=no_logs)
+        self.close_socket(sock)  # close client socket immediately
         
     def process_and_handle_request(
         self,
         sock: socket.socket,
         addr: Tuple[str, int],
-        data: bytes,
+        request_data: RequestData,
     ) -> None:
         """
         This processes the request using WSGI application callable.
@@ -367,10 +388,10 @@ class BaseServer:
         Args:
                 sock (socket.socket): Client Socket object
                 addr (Tuple): Tuple for ip and port from where this request is coming from, ie Client addr
-                data (bytes): Data received for the first time from client.
+                request_data (RequestData): The request data object
         """
         from duck.settings.loaded import WSGI as handle_wsgi_request
-        handle_wsgi_request(self.application, sock, addr, data)
+        handle_wsgi_request(self.application, sock, addr, request_data)
 
     def receive_data(
         self,
@@ -468,10 +489,12 @@ class BaseServer:
         
         # Return the received data
         return data
-
     
-    def is_socket_closed(self, sock: socket.socket) -> bool:
+    def is_socket_closed(self, sock: socket.socket, timeout: float=.1) -> bool:
         """Check if a client socket has closed the connection.
+        
+        Note:
+            - This may hang if the connected endpoint doesn't send anything. Utilize socket.settimeout to counter this.
 
         Args:
             sock (socket.socket): The client socket.
