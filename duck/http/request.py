@@ -2,9 +2,9 @@
 Module containing Request class which represents an http request.
 """
 import json
-import random
 import socket
 import hashlib
+import random
 
 from typing import Dict, Optional, Tuple
 from urllib.parse import parse_qs
@@ -583,7 +583,21 @@ class Request:
 
     @staticmethod
     def extract_content_queries(request) -> QueryDict:
-        """Extract queries from request content"""
+        """
+         Extract query parameters and file uploads from the request content.
+    
+         This method retrieves all query parameters from the request body,
+         including files and form data. However, uploaded files are not
+         automatically saved—you must manually call `save()` on
+         `request.FILES[query_key]` where necessary.
+    
+         Args:
+            request (HttpRequest): The incoming HTTP request object.
+    
+         Returns:
+            QueryDict: A dictionary-like object containing extracted query parameters
+                       and file data from the request.
+        """
         from duck.settings.loaded import FILE_UPLOAD_HANDLER
 
         content_type = request.get_header("content-type", "").strip()
@@ -656,11 +670,11 @@ class Request:
 
                     file_upload_handler = FILE_UPLOAD_HANDLER(
                         filename, content, **additional_kw)
-                    file_upload_handler.save()
 
-                    # add file in request.FILES
+                    # Add file in request.FILES
                     request.FILES[query_key] = file_upload_handler
-                    # skip to next content disposition
+                    
+                    # Skip to next content disposition
                     continue
 
                 # record some data

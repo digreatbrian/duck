@@ -2,6 +2,7 @@
 String utilities module providing a variety of functions for common string manipulation tasks.
 """
 import re
+
 from typing import Dict, List
 
 

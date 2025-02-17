@@ -153,8 +153,10 @@ class RouteRegistry:
             )
 
         original_url = url_path
-        # replace placeholders with wildcard aterisk (*)
+        
+        # Replace placeholders with wildcard aterisk (*)
         url_path = re.sub(r"<[^>]+>", "*", url_path)
+        
         normalized_url = normalize_url_path(url_path.strip("/"))
         normalized_original_url = normalize_url_path(original_url)
 

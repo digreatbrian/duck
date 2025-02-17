@@ -57,12 +57,11 @@ class PropertiesStore(dict):
         """
         if key == "style":
             raise KeyError(
-                f"Property 'style' is not allowed to be set in {self.__class__.__name__}"
-            )
-        assert isinstance(key,
-                          str), "Keys for PropertiesStore should be strings"
-        assert isinstance(value,
-                          str), "Values for PropertiesStore should be strings"
+                f"Property 'style' is not allowed to be set in {self.__class__.__name__}")
+        assert isinstance(
+            key, str), "Keys for PropertiesStore should be strings"
+        assert isinstance(
+            value, str), "Values for PropertiesStore should be strings"
         super().__setitem__(key.strip().lower(), value)
 
     def __repr__(self):
@@ -73,7 +72,7 @@ class PropertiesStore(dict):
             str: String representation of the PropertiesStore.
         """
         return f"<{self.__class__.__name__} {super().__repr__()}>"
-
+        
     def setdefaults(self, data: Dict):
         """
         Method setdefault on multiple items
