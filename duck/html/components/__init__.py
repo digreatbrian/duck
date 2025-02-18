@@ -118,10 +118,14 @@ class HtmlComponent:
         
         element = element or self.get_element()
         
-        if not isinstance(element, str) or not re.findall(
-                r"\b[a-zA-Z]+\b", element):
+        if not isinstance(element, str):
             raise HtmlComponentError(
                 f"Argument 'element' should be a valid string representing the HTML element tag name not \"{element}\": {type(element)}."
+            )
+            
+        if not re.findall(r"\b[a-zA-Z0-9]+\b", element):
+            raise HtmlComponentError(
+                f"Argument 'element' is has invalid format, change the elemebt to something else."
             )
 
         if inner_body and not accept_inner_body:

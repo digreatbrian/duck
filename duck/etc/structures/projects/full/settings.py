@@ -261,14 +261,38 @@ DJANGO_COMMANDS_ON_STARTUP: list[str] = [
 ]
 
 
+# Duck Explicit URLs  
+# Defines URLs that Duck should handle directly when USE_DJANGO=True.  
+# By default, if DUCK_EXPLICIT_URLS is empty, all requests are processed by Django,  
+# even if Duck has its own urlpatterns. Duck’s urlpatterns are effectively duplicated  
+# on the Django side, meaning Django handles all matching requests first.  
+
+# This setting allows specific URLs to bypass Django and be handled by Duck directly,  
+# but only if no matching URL pattern exists in DJANGO_SIDE_URLS. If pattern in DJANGO_SIDE_URLS,  
+# Django still takes precedence.  
+
+# Use this to optimize performance by letting Duck handle requests that don’t require Django,  
+# such as static/media file serving.  
+DUCK_EXPLICIT_URLS: list = [
+    ".*"
+] # Optimized fast mode, remove .* for normal optimum flow'
+
+
 # URLS to  be parsed straight to django
 # This is only useful for urls that were registered with django but not with duck .e.g /admin
 # These urls don't pass through the processing middlewares (responsible for detecting errors like Not found.)
 # Add a url if the urlpattern was defined only directly in the Django side.
 # **Note:** To avoid conflicts, only make sure that the url pattern definition is only in Django (Duck doesnt know of any urlpattern matching this).
-# For adding Django admin site, add "/admin.*",
-# Regex urls are allowed
-DJANGO_SIDE_URLS: list[str] = []
+# Eg. "/admin.*", Regex urls are allowed
+
+# Note: If a URL is only defined in Django and is not listed in DJANGO_SIDE_URLS,  
+# it will still result in a 404 response when accessed through Duck.
+
+DJANGO_SIDE_URLS: list[str] = [
+    "/admin.*",
+    "/x-static.*"
+]
+
 
 
 # Whether Django registered urls must skip Duck middleware checks
@@ -281,21 +305,6 @@ DJANGO_SIDE_URLS_SKIP_MIDDLEWARES: bool = False
 # Will be used also to validate private connection between Duck and Django.
 DJANGO_SHARED_SECRET_DOMAIN: str = os.environ.get(
     "DJANGO_SHARED_SECRET_DOMAIN", SECRET_DOMAIN)
-
-
-# Duck Explicit URLs
-# These are urls you want to be explicitly handled by Duck if USE_DJANGO=True
-# By default, if USE_DJANGO=True, all requests will be proxied to Django first to obtain a response
-# Even if you define urlpatterns within the Duck side, those urlpatterns will be registered at django endpoint as well.
-# This option flags all requests matching urls defined here to avoid all that effort of being first sent to Django server to produce a response, but
-# rather be handled directly (in short, prefer Duck over Django).
-# This is very useful for reducing latency for requests that do not rely operations that need Django. (e.g staticfiles handling, mediafiles handling, etc)
-# These URLs are considered more over DJANGO_SIDE_URLS if same url is defined both here and in DJANGO_SIDE_URLS
-DUCK_EXPLICIT_URLS: list = [
-    "/duck-static.*",
-    "/static.*",
-    "/media.*",
-]
 
 
 # Template Dirs

@@ -23,6 +23,10 @@ class DjangoHeaderFixerMiddleware(BaseMiddleware):
         host_obj = URL(request.host)
         host_obj.host = secret_domain
         
+        if host_obj.scheme:
+            # Convert scheme to http
+            host_obj.scheme = "http"
+        
         # Also set ports to None because Django doesnt support Host with port according to RFC 1034/1035.
         host_obj.port = None
         
@@ -33,12 +37,14 @@ class DjangoHeaderFixerMiddleware(BaseMiddleware):
         
         if request.referer:
             referer = URL(request.referer)
+            referer.scheme = "http" # modify to correct scheme
             referer.host = secret_domain
             referer.port = None
             modify_headers['referer'] = referer.to_str()
         
         if request.origin:
             origin = URL(request.origin)
+            origin.scheme = "http" # modify to correct scheme
             origin.host = secret_domain
             origin.port = None
             modify_headers['origin'] = origin.to_str()

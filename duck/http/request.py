@@ -492,10 +492,6 @@ class Request:
     @property
     def raw(self) -> bytes:
         """Construct raw request from this Request object"""
-        # Handling GET and POST requests with added query parameters
-        if self.method.upper() == "GET":
-            self.path = self.add_queries_to_url(self.path, self.QUERY)
-    
         # Add Authorization headers if not already set
         self._set_auth_headers()
         
@@ -1179,7 +1175,7 @@ class Request:
     
     def _build_request_line(self) -> bytes:
         """Construct the request line (method, path, HTTP version)"""
-        return f"{self.method.upper()} {self.path} {self.http_version}\r\n".encode("utf-8")
+        return f"{self.method.upper()} {self.fullpath} {self.http_version}\r\n".encode("utf-8")
     
     def _build_headers(self) -> bytes:
         """Construct headers for the request"""

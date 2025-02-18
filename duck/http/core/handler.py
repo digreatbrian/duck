@@ -402,6 +402,11 @@ class ResponseHandler:
         """
         # Check if a custom template is configured for this response
         
+        # Return the http response object.
+        if request and str(request.method).upper() == "HEAD":
+            # Reset content
+            request.set_content(b"", auto_add_content_headers=True)
+            
         if not SETTINGS["DEBUG"]:
             # Only enable custom t9emplates in production
             if response.status_code in CUSTOM_TEMPLATES:

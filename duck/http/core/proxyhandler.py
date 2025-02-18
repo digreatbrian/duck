@@ -255,6 +255,7 @@ class HttpProxyHandler:
         """
         # Connect to the target server
         target_socket = self.connect_to_target()
+        
         try:
             # Forward the client's request to the target server
             self.forward_request_to_target(request, client_socket, target_socket)
@@ -277,6 +278,7 @@ class HttpProxyHandler:
                 content_obj=Content(partial_content),
                 chunk_size=chunk_size or STREAM_CHUNK_SIZE,
             )
+            
             return streaming_response
         except (OSError, ConnectionRefusedError, socket.error) as e:
             raise BadGatewayError(f"Connection was successful, but subsequent actions failed: {e}.")

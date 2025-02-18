@@ -216,10 +216,6 @@ class RequestProcessor:
             # The data received from the view cannot be converted to http response.
             raise TypeError(f"Invalid data received from response view for URL '{url}'") from e
         
-        # Return the http response object.
-        if str(self.request.method).upper() == "HEAD":
-            # Reset content
-            self.request.set_content(b"", auto_add_content_headers=True)
         return response
 
     def get_django_response(self) -> HttpProxyResponse:
@@ -329,8 +325,9 @@ class RequestProcessor:
         if is_duck_explicit_url:
             # USE_DJANGO=True but this request is to be handled directly by Duck
             # Request's urlpattern is also known to Django but prefer Duck to handle the request,
-            # don't proxy the request to Django server.
-            return self.get_view_response()
+            # don't proxy the request to Django server. (only if url is not also django side url)
+            if not is_django_side_url:
+                return self.get_view_response()
             
         # Return the appropriate response by proxying request to Django server first
         return self.get_django_response()
