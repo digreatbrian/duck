@@ -337,9 +337,14 @@ class ResponseHandler:
                 (header.lower(), value) for header, value in response.headers.items()
             ]
             
+            # Add cookies to headers
+            for key, morsel in response.cookies.items():
+                output = morsel.output(header="").strip()
+                headers.append(("set-cookie", output))
+            
             # Add status line/topheader to headers
             headers.insert(0, (":status", str(response.status_code)))
-            
+           
             # Send headers alongside with stream ID according to HTTP/2
             h2_connection.send_headers(stream_id=stream_id, headers=headers)
             

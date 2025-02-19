@@ -387,6 +387,21 @@ class CSRFMiddleware(BaseMiddleware):
             )
 
     @classmethod
+    def is_django_side_url(self, url: str) -> bool:
+        """
+        Returns whether the request URL is in DJANGO_SIDE_URLS in settings.py,
+        this means that the request is meant to be handled by Django directly, and Duck doesn't
+        know anything about the urlpattern resolving to this request url.
+        """
+        django_side_urls = SETTINGS["DJANGO_SIDE_URLS"] or []# urls registered only in Django.
+        
+        for django_side_url in django_side_urls:
+            if re.compile(django_side_url).fullmatch(url):
+                # URL meant to be handle by Django directly
+                return True
+        return False
+        
+    @classmethod
     def is_duck_explicit_url(cls, url: str) -> bool:
         """
         Returns whether the request URL is in DUCK_EXPLICIT_URLS meaning,
@@ -409,7 +424,7 @@ class CSRFMiddleware(BaseMiddleware):
     
     @classmethod
     def process_request(cls, request: HttpRequest):
-        if SETTINGS["USE_DJANGO"] and not cls.is_duck_explicit_url(request.path):
+        if SETTINGS["USE_DJANGO"] and (cls.is_django_side_url(request.path) or not cls.is_duck_explicit_url(request.path)):
             # This request is meant for Django to handle, no need to do Csrf middleware checks (Django will do it).
             return cls.request_ok
             

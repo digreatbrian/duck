@@ -4,6 +4,7 @@ Base server implementation for HTTP/2
 import re
 import socket
 import asyncio
+import threading
 
 from typing import Tuple, Dict, Optional, List, Callable
 
@@ -118,7 +119,7 @@ class EventHandler:
         expecting data on, save it off. Otherwise, reset the stream.
         """
         stream_id = event.stream_id
-        request_data = self.stream.get(stream_id)
+        request_data = self.streams.get(stream_id)
         
         if not request_data:
             self.sock.h2_connection.reset_stream(
@@ -126,7 +127,7 @@ class EventHandler:
             )
         else:
             new_data = event.data
-            request_data.data += data
+            request_data.content += new_data
     
     def on_stream_reset(self, event):
         """
@@ -291,6 +292,18 @@ class BaseHttp2Server(BaseServer):
         This starts the loop for handling HTTP/2 connection.
         """
         # Assume client support HTTP/2
+        from duck.http.core.httpd.httpd import call_request_handling_executor
+        
+        async def http2_loop():
+            await self.async_start_http2_loop(sock, addr, h2_connection)
+        
+        call_request_handling_executor(http2_loop)
+     
+    async def async_start_http2_loop(self, sock, addr, h2_connection: H2Connection):
+        """
+        This starts the loop for handling HTTP/2 connection.
+        """
+        # Assume client support HTTP/2 
         sock.h2_handling = True
         sock.h2_connection = h2_connection
         sock.h2_cancel_streams = set()
@@ -298,12 +311,13 @@ class BaseHttp2Server(BaseServer):
         sock.h2_event_handler = EventHandler(sock=sock, addr=addr, base_server=self)
         
         while sock.h2_keep_connection:
-            # Receive data that need to be received
-            self.receive_h2_data(sock)
+            # Create threads for receiving and sending data
+            receive_task = asyncio.create_task(asyncio.to_thread(self.receive_h2_data, sock,))
+            send_task = asyncio.create_task(asyncio.to_thread(self.send_h2_data, sock,))
             
-            # Send data that needs to be sent
-            self.send_h2_data(sock)
-            
+            await receive_task
+            await send_task
+        
         # Close connection
         self.send_goaway(sock, 0)
     

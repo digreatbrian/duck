@@ -2,6 +2,7 @@
 Module representing response payload classes.
 """
 import importlib
+
 from datetime import timedelta, datetime
 from typing import Optional, Dict, Any, Union
 
@@ -81,7 +82,7 @@ class BaseResponsePayload:
         Retrieves all cookies as a dictionary.
         
         Returns:
-            Dict[str, str]: A dictionary of all cookies, where the key is the cookie name and the value is the cookie value.
+            Dict[str, str]: A dictionary of all cookies, where the key is the cookie name and the value is the cookie value (without other cookie properties).
         """
         return {key: morsel.value for key, morsel in self._cookies.items()}
     
