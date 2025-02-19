@@ -292,14 +292,9 @@ class BaseHttp2Server(BaseServer):
         This starts the loop for handling HTTP/2 connection.
         """
         # Assume client support HTTP/2
-        from duck.http.core.httpd.httpd import call_request_handling_executor
-        
-        async def http2_loop():
-            await self.async_start_http2_loop(sock, addr, h2_connection)
-        
-        call_request_handling_executor(http2_loop)
+        self._start_http2_loop(sock, addr, h2_connection)   
      
-    async def async_start_http2_loop(self, sock, addr, h2_connection: H2Connection):
+    def _start_http2_loop(self, sock, addr, h2_connection: H2Connection):
         """
         This starts the loop for handling HTTP/2 connection.
         """
@@ -311,13 +306,10 @@ class BaseHttp2Server(BaseServer):
         sock.h2_event_handler = EventHandler(sock=sock, addr=addr, base_server=self)
         
         while sock.h2_keep_connection:
-            # Create threads for receiving and sending data
-            receive_task = asyncio.create_task(asyncio.to_thread(self.receive_h2_data, sock,))
-            send_task = asyncio.create_task(asyncio.to_thread(self.send_h2_data, sock,))
+            # Receive and send data
+            self.receive_h2_data(sock,)
+            self.send_h2_data(sock,)
             
-            await receive_task
-            await send_task
-        
         # Close connection
         self.send_goaway(sock, 0)
     
@@ -333,6 +325,7 @@ class BaseHttp2Server(BaseServer):
             self.send_goaway(sock, ErrorCodes.PROTOCOL_ERROR)
         
         except Exception as e:
+            sock.h2_keep_connection = False
             raise e # reraise error, it will be automatically handled
             
     def send_h2_data(self, sock):
@@ -351,7 +344,11 @@ class BaseHttp2Server(BaseServer):
                  # Client closed connection
                  logger.log(f"Client Closed Connection: {e}", level=logger.WARNING)
                  sock.h2_keep_connection = False
-                 
+            
+            except Exception as e:
+                sock.h2_keep_connection = False
+                raise e # reraise error, it will be automatically handled
+            
     def send_goaway(self, sock, error_code, debug_message: bytes = None):
         """Send a GOAWAY frame with the given error code and debug_message."""
         sock.h2_keep_connection = False
@@ -388,7 +385,20 @@ class BaseHttp2Server(BaseServer):
         """
         Receive data that needs to be received from transport endpoint
         """
-        data = sock.recv(SERVER_BUFFER)
+        receive_timeout = SETTINGS["HTTP_2_RECEIVE_TIMEOUT"]
+        default_timeout = sock.gettimeout()
+        
+        if receive_timeout:
+            sock.settimeout(receive_timeout)
+            try:
+                data = sock.recv(SERVER_BUFFER)
+            except socket.timeout:
+                # Ignore error
+                return
+            finally:
+                sock.settimeout(default_timeout)
+        else:
+            data = sock.recv(SERVER_BUFFER)
         
         if not data:
             # No data, we are done

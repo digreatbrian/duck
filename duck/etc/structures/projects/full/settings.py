@@ -34,6 +34,10 @@ DEBUG: bool = True
 SUPPORT_HTTP_2: bool = True
 
 
+#  HTTP/2 Receive timeout
+HTTP_2_RECEIVE_TIMEOUT: float | int = 0.5 # Fast response time
+
+
 # Enable or disable autoreload for the server on file changes.
 # Autoreload is disabled on devices such as phones to optimize performance.
 AUTO_RELOAD: bool = True
