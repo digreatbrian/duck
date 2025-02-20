@@ -181,13 +181,19 @@ def get_404_error_response(request: HttpRequest):
         # Add a list of registered routes
         body += "<h3>Duck tried the following routes</h3>"
         body += "<div class='registered-routes'>"
+        
         for route, info in RouteRegistry.url_map.items():
             name = list(info.items())[0][0]
+            
+            # Replace < and > in route with allowed html signs (if present)
+            route = route.replace('>', "&gt;").replace('<', "&lt;")
+            
             body += f"""\n
             <div class='route' >
                 <strong>{route}</strong> [name='{name}']
             </div>
             """
+        
         # Close the div tag and add style
         body += "</div>"
         style = """

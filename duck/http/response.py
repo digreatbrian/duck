@@ -4,6 +4,7 @@ Module for representing Duck HttpResponses
 import io
 import re
 import os
+import json
 import importlib
 
 from datetime import datetime, timedelta
@@ -882,6 +883,27 @@ class HttpSwitchProtocolResponse(HttpResponse):
             headers=headers,
             content_type=content_type,
         )  
+
+
+class JsonResponse(HttpResponse):
+    """
+    Class epresenting an json response.
+    """
+    def __init__(
+        self,
+        content: Optional[Dict[str, str]] = None,
+        status_code: int = 200,
+        headers: Dict = {},
+        content_type = "application/json",
+    ):
+        json_content = json.dumps(content or {}).encode('utf-8')
+        
+        super().__init__(
+            json_content,
+            status_code,
+            headers=headers,
+            content_type=content_type,
+        )
 
 
 class HttpErrorRequestResponse(HttpResponse):

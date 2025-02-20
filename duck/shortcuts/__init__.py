@@ -300,12 +300,7 @@ def resolve(name: str, absolute: bool = True, fallback_url: Optional[str] = None
     try:
         info = RouteRegistry.fetch_route_info_by_name(name)
         url = info["url"]
-
-        if not is_good_url_path(url):
-            raise URLResolveError(
-                f"Only plain URL's associated with the name '{name}' is malformed or invalid"
-            )
-
+        
         if absolute:
             # build absolute url
             root_url = Meta.get_absolute_server_url()

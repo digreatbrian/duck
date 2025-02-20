@@ -18,7 +18,6 @@ from duck.utils.path import (
 )
 
 
-
 class RouteRegistry:
     """
     A registry for storing and retrieving routes (URL patterns) with associated handlers.
@@ -59,7 +58,7 @@ class RouteRegistry:
         pattern = re.compile(re.escape(_url).replace(r"\*", ".*"))
 
         if not pattern.fullmatch(_url):
-            raise RouteError("Pattern provided and URL does'nt match")
+            raise RouteError("Pattern provided and URL doesn't match")
 
         parts = url.strip("/").split("/")  # url should start and endswith /
         parts_b = registered_url.strip("/").split("/")
@@ -158,7 +157,7 @@ class RouteRegistry:
         url_path = re.sub(r"<[^>]+>", "*", url_path)
         
         normalized_url = normalize_url_path(url_path.strip("/"))
-        normalized_original_url = normalize_url_path(original_url)
+        normalized_original_url = normalize_url_path(original_url, ignore_chars=["<", ">"])
 
         if not name:
             name = f"route_{len(self.url_map) + 1}"  # Auto-generate names

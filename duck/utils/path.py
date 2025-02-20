@@ -5,6 +5,8 @@ import re
 import os
 import pathlib
 
+from typing import List, Optional
+
 from .urlcrack import URL
 
 
@@ -12,18 +14,18 @@ from .urlcrack import URL
 URL_PATH_REGEX = r'^[a-zA-Z0-9\-._~:/?#@!$&\()*+,;=%]*$'
 
 
-def url_normalize(url: str) -> str:
+def url_normalize(url: str, ignore_chars: Optional[List[str]] = None) -> str:
     """
     Normalizes a URL by removing consecutive slashes, adding a leading slash, removing trailing slashes, removing disallowed characters, e.g "<", string quotes (etc), replacing back slashes and lowercasing the scheme.
     """
     return URL.normalize_url(url)
     
 
-def normalize_url_path(url_path: str) -> str:
+def normalize_url_path(url_path: str, ignore_chars: Optional[List[str]] = None) -> str:
     """
     Normalizes a URL path by removing consecutive slashes, adding a leading slash, removing trailing slashes, removing disallowed characters, e.g "<", string quotes (etc), replacing back slashes and lowercasing the scheme.
     """
-    return URL.normalize_url_path(url_path)
+    return URL.normalize_url_path(url_path, ignore_chars)
 
 
 def joinpaths(path1: str, path2: str, *more):

@@ -30,7 +30,7 @@ Brian Musakwa <digreatbrian@gmail.com>
 import re
 import os
 
-from typing import Tuple, Union, Optional
+from typing import Tuple, Union, Optional, List
 
 
 __author__ = "Brian Musakwa"
@@ -202,18 +202,20 @@ class URL:
         return base_url_obj.to_str()
     
     @classmethod
-    def normalize_url_path(cls, url_path: str):
+    def normalize_url_path(cls, url_path: str, ignore_chars: Optional[List[str]]=None):
         """
         This normalizes the URL path.
         """
-        return URL.normalize_url('/' + url_path)
+        return URL.normalize_url('/' + url_path, ignore_chars)
         
     @classmethod
-    def normalize_url(cls, url: str):
+    def normalize_url(cls, url: str, ignore_chars: Optional[List[str]]=None):
         """
         Normalizes a URL by removing consecutive slashes, adding a leading slash, removing trailing slashes, removing disallowed characters, e.g "<", string quotes (etc), replacing back slashes and lowercasing the scheme.
         """
         is_url_path = False
+        ignore_chars = ignore_chars or []
+        
         if not url:
             # url is None
             url = ""
@@ -222,7 +224,8 @@ class URL:
     
         # removing disallowed characters
         for i in disallowed_chars:
-            url = url.replace(i, "")
+            if i not in ignore_chars:
+                url = url.replace(i, "")
     
         # For urls in form "GET /] HTTP/1.1", or  "GET /],app-emailsubscribe,app-newsletter-widget,div.newsletter-image,div[data-newsletter-1],div[data-newsletter-2],gannett-atoms-component-newsletter-cta,hl-newsletter-cta,div HTTP/1.1"
         # The urls in form above may be provided by other browsers like 1DM
