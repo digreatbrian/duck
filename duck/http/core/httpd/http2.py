@@ -2,6 +2,7 @@
 Base server implementation for HTTP/2
 """
 import re
+import ssl
 import socket
 import asyncio
 import threading
@@ -352,9 +353,13 @@ class BaseHttp2Server(BaseServer):
         data_to_send = sock.h2_connection.data_to_send()
             
         if data_to_send:
-             response_handler.send_data(
-                 data_to_send,
-                 sock, suppress_errors=False)
+             try:
+                 response_handler.send_data(
+                     data_to_send,
+                     sock, suppress_errors=False)
+             except ssl.SSLEOFError:
+                  # Suppress error: EOF occurred in violation of protocol (_ssl.c:2417)
+                  pass
             
     def send_goaway(self, sock, error_code, debug_message: bytes = None):
         """Send a GOAWAY frame with the given error code and debug_message."""
