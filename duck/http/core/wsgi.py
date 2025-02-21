@@ -102,7 +102,8 @@ def get_debug_error_as_html(exception: Exception, request: Optional = None):
     else:
       # Retrieve the original host
       if SETTINGS["USE_DJANGO"]:
-          host = request.META.get("REAL_HTTP_HOST")
+          # If not real https host set, fallback to http host because this request might have been included inDUCK_EXPLICIT_URLS
+          host = request.META.get("REAL_HTTP_HOST") or request.META.get("HTTP_HOST")
       else:
           host = request.META.get("HTTP_HOST")
       body = f"""

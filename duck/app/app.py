@@ -58,6 +58,7 @@ from duck.exceptions.all import (
     SettingsError,
     SSLError,
 )
+from duck.exceptions.exceptionhooks import enable_exception_hooks
 from duck.http.core.httpd.servers import (
     HttpServer,
     HttpsServer,
@@ -80,6 +81,11 @@ from duck.meta import Meta
 from duck.setup import setup
 from duck.art import display_duck_art
 from duck.version import version
+
+
+if SETTINGS["ENABLE_EXCEPTION_HOOKS"]:
+    # Enable exception hooks, adding ID to every exception
+    enable_exception_hooks()
 
 
 def is_ipv6(ip_address: str) -> bool:
