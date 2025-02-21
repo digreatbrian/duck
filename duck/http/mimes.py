@@ -79,7 +79,7 @@ def guess_data_mimetype(data: bytes) -> str:
         b"<br",
         b"<b>",
     ]
-    data = data.lstrip()
+    
     if data.startswith(b"\xFF\xD8"):
         return "image/jpeg"
     elif data.startswith(b"\x89PNG\r\n\x1A\n"):
@@ -88,6 +88,8 @@ def guess_data_mimetype(data: bytes) -> str:
         return "image/gif"
     elif data.startswith(b"%PDF-"):
         return "application/pdf"
+    elif data.startswith(b"\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1"):  # DOC signature
+        return "application/msword"
     elif data.startswith(b"PK\x03\x04"):
         return "application/zip"
     elif data.startswith(b"PK\x05\x06") or data.startswith(b"PK\x07\x08"):

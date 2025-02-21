@@ -92,6 +92,14 @@ class RequestHandlingExecutor:
                 await task()
             await asyncio.sleep(0.01)  # Yield control to the event loop
 
+    def on_thread_task_complete(self, future):
+         try:
+             future.result()
+         except Exception as e:
+             if hasattr(future, 'name'):
+                 e.args = (f"{e.args[0]}: [{future.name}]", )
+             raise e # reraise error, it will be handled
+        
     def execute(self, task: Union[Callable, Coroutine]):
         """
         Execute a task using threads or async execution.
@@ -103,7 +111,9 @@ class RequestHandlingExecutor:
             if self.thread_executor:
                 self.thread_executor(task)
             else:
-                self._thread_pool.submit(task.run)  # Optimized thread execution
+                future = self._thread_pool.submit(task.run)  # Optimized thread execution
+                future.name = task.name
+                future.add_done_callback(self.on_thread_task_complete)
         else:
             # Handle async tasks by adding them to the asyncio queue
             if self.async_executor:

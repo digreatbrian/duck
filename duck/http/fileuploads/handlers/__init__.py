@@ -79,6 +79,7 @@ class TemporaryFileUpload(BaseFileUpload):
         """
         Save the uploaded data. In this case, the method does nothing.
         """
+        raise NotImplementedErro("TemporaryFileUpload cannot be saved as it is stored in memory, implement this method.")
 
 
 class PersistentFileUpload(BaseFileUpload):

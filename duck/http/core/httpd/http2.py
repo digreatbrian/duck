@@ -128,7 +128,10 @@ class EventHandler:
         else:
             new_data = event.data
             request_data.content += new_data
-    
+        
+        if event.stream_ended:
+            self.on_request_complete(event)
+        
     def on_stream_reset(self, event):
         """
         Event called on stream reset.
@@ -145,13 +148,21 @@ class EventHandler:
         """
         Dispatch or handle events
         """
+        
         for event in events:
             if isinstance(event, RequestReceived):
                 self.on_new_request(event)
             
             elif isinstance(event, DataReceived):
                  self.on_data_received(event)
-            
+                 
+                 # Acknowledge that we've processed the data to update the flow control window
+                 self.sock.h2_connection.acknowledge_received_data(event.flow_controlled_length, event.stream_id)
+                 
+            elif isinstance(event, WindowUpdated):
+                  # Update flow control window if necessary
+                  self.sock.h2_connection.increment_flow_control_window(event.delta)
+                 
             elif isinstance(event, StreamReset):
                  self.on_stream_reset(event)
             
@@ -298,20 +309,31 @@ class BaseHttp2Server(BaseServer):
         """
         This starts the loop for handling HTTP/2 connection.
         """
-        # Assume client support HTTP/2 
+        # Assume client support HTTP/2
         sock.h2_handling = True
         sock.h2_connection = h2_connection
         sock.h2_cancel_streams = set()
         sock.h2_keep_connection = True
         sock.h2_event_handler = EventHandler(sock=sock, addr=addr, base_server=self)
         
-        while sock.h2_keep_connection:
-            # Receive and send data
-            self.receive_h2_data(sock,)
-            self.send_h2_data(sock,)
+        try:
+            while sock.h2_keep_connection:
+                # Receive and send data
+                self.receive_h2_data(sock,)
+                self.send_h2_data(sock,)
+        
+        except ProtocolError as e:
+            logger.log(f"Protocol Error: {e}", level=logger.WARNING)
+            logger.log_exception(e)
             
-        # Close connection
-        self.send_goaway(sock, 0)
+        except Exception as e:
+            logger.log(f"HTTP/2 Error: {e}", level=logger.WARNING)
+            logger.log_exception(e)
+            
+        finally:
+            sock.h2_keep_connection = False
+            # Send goaway and close connection
+            self.send_goaway(sock, 0)
     
     def receive_h2_data(self, sock):
         """
@@ -319,14 +341,8 @@ class BaseHttp2Server(BaseServer):
         """
         try:
             self._receive_h2_data(sock)
-        except ProtocolError as e:
-            logger.log(f"Protocol Error: {e}", level=logger.WARNING)
-            logger.log_exception(e)
-            self.send_goaway(sock, ErrorCodes.PROTOCOL_ERROR)
-        
-        except Exception as e:
-            sock.h2_keep_connection = False
-            raise e # reraise error, it will be automatically handled
+        except socket.timeout:
+            pass
             
     def send_h2_data(self, sock):
         """
@@ -336,18 +352,9 @@ class BaseHttp2Server(BaseServer):
         data_to_send = sock.h2_connection.data_to_send()
             
         if data_to_send:
-            try:
-                response_handler.send_data(
-                    data_to_send,
-                    sock, suppress_errors=False)
-            except (BrokenPipeError, ConnectionResetError) as e:
-                 # Client closed connection
-                 logger.log(f"Client Closed Connection: {e}", level=logger.WARNING)
-                 sock.h2_keep_connection = False
-            
-            except Exception as e:
-                sock.h2_keep_connection = False
-                raise e # reraise error, it will be automatically handled
+             response_handler.send_data(
+                 data_to_send,
+                 sock, suppress_errors=False)
             
     def send_goaway(self, sock, error_code, debug_message: bytes = None):
         """Send a GOAWAY frame with the given error code and debug_message."""
@@ -392,9 +399,6 @@ class BaseHttp2Server(BaseServer):
             sock.settimeout(receive_timeout)
             try:
                 data = sock.recv(SERVER_BUFFER)
-            except socket.timeout:
-                # Ignore error
-                return
             finally:
                 sock.settimeout(default_timeout)
         else:
@@ -404,8 +408,8 @@ class BaseHttp2Server(BaseServer):
             # No data, we are done
             sock.h2_keep_connection = False
             return
-       
-       # Retrieve events and dispatch them
+        
+        # Retrieve events and dispatch them
         events = sock.h2_connection.receive_data(data)
         sock.h2_event_handler.dispatch_events(events)
         

@@ -147,8 +147,7 @@ class BaseServer:
         host, port = self.addr
         self.sock.bind(self.addr)  # bind socket to (address, port)
         
-        # continue
-        self.running = True
+        # Server setup
         duck_host = domain or Meta.get_metadata("DUCK_SERVER_HOST")
         duck_host = (list(duck_host)[0] if isinstance(duck_host, tuple) else
                      duck_host or "localhost")
@@ -168,19 +167,20 @@ class BaseServer:
                     f"  └── This is a production server, always stay secure! ",
                      level=logger.DEBUG)
         
+        # Listen and set the server in running state
+        self.sock.listen(SETTINGS["REQUESTS_BACKLOG"]) # 200 by default
+        self.running = True
+        
         # listen and accept incoming connections
         while self.running:
             try:
-                self.sock.listen(SETTINGS["REQUESTS_BACKLOG"])
-                
-                # accept incoming connections
+                # Accept incoming connections
                 if self.uses_ipv6:
                     self.accept_and_handle_ipv6()
                 else:
                     self.accept_and_handle_ipv4()
-                
-                time.sleep(self.poll) # pause before the next request.
-            
+                # Pause before the next request.
+                time.sleep(self.poll) 
             except ssl.SSLError as e:
                 # wrong protocol used, eg https on http or vice versa
                 if not no_logs and (SETTINGS["VERBOSE_LOGGING"] or SETTINGS["DEBUG"]):

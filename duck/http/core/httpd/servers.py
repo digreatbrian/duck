@@ -91,7 +91,7 @@ class BaseHttpServer(BaseServer):
                     server_side=True,
                     alpn_protocols=alpn_protocols,
                     **self.ssl_params)
-            except:
+            except Exception:
                 raise SettingsError(
                     "An error occurred whilst creating SSL socket, please make sure certfile and "
                     "private key exist and are in right format")

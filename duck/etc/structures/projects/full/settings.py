@@ -154,10 +154,10 @@ SERVER_BUFFER: int = 1024
 
 # Server Polling Interval
 # The time (in seconds) for the server to sleep while waiting for incoming requests.
-# A smaller value (e.g., 0.5) will make the server check for requests more frequently,
-# while a larger value (e.g., 5) reduces the frequency of checks, saving CPU resources.
+# A smaller value (e.g., 0.1) will make the server check for requests more frequently,
+# while a larger value (e.g., 2) reduces the frequency of checks, saving CPU resources.
 # Can be specified as either an integer or a floating-point number.
-SERVER_POLL: int | float = 1
+SERVER_POLL: int | float = .05 # Fast responses
 
 
 # Keep-Alive Timeout
