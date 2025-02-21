@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block hero %}
+
+{% TOSPage %}
+    inner_body="""
+    {% Image %}
+         source='{% static "images/tos.png" %}',
+         style={
+            "width": "100%",
+            "object-fit": "contain",
+            "border": "1px solid #cccc",
+            "border-radius": "var(--border-radius)",
+         }
+    {% endImage %}
+    
+    <h1>Terms and Conditions</h1>
+    <p><strong>Effective Date:</strong> {effective_date}</p>
+
+    {% Block %}
+        inner_body='''
+        <h2>1. Introduction</h2>
+        <p>Welcome to <strong>Yannick Consultancy</strong>. By accessing or using our services, you agree to abide by these Terms and Conditions. Please read them carefully.</p>
+
+        <h2>2. Services Provided</h2>
+        <p>We offer consultancy services, including but not limited to:</p>
+        <ul>
+            <li>Business advisory</li>
+            <li>Technical consultations</li>
+            <li>Other professional services as agreed upon</li>
+        </ul>
+
+        <h2>3. User Obligations</h2>
+        <p>By using our services, you agree that you will not:</p>
+        <ul>
+            <li>Use our services for any unlawful purpose</li>
+            <li>Provide false or misleading information</li>
+            <li>Violate any applicable laws or regulations</li>
+        </ul>
+
+        <h2>4. Payment and Fees</h2>
+        <ul>
+            <li>All services rendered are subject to agreed-upon fees.</li>
+            <li>Payments must be made in full before the commencement of services unless otherwise stated in a written agreement.</li>
+            <li>Refunds will be processed only under specific circumstances as determined by <strong>Yannick Consultancy</strong>.</li>
+        </ul>
+
+        <h2>5. Confidentiality</h2>
+        <p>We respect your privacy and confidentiality. Any personal or business-related information shared with us will not be disclosed to third parties except in the following situations:</p>
+        <ul>
+            <li>When required by law or legal processes.</li>
+            <li>With trusted service providers assisting in delivering our services under confidentiality obligations.</li>
+        </ul>
+
+        <h2>6. Intellectual Property</h2>
+        <p>All intellectual property related to our services, including reports, documentation, and software, remains the property of <strong>Yannick Consultancy</strong> unless otherwise agreed upon in writing.</p>
+
+        <h2>7. Limitation of Liability</h2>
+        <p>We are not responsible for any indirect, incidental, or consequential damages resulting from the use of our services. Our total liability will not exceed the amount paid for the services in question.</p>
+
+        <h2>8. Termination of Services</h2>
+        <p>We reserve the right to terminate services if you breach these terms or engage in behavior that compromises the integrity of our operations.</p>
+
+        <h2>9. Amendments to Terms</h2>
+        <p>We may update these Terms and Conditions from time to time. Any changes will be posted on this page, and continued use of our services constitutes acceptance of the revised terms.</p>
+
+        <h2>10. Contact Information</h2>
+        <p>If you have any questions about these Terms and Conditions, you may contact us at:</p>
+        <p><strong>Email:</strong> <a href="mailto:contact@yourcompany.com">contact@yourcompany.com</a></p>
+        <p><strong>Address:</strong> [Your Company Address]</p>
+    '''
+    {% endBlock %}
+"""
+{% endTOSPage %}
+{% endblock hero %}
+
+{% block main_content_inner %}
+{% endblock main_content_inner %}

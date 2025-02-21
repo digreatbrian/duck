@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block extra_styles  %}
+  {% OurServicesStyle %}
+  {% endOurServicesStyle %}
+{% endblock extra_styles %}
+
+
+{% block hero %}
+  <div id="our-services-container">
+   <h1 class="text-color-ccc margin-top-5px">Our Services</h1>
+   {% OurServices %}
+     inner_body = '''{% ServiceCards %}
+       services = [
+         {
+           "icon_class": "bi bi-graph-up-arrow",
+           "heading": "Business Strategy & Growth",
+           "subheading": "Helping businesses scale, optimize operations, and improve profitability."
+         },
+         {
+           "icon_class": "bi bi-laptop",
+           "heading": "Technology & IT Solutions",
+           "subheading": "Providing expert guidance on software, cloud, cybersecurity, and digital transformation."
+         },
+         {
+           "icon_class": "bi bi-person-gear",
+           "heading": "Human Resources & Talent Management",
+           "subheading": "Optimizing recruitment, employee engagement, and performance management."
+         },
+         {
+           "icon_class": "bi bi-cash-coin",
+           "heading": "Financial & Legal Advisory",
+           "subheading": "Ensuring financial stability, investment planning, and legal compliance."
+         },
+       ]
+     {% endServiceCards %}
+     
+     <!-- cta-btn -->
+     {% FlatButton %}
+       inner_body="Better your business now",
+       style={
+         "font-size": "20px !important",
+       },
+       properties={
+         "class": "bg-color-secondary text-color-ccc theme-border-radius theme-padding",
+         "onclick": "window.open('{% resolve 'consultation' fallback_url='#' %}', '_blank');"
+       }
+     {% endFlatButton %}'''
+   {% endOurServices %}
+  </div>
+{% endblock hero %}
+
+{% block main_content_inner %}
+{% endblock main_content_inner %}

@@ -1,6 +1,7 @@
 from duck.html.components import InnerHtmlComponent
 from duck.html.components.button import FlatButton
 from duck.etc.templatetags import static
+from duck.shortcuts import resolve
 
 from theme import Theme
 from .container import FlexContainer
@@ -23,14 +24,14 @@ class HeroLeftContent(FlexContainer):
         
         # Add cta btn
         cta_btn = FlatButton()
-        cta_btn.inner_body = "Get consultation"
+        cta_btn.inner_body = "Book now"
         cta_btn.style["background-color"] = "rgba(100, 100, 100, .25)"
         cta_btn.style["color"] = "#ccc"
         cta_btn.style["margin-top"] = "5px"
         cta_btn.style["border_radius"] = Theme.border_radius
         cta_btn.style["font-size"] = "1.2rem"
         cta_btn.style["border"] = ".25px solid #ccc"
-        
+        cta_btn.properties["onclick"] = "window.open('{}', '_blank');".format(resolve('consultation', fallback_url="#"))
         self.inner_body += cta_btn.to_string()
 
 
@@ -65,12 +66,13 @@ class HeroRightContent(FlexContainer):
         image_container.add_child(placeholder)
         
         # Add cta btn to placeholder
-        cta_btn = FlatButton(inner_body="Get free Quote")
+        cta_btn = FlatButton(inner_body="Get Consultancy Service")
         cta_btn.style["color"] = "#ccc"
         cta_btn.style["width"] = "80%"
         cta_btn.style["background-color"] = "transparent"
         cta_btn.style["font-size"] = "1.5rem"
         cta_btn.style["border"] = "1px solid #ccc"
+        cta_btn.properties["onclick"] = "window.open('{}', '_blank');".format(resolve('consultation', fallback_url="#"))
         placeholder.add_child(cta_btn)
         
         # Add image container

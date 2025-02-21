@@ -64,7 +64,8 @@
                {"text": "About", "url": "{% resolve 'about' fallback_url='#' %}"},
                {"text": "Services", "url": "{% resolve 'services' fallback_url='#' %}"},
                {"text": "Contact", "url": "{% resolve 'contact' fallback_url='#' %}"},
-               {"text": "Jobs", "url": "{% resolve 'portfolio' fallback_url='#' %}"},
+               {"text": "Consultation", "url": "{% resolve 'consultation' fallback_url='#' %}"},
+               {"text": "Jobs", "url": "{% resolve 'jobs' fallback_url='#' %}"},
             ],
            {% endNavbar %}
          
@@ -120,8 +121,8 @@
                '{% Link %}text="Contact", url="/contact"{% endLink %}'
              ], # Quick links
              "Legal": [
-               '{% Link %}text="Privacy Policy", url="/privacy"{% endLink %}',
-               '{% Link %}text="Terms & Conditions", url="/terms"{% endLink %}',
+               '{% Link %}text="Privacy Policy", url="{% resolve 'privacy' fallback_url='#' %}"{% endLink %}',
+               '{% Link %}text="Terms & Conditions", url="{% resolve 'tos' fallback_url='#' %}"{% endLink %}',
              ],
            }
          {% endFooter %}

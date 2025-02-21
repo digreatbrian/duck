@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block extra_styles  %}
+  {% ConsultationPageStyle %}
+  {% endConsultationPageStyle %}
+{% endblock extra_styles %}
+
+
+{% block hero %}
+  <div id="consultation-page-container">
+   <h1 class="text-color-ccc margin-top-5px text-center">
+     Ready to make a change!
+   </h1>
+   {% ConsultationPage %}
+     inner_body = """
+       {% ConsultationVideo %}
+         source='{% static "videos/consultation.mp4" %}',
+         autoplay=True,
+         muted=True,
+         loop=True,
+         playsinline=True,
+       {% endConsultationVideo %}
+       
+       {% ConsultationForm %}
+         style={
+           "min-width": "75%",
+         }
+       {% endConsultationForm %}
+       """
+   {% endConsultationPage %}
+  </div>
+{% endblock hero %}
+
+{% block main_content_inner %}
+{% endblock main_content_inner %}

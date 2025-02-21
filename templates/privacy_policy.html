@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block hero %}
+
+{% PrivacyPolicyPage %}
+    inner_body="""
+    {% Video %}
+         source='{% static "videos/privacy.mp4" %}',
+         autoplay=True,
+         muted=True,
+         loop=True,
+         playsinline=True,
+         style={
+             "width": "100%",
+            "object-fit": "contain",
+            "border": "1px solid #cccc",
+            "border-radius": "var(--border-radius)",
+         }
+    {% endVideo %}
+    
+    <h1>Privacy Policy</h1>
+    <p>Effective Date: {effective_data}</p>
+    
+    {% Block %}
+        inner_body='''<h2>1. Introduction</h2>
+        <p>Welcome to <strong>Yannick Consultancy</strong>. We respect your privacy and are committed to protecting the personal information you share with us. This Privacy Policy explains how we collect, use, and protect your data.</p>
+    
+        <h2>2. Information We Collect</h2>
+        <p>We may collect the following types of information:</p>
+        <ul>
+            <li>Personal Information (e.g., name, email, phone number)</li>
+            <li>Business Information (e.g., company name, services required)</li>
+            <li>Technical Information (e.g., IP address, browser type)</li>
+        </ul>
+    
+        <h2>3. How We Use Your Information</h2>
+        <p>We use the collected data for:</p>
+        <ul>
+            <li>Providing consultancy services</li>
+            <li>Responding to inquiries</li>
+            <li>Improving our services</li>
+            <li>Sending updates or promotional content (only if you opt-in)</li>
+        </ul>
+    
+        <h2>4. Data Protection</h2>
+        <p>We implement industry-standard security measures to protect your personal data from unauthorized access, alteration, or disclosure.</p>
+    
+        <h2>5. Third-Party Sharing</h2>
+        <p>We do not sell or share your personal information with third parties except:</p>
+        <ul>
+            <li>When required by law</li>
+            <li>With trusted partners providing essential business services</li>
+        </ul>
+    
+        <h2>6. Cookies and Tracking</h2>
+        <p>We may use cookies to enhance your experience. You can adjust your browser settings to decline cookies if you prefer.</p>
+    
+        <h2>7. Your Rights</h2>
+        <p>You have the right to:</p>
+        <ul>
+            <li>Access your personal data</li>
+            <li>Request corrections</li>
+            <li>Request deletion of your data</li>
+        </ul>
+        <p>To make a request, contact us at <a href="mailto:contact@yourcompany.com">contact@yourcompany.com</a>.</p>
+    
+        <h2>8. Changes to This Policy</h2>
+        <p>We may update this Privacy Policy from time to time. Changes will be posted on this page.</p>
+    
+        <h2>9. Contact Us</h2>
+        <p>If you have any questions about our Privacy Policy, please contact us at:</p>
+        <p><strong>Email:</strong> <a href="mailto:contact@yourcompany.com">contact@yourcompany.com</a></p>
+        <p><strong>Address:</strong> [Your Company Address]</p>
+    '''
+    {% endBlock %}
+"""
+{% endPrivacyPolicyPage %}
+{% endblock hero %}
+
+{% block main_content_inner %}
+{% endblock main_content_inner %}

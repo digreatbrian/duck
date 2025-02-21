@@ -30,6 +30,14 @@ SECRET_KEY: str = os.environ.get("DUCK_SECRET_KEY", DUCK_SECRET)
 DEBUG: bool = True
 
 
+# Support HTTP/2 Protocol
+SUPPORT_HTTP_2: bool = True
+
+
+#  HTTP/2 Receive timeout
+HTTP_2_RECEIVE_TIMEOUT: float | int = 1
+
+
 # Enable or disable autoreload for the server on file changes.
 # Autoreload is disabled on devices such as phones to optimize performance.
 AUTO_RELOAD: bool = False
@@ -59,7 +67,7 @@ WSGI: str = "duck.http.core.wsgi.WSGI"
 # Specifies whether to enable HTTPS for the server.
 # - When `ENABLE_HTTPS=True`, HTTPS is enabled on the specified port.
 # - Ensure you have valid SSL certificates configured for secure communication.
-ENABLE_HTTPS: bool = False
+ENABLE_HTTPS: bool = True
 
 
 # Force HTTPS
@@ -134,7 +142,7 @@ REQUEST_HANDLING_TASK_EXECUTOR_KWARGS: dict = {
 # Determines whether to use asynchronous request handling.
 # If set to False, the framework defaults to multithreaded request handling.
 # Example: ASYNC_HANDLING=True enables async handling; False uses threads.
-ASYNC_HANDLING: bool = False
+ASYNC_HANDLING: bool = 0
 
 
 # Server Buffer
@@ -149,7 +157,7 @@ SERVER_BUFFER: int = 1024
 # A smaller value (e.g., 0.5) will make the server check for requests more frequently,
 # while a larger value (e.g., 5) reduces the frequency of checks, saving CPU resources.
 # Can be specified as either an integer or a floating-point number.
-SERVER_POLL: int | float = 1
+SERVER_POLL: int | float = .05 # Fast responses
 
 
 # Keep-Alive Timeout
@@ -222,7 +230,7 @@ PROXY_CONNECT_TIMEOUT = 1  # Timeout in seconds for establishing the connection
 # Timeout to wait for data from the remote proxy server.
 # This value should balance between waiting for data and not blocking indefinitely.
 # Increase if network latency or server load is high.
-PROXY_READ_TIMEOUT = 3  # Timeout in seconds for reading data
+PROXY_READ_TIMEOUT = 10  # Timeout in seconds for reading data
 
 
 # The amount of data to stream at once from the remote proxy server.
@@ -234,18 +242,18 @@ PROXY_STREAM_CHUNK_SIZE = 4096
 # DJANGO INTEGRATION
 # Whether to use Django for Backend
 # This will make Duck server act as Proxy for Django
-USE_DJANGO: bool = False
+USE_DJANGO: bool = 0
 
 
 # Django Server Port
 # This is the port where django server will be started on
-DJANGO_BIND_PORT: int = 9999
+DJANGO_BIND_PORT: int = 9898
 
 
 # Django Server Wait Time
 # Time in seconds to wait before checking if the Django server is up and running.
 # This variable is used to periodically verify the server's status during the initial startup or maintenance routines, ensuring that the server is ready to handle incoming requests.
-DJANGO_SERVER_WAIT_TIME: str = 2
+DJANGO_SERVER_WAIT_TIME: str = 5
 
 
 # These commands will be run before Django server startup if USE_DJANGO is set to True.
@@ -257,14 +265,37 @@ DJANGO_COMMANDS_ON_STARTUP: list[str] = [
 ]
 
 
+# Duck Explicit URLs  
+# Defines URLs that Duck should handle directly when USE_DJANGO=True.  
+# By default, if DUCK_EXPLICIT_URLS is empty, all requests are processed by Django,  
+# even if Duck has its own urlpatterns. Duck’s urlpatterns are effectively duplicated  
+# on the Django side, meaning Django handles all matching requests first.  
+
+# This setting allows specific URLs to bypass Django and be handled by Duck directly,  
+# but only if no matching URL pattern exists in DJANGO_SIDE_URLS. If pattern in DJANGO_SIDE_URLS,  
+# Django still takes precedence.  
+
+# Use this to optimize performance by letting Duck handle requests that don’t require Django,  
+# such as static/media file serving.  
+DUCK_EXPLICIT_URLS: list = [
+    ".*"
+] # Optimized fast mode, remove .* for normal optimum flow'
+
+
 # URLS to  be parsed straight to django
 # This is only useful for urls that were registered with django but not with duck .e.g /admin
 # These urls don't pass through the processing middlewares (responsible for detecting errors like Not found.)
 # Add a url if the urlpattern was defined only directly in the Django side.
 # **Note:** To avoid conflicts, only make sure that the url pattern definition is only in Django (Duck doesnt know of any urlpattern matching this).
-# For adding Django admin site, add "/admin.*",
-# Regex urls are allowed
-DJANGO_SIDE_URLS: list[str] = []
+# Eg. "/admin.*", Regex urls are allowed
+
+# Note: If a URL is only defined in Django and is not listed in DJANGO_SIDE_URLS,  
+# it will still result in a 404 response when accessed through Duck.
+
+DJANGO_SIDE_URLS: list[str] = [
+    "/admin.*",
+    "/x-static.*"
+]
 
 
 # Whether Django registered urls must skip Duck middleware checks
@@ -277,21 +308,6 @@ DJANGO_SIDE_URLS_SKIP_MIDDLEWARES: bool = False
 # Will be used also to validate private connection between Duck and Django.
 DJANGO_SHARED_SECRET_DOMAIN: str = os.environ.get(
     "DJANGO_SHARED_SECRET_DOMAIN", SECRET_DOMAIN)
-
-
-# Duck Explicit URLs
-# These are urls you want to be explicitly handled by Duck if USE_DJANGO=True
-# By default, if USE_DJANGO=True, all requests will be proxied to Django first to obtain a response
-# Even if you define urlpatterns within the Duck side, those urlpatterns will be registered at django endpoint as well.
-# This option flags all requests matching urls defined here to avoid all that effort of being first sent to Django server to produce a response, but
-# rather be handled directly (in short, prefer Duck over Django).
-# This is very useful for reducing latency for requests that do not rely operations that need Django. (e.g staticfiles handling, mediafiles handling, etc)
-# These URLs are considered more over DJANGO_SIDE_URLS if same url is defined both here and in DJANGO_SIDE_URLS
-DUCK_EXPLICIT_URLS: list = [
-    "/duck-static.*",
-    "/static.*",
-    "/media.*",
-]
 
 
 # Template Dirs
@@ -399,6 +415,8 @@ HTML_COMPONENTS: dict[str, str] = {
     "Hero": "templates.components.hero.Hero",
     "Image": "templates.components.image.Image",
     "Card": "templates.components.card.Card",
+    "Block": "templates.components.privacy_policy.Block",
+    "Video": "templates.components.video.Video",
     "ServiceCards": "templates.components.card.ServiceCards",
     "Footer": "templates.components.footer.Footer",
     "AboutUs": "templates.components.about_us.AboutUs",
@@ -409,6 +427,29 @@ HTML_COMPONENTS: dict[str, str] = {
     # Contact us page
     "ContactUs": "templates.components.contact_us.ContactUs",
     "ContactUsStyle": "templates.components.style.ContactUsStyle",
+    
+    # Our Services page
+    "OurServices": "templates.components.our_services.OurServices",
+    "OurServicesStyle": "templates.components.our_services.OurServicesStyle",
+    
+    # Consultation page
+    "ConsultationPage": "templates.components.consultation_page.ConsultationPage",
+    "ConsultationPageStyle": "templates.components.consultation_page.ConsultationPageStyle",
+    "ConsultationVideo": "templates.components.consultation_page.ConsultationVideo",
+    "ConsultationForm": "templates.components.consultation_page.ConsultationForm",
+    
+    # Jobs page
+    "JobsPage": "templates.components.jobs_page.JobsPage",
+    "JobsPageStyle": "templates.components.jobs_page.JobsPageStyle",
+    
+    # Job application page
+    "JobApplicationPage": "templates.components.job_application.JobApplicationPage",
+    
+    # Privacy policy page
+    "PrivacyPolicyPage": "templates.components.privacy_policy.PrivacyPolicyPage",
+    
+    # Terms and conditions page
+    "TOSPage": "templates.components.tos.TOSPage",
     
 }
 

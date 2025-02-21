@@ -16,8 +16,13 @@ urlpatterns = duck_urls.urlpatterns + [
     # Your new URL patterns here
 ]
 """
+from django.contrib import admin
+from django.urls import path, re_path
 from duck.backend.django import urls as duck_urls
+
 
 urlpatterns = duck_urls.urlpatterns + [
     # Your new URL patterns here...
+    path('admin/', admin.site.urls),
+    
 ]

@@ -2,6 +2,8 @@
 from theme import Theme
 
 from .container import FlexContainer
+from .image import Image
+from .style import Style
 
 
 class Card(FlexContainer):
@@ -27,10 +29,37 @@ class ServiceCard(Card):
         self.style["border"] = "1px solid #ccc"
         
         self.properties["class"] = 'service-card card'
-        # Add service card image
         
         # Add heading and subheading to card
         heading, subheading = self.kwargs.get('heading', ''), self.kwargs.get('subheading', '')
+        
+        # Add service card image
+        if "image_source" in self.kwargs:
+            image_source = self.kwargs.get('image_source', '')
+            image = Image(source=image_source)
+            image.style["border_radius"] = Theme.border_radius
+            image.style["object-fit"] = "contain"
+            
+            # Add image
+            self.inner_body += image.to_string()
+        
+        # Add service card icon
+        if "icon_class" in self.kwargs:
+            icon_class =  self.kwargs.get('icon_class', '')
+            icon = f"<span class='{icon_class} icon'></span>"
+            
+            # Add icon and icon style
+            icon_style = Style()
+            icon_style.inner_body = """
+                .service-card .icon {
+                    display: block;
+                    font-size: 3rem !important;
+                }
+            """
+            
+            self.inner_body += icon
+            self.inner_body += icon_style.to_string()
+        
         self.inner_body += f"<h2 class='heading'>{heading}</h2>"
         self.inner_body += f"<p class='heading'>{subheading}</p>"
 
@@ -48,12 +77,9 @@ class ServiceCards(FlexContainer):
         self.properties["class"] = "service-cards"
         
         if "services" in self.kwargs:
-            
-            for service_item in self.kwargs.get("services"):
-                service_heading, subheading = service_item.get('heading', ''), service_item.get('subheading', '')
-                
+            for service_item in self.kwargs.get("services", []):
                 # Create and add info to service card
-                service_card = ServiceCard(heading=service_heading, subheading=subheading)
+                service_card = ServiceCard(**service_item)
                 
                 # Add service card
                 self.add_child(service_card)

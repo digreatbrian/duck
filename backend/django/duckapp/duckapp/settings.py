@@ -6,6 +6,7 @@ only modify these if you know what you are doing!
 """
 
 import os
+
 from pathlib import Path
 
 from duck.backend.django.logging import SIMPLE_CONFIG
@@ -34,6 +35,10 @@ ALLOWED_HOSTS = [
 ]
 
 
+# Always False
+APPEND_SLASH = False
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -43,6 +48,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "backend.django.duckapp.core",
     # Other apps here...
 ]
 

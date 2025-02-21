@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block extra_styles  %}
+  {% JobsPageStyle %}
+  {% endJobsPageStyle %}
+{% endblock extra_styles %}
+
+
+{% block hero %}
+  <div id="jobs-page-container">
+   <h1 class="text-color-ccc margin-top-5px text-start">
+     Join us
+   </h1>
+   {% JobsPage %}
+   {% endJobsPage %}
+  </div>
+{% endblock hero %}
+
+{% block main_content_inner %}
+{% endblock main_content_inner %}

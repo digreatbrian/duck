@@ -20,3 +20,13 @@ class Image(NoInnerHtmlComponent):
             
         if self.kwargs.get("height"):
             self.properties["height"] = self.kwargs.get("height", '')
+
+
+class CircularImage(Image):
+    """
+    HTML Circular Image component.
+    """  
+    def on_create(self):
+        super().on_create()
+        self.style["border-radius"] = "50%"
+        

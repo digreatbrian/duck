@@ -104,7 +104,7 @@ class ContactUs(FlexContainer):
         self.style['border-radius'] = Theme.border_radius
         self.style["padding"] = "20px"
         self.style["margin-top"] = "0px"
-        self.style["color"] = "var(--secondary-color)"
+        self.style["color"] = "#ccc"
         self.style["backdrop-filter"] = "blur(20px)"
         self.style["font-size"] = "1.8rem"
         self.style["background-size"] = "cover"

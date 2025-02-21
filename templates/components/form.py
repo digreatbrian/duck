@@ -1,7 +1,25 @@
 from duck.html.components import InnerHtmlComponent
 from duck.html.components.input import Input, CSRFInput
 from duck.html.components.textarea import TextArea
+
 from theme import Theme
+from .style import Style
+
+
+class FormStyle(Style):
+    def on_create(self):
+        super().on_create()
+        
+        self.inner_body = """
+            div.form-control {
+                background-color: transparent;
+            }
+            
+            form label {
+                color: #ccc;
+            }
+        """
+
 
 class Form(InnerHtmlComponent):
     def get_element(self):
@@ -22,10 +40,14 @@ class Form(InnerHtmlComponent):
                 field.style["border-radius"] = Theme.border_radius
                 field.style["font-size"] = "1.5rem"
                 if "class" in field.properties:
-                    field.properties["class"] += " form-group"
+                    field.properties["class"] += " form-control"
                 else:
-                    field.properties["class"] = "form-group"
+                    field.properties["class"] = "form-control"
                 self.inner_body += field.to_string()
+        
+        # Add Form Style
+        style = FormStyle()
+        self.inner_body += style.to_string()
 
 
 class InputField(Input):
@@ -37,6 +59,9 @@ class InputField(Input):
         
         if "type" in self.kwargs:
             self.properties["type"] = self.kwargs.get('type') or ''
+        
+        if "name" in self.kwargs:
+            self.properties["name"] = self.kwargs.get('name') or ''
         
         if "placeholder" in self.kwargs:
             placeholder = self.kwargs.get('placeholder') or ''
@@ -58,6 +83,9 @@ class TextArea(TextArea):
         if "type" in self.kwargs:
             self.properties["type"] = self.kwargs.get('type') or ''
         
+        if "name" in self.kwargs:
+            self.properties["name"] = self.kwargs.get('name') or ''
+        
         if "placeholder" in self.kwargs:
             placeholder = self.kwargs.get('placeholder') or ''
             self.properties["placeholder"] = placeholder
@@ -67,14 +95,14 @@ class TextArea(TextArea):
             
         if "maxlength" in self.kwargs:
            self.properties["maxlength"] = str(self.kwargs.get('maxlength')) or ''
-            
+
 
 class FeedbackForm(Form):
     def on_create(self):
         # Set form style
         self.style["display"] = "flex"
         self.style["flex-direction"] = "column"
-        self.style["gap"] = "10px"
+        self.style["gap"] = "20px"
         self.style["padding"] = "10px"
         self.style["background-color"] = "transparent"
         self.style["backdrop-filter"] = "blur(50px)"
@@ -122,5 +150,5 @@ class FeedbackForm(Form):
             textarea,
             submit]
         
-        # Super create
+        # Super Create
         super().on_create()
