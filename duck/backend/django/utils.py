@@ -2,6 +2,7 @@
 Utilities module for Django.
 """
 from io import BytesIO
+
 from django.http.response import (
     HttpResponse as DjangoHttpResponse,
     StreamingHttpResponse as DjangoStreamingHttpResponse,
@@ -10,11 +11,13 @@ from django.http.request import (
     HttpRequest as DjangoHttpRequest,
     RawPostDataException,
 )
+from django.core.files.uploadedfile import SimpleUploadedFile
 from duck.http.request import HttpRequest
 from duck.http.response import (
     HttpResponse,
     StreamingHttpResponse,
 )
+from duck.http.fileuploads.handlers import BaseFileUpload
 
 
 def duck_url_to_django_syntax(url: str) -> str:
@@ -68,6 +71,19 @@ def duck_to_django_response(response: HttpResponse):
             headers=headers,
             content_type=content_type,
         )
+
+
+def to_django_uploadedfile(fileupload: BaseFileUpload) -> SimpleUploadedFile:
+    """
+    Function to convert Duck fileupload to django UploadedFile object
+    """
+    simple_uploadedfile = SimpleUploadedFile(
+        name=fileupload.filename,
+        content=fileupload.read(),
+        content_type=fileupload.content_type if hasattr(fileupload, "content_type") else None,
+    )
+    simple_uploadedfile.save = lambda *_, **__: fileupload.save()
+    return simple_uploadedfile
 
 
 def duck_to_django_request(request):
