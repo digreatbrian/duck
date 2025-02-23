@@ -105,6 +105,88 @@ button {
   margin-top: 5px;
 }
 
+/* Creating the general gradient bg effect with moving gradient */
+.gradient-bg::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, #f0c200, #d3a2a4, green, var(--primary-color), purple);
+  background-size: 400% 400%; /* Ensures smooth gradient movement */
+  border-radius: 8px;
+  z-index: -1;
+  animation: move-gradient-bg 3s linear infinite;
+}
+
+/* Creating the error bg effect with pulsing and moving gradient */
+.gradient-error-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, #ff0000, #ff6347, #ff4500); /* Intense red shades for error */
+  background-size: 400% 400%;
+  border-radius: 8px;
+  z-index: -1;
+  animation: move-gradient-bg 2s linear infinite, pulse-bg 1s ease-in-out infinite;
+}
+
+/* Creating the success bg effect with pulsing and moving gradient */
+.gradient-success-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, #28a745, #32cd32, #228b22); /* Green shades for success */
+  background-size: 400% 400%;
+  border-radius: 8px;
+  z-index: -1;
+  animation: move-gradient-bg 2s linear infinite, pulse-bg 1s ease-in-out infinite;
+}
+
+/* Animation for moving gradient effect */
+@keyframes move-gradient-bg {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Stronger pulse effect for the success background (renamed to pulse-bg) */
+@keyframes pulse-bg {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 15px rgba(40, 167, 69, 0.7), 0 0 30px rgba(40, 167, 69, 0.5);
+  }
+  25% {
+    transform: scale(1.2);
+    box-shadow: 0 0 20px rgba(40, 167, 69, 1), 0 0 40px rgba(40, 167, 69, 0.6);
+  }
+  50% {
+    transform: scale(1.3);
+    box-shadow: 0 0 30px rgba(40, 167, 69, 1.2), 0 0 60px rgba(40, 167, 69, 0.8);
+  }
+  75% {
+    transform: scale(1.2);
+    box-shadow: 0 0 20px rgba(40, 167, 69, 1), 0 0 40px rgba(40, 167, 69, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 15px rgba(40, 167, 69, 0.7), 0 0 30px rgba(40, 167, 69, 0.5);
+  }
+}
+
 .card {
     width: 350px;
     background: rgba(255, 255, 255, 0.1); /* Glassmorphism effect */

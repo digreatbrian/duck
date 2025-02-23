@@ -1,5 +1,7 @@
 
-from datetime import datetime, timezone
+from django.views.decorators.cache import cache_page
+from django.core.paginator import Paginator, EmptyPage
+
 from duck.backend.django.utils import to_django_uploadedfile
 from duck.shortcuts import render
 from duck.utils.validation import (
@@ -7,12 +9,18 @@ from duck.utils.validation import (
     validate_phone,
 )
 from duck.http.mimes import guess_data_mimetype
-from duck.http.response import JsonResponse
+from duck.http.response import (
+    JsonResponse,
+    HttpBadRequestResponse,
+    HttpResponse,
+)
 
 from backend.django.duckapp.core.models import (
     JobApplication,
     Job
 )
+from templates.components.jobs_page import JobCard
+
 
 def home_view(request):
     ctx = {}
@@ -41,6 +49,33 @@ def consultation_view(request):
 
 def jobs_view(request):
     ctx = {}
+    GET = request.GET
+    if "page" in GET:
+        try:
+            page = GET.get("page", [1])[0]
+            page = int(page)
+            job_list = Job.objects.all().order_by('-created_at')
+            
+            if not job_list:
+                response = HttpResponse("No more jobs")
+                response.set_header("x-no-more-jobs", "true")
+                return response
+            
+            paginator = Paginator(job_list, 10)
+            page_obj = paginator.page(page)
+            current_jobs = page_obj.object_list
+            
+            jobs_as_html = "".join([JobCard(job=job).to_string() for job in current_jobs])
+            response = HttpResponse(jobs_as_html)
+            return response
+        
+        except EmptyPage:
+            response = HttpResponse("No more jobs")
+            response.set_header("x-no-more-jobs", "true")
+            return response
+        
+        except Exception as e:
+            return HttpBadRequestResponse("Error retrieving jobs")
     return render(request, "jobs.html", ctx, engine="django")
 
 
@@ -100,14 +135,7 @@ def job_application_view(request, job_id):
         try:
            job_id = int(job_id)
            job = Job.objects.get(job_id=job_id)
-           utc_now = datetime.utcnow().replace(tzinfo=timezone.utc)  # Current UTC time
-
-           if job.expiration_date:
-              # Make sure job.expiration_date is aware (in UTC)
-              if job.expiration_date.tzinfo is None:
-                  job.expiration_date = job.expiration_date.replace(tzinfo=timezone.utc)
-            
-           if job.expiration_date and job.expiration_date <= utc_now:
+           if job.expired:
                return {"error": f"Job with id: {job_id} expired"}
         except Job.DoesNotExist:
             return {"error": f"Job with id: {job_id} doesn't exist anymore"}
@@ -146,7 +174,7 @@ def job_application_view(request, job_id):
         except Exception:
             response = {"error": "Error processing request"}
             return JsonResponse(content=response, status_code=400)
-        
+    ctx["job_id"] = job_id # Set Job ID
     return render(request, "job-application.html", ctx, engine="django")
 
 

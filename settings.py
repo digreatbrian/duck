@@ -294,7 +294,7 @@ DUCK_EXPLICIT_URLS: list = [
 
 DJANGO_SIDE_URLS: list[str] = [
     "/admin.*",
-    "/x-static.*"
+    "/x-static.*",
 ]
 
 
@@ -348,57 +348,6 @@ TEMPLATETAGS_MODULE: str = ""
 
 
 # Html Components
-# These are template tags which can be used to dynamically create HTML elements
-# Example Usage:
-# Jinja2 Template
-# {{ Button(
-#     properties={
-#         "value": "Hello world",
-#          "id": "btn"
-#      },
-#      style={
-#          "background-color": "red",
-#           "color": "white",
-#        },
-#        optional_argument="Some value",
-#      )
-# }}
-# 
-# Django Template
-# {% Button %}
-#     properties={
-#         "id": "btn",
-#         "value": "Hello world"
-#      },
-#      style={
-#           "background-color": "blue",
-#            "color": "white"
-#       },
-#       optional_argument="Some value"
-# {% endButton %}
-
-
-# You can create your custom HtmlComponent by subclassing the component from duck.html.components.InnerHtmlComponent or NoInnerHtmlComponent.
-# Do help on how these two classes work
-# 
-# Example:
-# class CustomButton(InnerHtmlComponent):
-#    """
-#    HTML Button component.
-#    """
-#    def __init__(self, properties: dict[str, str]={}, style: dict[str, str]={}, **kwargs):
-#        """
-#        Initialize the Custom Button html component.
-#        """
-#        btn_style = {
-#            "padding": "10px 20px",
-#            "cursor": "pointer",
-#            "transition": "background-color 0.3s ease",
-#            "border": "none",
-#        } # default style
-#
-#        btn_style.update(style) if style else None # update default style
-#        super().__init__("button", properties, btn_style, **kwargs)
 HTML_COMPONENTS: dict[str, str] = {
     "Button": "duck.html.components.button.Button",
     "FlatButton": "duck.html.components.button.FlatButton",
@@ -440,7 +389,6 @@ HTML_COMPONENTS: dict[str, str] = {
     
     # Jobs page
     "JobsPage": "templates.components.jobs_page.JobsPage",
-    "JobsPageStyle": "templates.components.jobs_page.JobsPageStyle",
     
     # Job application page
     "JobApplicationPage": "templates.components.job_application.JobApplicationPage",

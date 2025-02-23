@@ -13,6 +13,7 @@ from duck.utils.dateutils import (
 from duck.shortcuts import resolve
 
 from theme import Theme
+from backend.django.duckapp.core.models import Job
 
 from .container import FlexContainer
 from .form import Form, TextArea, InputField
@@ -21,26 +22,6 @@ from .image import Image
 from .style import Style
 from .script import Script
 from .icon import Icon
-
-
-class Job:
-    def __init__(self, job_id, title, company, location, job_type, salary, description, requirements, benefits, industry, posting_date=None, expiration_date=None):
-        self.job_id = job_id
-        self.title = title
-        self.company = company
-        self.company_image_source = static('images/yannick-logo.png')
-        self.location = location
-        self.job_type = job_type
-        self.salary = salary
-        self.description = description
-        self.requirements = requirements
-        self.benefits = benefits
-        self.industry = industry
-        self.posting_date = datetime.now()
-        self.expiration_date = datetime.now()
-        
-    def __repr__(self):
-        return f"Job({self.job_id}, {self.title}, {self.company}, {self.location}, {self.job_type})"
 
 
 class JobCardTopItems(FlexContainer):
@@ -56,8 +37,7 @@ class JobCardTopItems(FlexContainer):
         job_expiration_date = job.expiration_date
         job_description = job.description
         job_company = job.company
-        job_company_image = job.company_image_source
-
+        
         # Create left and right containers
         # Create left container
         left_container = FlexContainer()
@@ -73,7 +53,7 @@ class JobCardTopItems(FlexContainer):
         
         # Add items to left container
         # Add company image
-        image = Image(source=job_company_image)
+        image = Image(source=job.company_image_url)
         image.style['border'] = "1px solid #ccc"
         image.style['width'] = "200px"
         image.style["height"] = "200px"
@@ -96,10 +76,12 @@ class JobCardTopItems(FlexContainer):
         right_container.inner_body += f"<p>Posted: {job_posting}</p>"
         
         # Add job expiration
-        diff_upto_now = datetime_difference_upto_now(job_expiration_date)
-        job_expiration_date = build_readable_date(diff_upto_now)
-        right_container.inner_body += f"<p>Expire in: {job_expiration_date}</p>"
-        
+        if not job.expired:
+            job_expiration_date = job.readable_expiration_date
+            right_container.inner_body += f"<p>Expire in: {job_expiration_date}</p>"
+        else:
+            right_container.inner_body += f"<p style='color: red'>Expired</p>"
+
 
 class JobCardBottomItems(FlexContainer):
     def on_create(self):
@@ -476,7 +458,6 @@ class JobApplicationForm(Form):
                 type="text",
                 name="cover_letter",
                 placeholder="A short message about why you’re interested in this job and why you’re a good fit (optional)",
-                required=False,
                 maxlength=255,
                 properties={
                     "rows": "6",
@@ -492,7 +473,7 @@ class JobApplicationForm(Form):
                 name="resume",
                 required=True,
                 properties={
-                    "accept": ".doc, .pdf, .docx"
+                    "accept": ".doc,.pdf,.docx"
                 }
             )
         )
@@ -522,9 +503,18 @@ class JobApplicationForm(Form):
                     }
                     
                     let resumeFile = resumeFileInput[0].files[0];
+                    let resumeFileName = resumeFile.name;
                     
                     if (resumeFile && resumeFile.size > resumeMaxSize) {
                         showJobApplicationStatus({ "error": "Resume too large, should be a max of " + maxSizeMB + " MB" });
+                        return;
+                    }
+                    
+                    // Check file extension
+                    let allowedExts = [".pdf", ".doc", ".docx"]
+
+                    if (!(allowedExts.some(ext => resumeFileName.toLowerCase().endsWith(ext)))) {
+                        showJobApplicationStatus({"error": "Uknown resume file. Allowed file types: .pdf, .doc, .docx"});
                         return;
                     }
                 
@@ -602,7 +592,7 @@ class JobApplicationStatus(FlexContainer):
         self.style["border"] = "1px solid #ccc"
         self.style["justify-content"] = "center"
         self.style["align-items"] = "center"
-        self.style["color"] = "#ccc"
+        self.style["color"] = "white"
         self.properties["class"] = "job-application-status"
         
         icon = Icon()
@@ -622,24 +612,32 @@ class JobApplicationStatus(FlexContainer):
                     
                     let successIconClass = "bi bi-check-circle";
                     let errorIconClass = "bi bi-exclamation-circle";
-                    let infoIconClass = "bi bi-circle";
+                    let infoIconClass = "bi bi-upload";
+                    let gradientBgClass = "gradient-bg"
+                    let gradientErrorBgClass = "gradient-error-bg"
+                    let gradientSuccessBgClass = "gradient-success-bg"
                     
-                    // Clear any existing icons before adding new ones
+                    // Clear status container, any existing icons before adding new ones
                     statusIcon.removeClass(successIconClass + ' ' + errorIconClass + ' ' + infoIconClass);
+                    statusContainer.removeClass(gradientSuccessBgClass + ' ' + gradientErrorBgClass + ' ' + gradientBgClass);
                     
                     // Check for "success", "error", or "info" in the response dictionary
                     if (response.success) {
                         statusLabel.text(response["success"]);
                         statusIcon.addClass(successIconClass);
+                        statusContainer.addClass(gradientSuccessBgClass);
                     } else if (response.error) {
                         statusLabel.text(response["error"]);
                         statusIcon.addClass(errorIconClass);
+                        statusContainer.addClass(gradientErrorBgClass);
                     } else if (response.info) {
                         statusLabel.text(response["info"]);
                         statusIcon.addClass(infoIconClass);
+                        statusContainer.addClass(gradientBgClass);
                     } else {
                         statusLabel.text("Got unexpected response");
                         statusIcon.addClass(errorIconClass);
+                        statusContainer.addClass(gradientErrorBgClass);
                     }
                     
                     // Show the status container with fade effect
@@ -663,6 +661,19 @@ class JobApplicationStatus(FlexContainer):
         
 
 class JobApplicationPage(FlexContainer):
+    def display_error_message(self, message):
+        self.style.update({
+            "align-items": "center",
+            "font-size": "1.3rem"
+        })
+        
+        error_icon = Icon()
+        error_icon.style["font-size"] = "3rem"
+        error_icon.properties["class"] = "bi bi-exclamation"
+        
+        self.inner_body += error_icon.to_string()
+        self.inner_body += message
+
     def on_create(self):
         super().on_create()
         self.style["min-width"] = "80%"
@@ -679,20 +690,45 @@ class JobApplicationPage(FlexContainer):
         self.style["gap"] = "15px"
         self.properties["id"] = "job-application-page"
         
-        from .mock_jobs import jobs
-        
-        job = job=jobs[0]
-        
+        # Load the job.
+        try:
+            context = self.kwargs.get("context")
+            job_id = context.get("job_id")
+            job_id = int(job_id)
+            job = Job.objects.get(job_id=job_id)
+            
+            if job.expired:
+                self.display_error_message("Job expired")
+                return # no need to add more html element
+            self.add_main_components(job) # Add main components
+        except Job.DoesNotExist:
+            self.display_error_message("Job unavailable")
+            
+        except Exception:
+            raise
+            self.display_error_message("Error retrieving job application")
+            return # no need to add more html elements
+    
+    def add_main_components(self, job):
         # Add popup
         application_popup = Popup()
         application_popup.style["gap"] = "10px"
         application_popup.properties["class"] += " job-application-popup"
         
-        # Add job application status in popup
+        # Add application status cotainer
+        application_status_container = FlexContainer()
+        application_status_container.style["flex-direction"] = "column"
+        application_status_container.style["width"] = "100%"
+        application_status_container.style["align-items"] = "center"
+        
+        # Add job application status to container and container to popup
         application_status = JobApplicationStatus()
         application_status.style["display"] = "none"
+        application_status.style["width"] = "80%"
         application_status.style["min-height"] = "50%"
-        application_popup.add_child(application_status)
+        
+        application_status_container.add_child(application_status)
+        application_popup.add_child(application_status_container)
         
         # Add job application form
         applicaton_form = JobApplicationForm(job=job, **self.kwargs)

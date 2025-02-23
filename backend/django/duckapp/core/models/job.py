@@ -1,5 +1,17 @@
+import os
+
+from datetime import datetime, timezone
+
 from django.db import models
-from datetime import datetime
+from django.utils.timezone import now
+
+from duck.etc.templatetags import media
+from duck.utils.dateutils import (
+    datetime_difference_from_now,
+    build_readable_date,
+)
+
+from .company import Company
 
 
 class Job(models.Model):
@@ -13,15 +25,9 @@ class Job(models.Model):
     The title of the job position. Max length: 255 characters.
     """
 
-    company = models.CharField(max_length=255)
+    company = models.ForeignKey(Company, related_name='companies', on_delete=models.CASCADE)
     """
-    The name of the company offering the job. Max length: 255 characters.
-    """
-
-    company_image_source = models.ImageField(upload_to='company_images/', null=True, blank=True)
-    """
-    The image source for the company's logo or branding. This image is uploaded to 'company_images/'.
-    Can be left blank or null if no image is provided.
+    The company offering the job.
     """
 
     location = models.CharField(max_length=255)
@@ -70,19 +76,50 @@ class Job(models.Model):
     """
     The date and time when the job posting will expire. After this date, the job posting is no longer valid.
     """
-
-    def __repr__(self):
-        return f"Job({self.job_id}, {self.title}, {self.company}, {self.location}, {self.job_type})"
-
-    def is_expired(self):
-        """Returns whether the job listing has expired based on the expiration_date."""
-        return self.expiration_date < datetime.now()
-
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
     class Meta:
+        indexes = [
+            models.Index(fields=['created_at']),
+        ]
+        
         ordering = ['-posting_date']
         """
         Orders jobs by their posting date, displaying the most recent jobs first.
         """
+        
+    def __repr__(self):
+        return f"Job({self.job_id}, {self.title}, {self.company}, {self.location}, {self.job_type})"
+
+    @property
+    def company_image_url(self):
+        relative_path = self.company_image_source.name
+        return media(relative_path.strip() or "/")
+        
+    @property
+    def readable_expiration_date(self):
+        expire_date = self.expiration_date
+        if expire_date:
+            diff_from_now = datetime_difference_from_now(expire_date)
+            return build_readable_date(diff_from_now)
+    
+    @property
+    def expired(self):
+        """Returns whether the job listing has expired based on the expiration_date."""
+        if self.expiration_date is None:
+            return False  # No expiration date means it's not expired
+    
+        # Ensure expiration_date is timezone-aware
+        expiration_date = self.expiration_date
+        if expiration_date.tzinfo is None:
+            expiration_date = expiration_date.replace(tzinfo=timezone.utc)  # Treat as UTC
+    
+        # Get the current UTC time
+        utc_now = datetime.now(timezone.utc)
+    
+        # Compare timestamps
+        return expiration_date <= utc_now
 
 
 class JobApplication(models.Model):

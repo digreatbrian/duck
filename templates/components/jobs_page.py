@@ -18,31 +18,7 @@ from .container import FlexContainer
 from .card import Card
 from .image import Image
 from .style import Style
-
-
-class Job:
-    def __init__(self, job_id, title, company, location, job_type, salary, description, requirements, benefits, industry, posting_date=None, expiration_date=None):
-        self.job_id = job_id
-        self.title = title
-        self.company = company
-        self.company_image_source = static('images/yannick-logo.png')
-        self.location = location
-        self.job_type = job_type
-        self.salary = salary
-        self.description = description
-        self.requirements = requirements
-        self.benefits = benefits
-        self.industry = industry
-        self.posting_date = datetime.now()
-        self.expiration_date = datetime.now()
-        
-    def __repr__(self):
-        return f"Job({self.job_id}, {self.title}, {self.company}, {self.location}, {self.job_type})"
-
-
-class JobsPageStyle(Style):
-    def on_create(self):
-        super().on_create()
+from .script import Script
 
 
 class JobCardTopItems(FlexContainer):
@@ -58,8 +34,7 @@ class JobCardTopItems(FlexContainer):
         job_expiration_date = job.expiration_date
         job_description = job.description
         job_company = job.company
-        job_company_image = job.company_image_source
-
+        
         # Create left and right containers
         # Create left container
         left_container = FlexContainer()
@@ -75,7 +50,7 @@ class JobCardTopItems(FlexContainer):
         
         # Add items to left container
         # Add company image
-        image = Image(source=job_company_image)
+        image = Image(source=job.company_image_url)
         image.style['border'] = "1px solid #ccc"
         image.style['width'] = "200px"
         image.style["height"] = "200px"
@@ -97,9 +72,11 @@ class JobCardTopItems(FlexContainer):
         right_container.inner_body += f"<p>Posted: {job_posting}</p>"
         
         # Add job expiration
-        diff_upto_now = datetime_difference_upto_now(job_expiration_date)
-        job_expiration_date = build_readable_date(diff_upto_now)
-        right_container.inner_body += f"<p>Expire in: {job_expiration_date}</p>"
+        if not job.expired:
+            job_expiration_date = job.readable_expiration_date
+            right_container.inner_body += f"<p>Expire in: {job_expiration_date}</p>"
+        else:
+            right_container.inner_body += f"<p style='color: red'>Expired</p>"
         
         # Add truncated job description
         job_description = smart_truncate(job_description, cap=250)
@@ -166,13 +143,8 @@ class JobCard(Card):
                  cta_btn.style["width"] = "100%"
                  
                  apply_url = resolve('job-application', fallback_url="#")
-                 
-                 if apply_url != "#":
-                     apply_url = URL.urljoin(apply_url, str(job.job_id))
-                 
-                 cta_btn.properties["onclick"] = "window.open('{}', '_blank');".format(
-                     apply_url,
-                     job.job_id)
+                 apply_url = apply_url.replace('job_id', str(job.job_id))
+                 cta_btn.properties["onclick"] = "window.open('{}');".format(apply_url)
                  self.add_child(cta_btn)
 
 
@@ -210,7 +182,113 @@ class JobsPage(FlexContainer):
         self.style["gap"] = "15px"
         self.properties["id"] = "jobs-page"
         
-        from .mock_jobs import jobs
-        jobs_container = JobsContainer(jobs=jobs)
+        # Add info container
+        info_container = FlexContainer()
+        info_container.style["flex-direction"] = "column"
+        info_container.style["gap"] = "5px"
+        info_container.style["font-size"] = "1.5rem"
+        info_container.style["align-items"] = "center"
+        info_container.properties["id"] = "info-container"
+        self.add_child(info_container)
         
+        # Add jobs container
+        jobs_container = JobsContainer()
         self.add_child(jobs_container)
+        
+        # Add load more jobs btn
+        load_more_jobs_button = FlatButton(inner_body="Load more jobs")
+        load_more_jobs_button.style["background-color"] = "var(--secondary-color)"
+        load_more_jobs_button.style["color"] = "#ccc"
+        load_more_jobs_button.style["border"] = "1px solid #ccc"
+        load_more_jobs_button.style["border-radius"] = Theme.border_radius
+        load_more_jobs_button.properties["id"] = 'load-more-jobs-btn'
+        load_more_jobs_button.properties["onclick"] = "loadMoreJobs()"
+        
+        self.add_child(load_more_jobs_button)
+        
+        # Add script for loading more jobs
+        script = Script(
+            inner_body="""
+                let jobs_page = 1;
+
+                function disableLoadMoreJobsButton(disableMsg) {
+                    const jobsPage = $("#jobs-page");
+                    const btn = jobsPage.find('#load-more-jobs-btn');
+                
+                    if (disableMsg) {
+                        btn.text(disableMsg);
+                    }
+                
+                    btn.prop('disabled', true);
+                }
+                
+                function setInfo(msg) {
+                    const jobsPage = $("#jobs-page");
+                    const infoContainer = jobsPage.find('#info-container');  // Fixed missing quote
+                    infoContainer.text(msg);
+                }
+                
+                function clearInfo() {
+                    const jobsPage = $("#jobs-page");
+                    const infoContainer = jobsPage.find('#info-container');  // Fixed missing quote
+                    infoContainer.text("");
+                }
+                
+                function loadMoreJobs() {
+                    const jobsContainer = $("#jobs-page .jobs-container");
+                    const loadMoreJobsButton = $('#load-more-jobs-btn');
+                
+                    loadMoreJobsButton.text("Loading...");
+                    
+                    $.ajax({
+                        url: '%s',
+                        data: { 'page': jobs_page },
+                        success: function(response, status, xhr) {
+                            if (xhr.getResponseHeader("X-No-More-Jobs") === "true") {
+                                disableLoadMoreJobsButton("No more jobs");
+                                
+                                if (jobs_page > 1) {
+                                    alert(response);
+                                    clearInfo();
+                                } else {
+                                    setInfo("No jobs at the moment, come back another time");
+                                }
+                            } else {
+                                jobsContainer.append(response);  // Append job listings
+                                jobs_page += 1;  // Corrected increment
+                                loadMoreJobsButton.text("Load more jobs");
+                                clearInfo();
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            if (xhr.responseText) {
+                                if (jobs_page > 1) {
+                                    alert("Server returned error response: " + xhr.responseText.toLowerCase());
+                                    clearInfo();
+                                } else {
+                                    setInfo("Server returned error response: " + xhr.responseText.toLowerCase());
+                                }
+                            } else {
+                                if (jobs_page > 1) {
+                                    alert('An error occurred while loading more jobs, check your internet connection.');
+                                    clearInfo();
+                                } else {
+                                    setInfo('An error occurred while loading more jobs, check your internet connection.');
+                                }
+                            }
+                            loadMoreJobsButton.text("Load more jobs");
+                        }
+                    });
+                }
+                
+                // Load jobs initially
+                $(document).ready(function () {
+                    setInfo("Loading jobs, wait a few seconds");
+                    loadMoreJobs();  // Trigger initial load
+                });
+            """%(resolve('jobs', fallback_url="#"))
+        )
+        
+        # add script
+        self.add_child(script)
+
