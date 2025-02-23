@@ -42,7 +42,7 @@ def validate_email(email: str) -> bool:
 
 def validate_phone(phone: str) -> bool:
     """
-    Validates the format of a phone number (supports international formats).
+    Validates the format of a phone number (supports both international and local formats).
     
     Args:
         phone (str): The phone number to validate.
@@ -50,7 +50,9 @@ def validate_phone(phone: str) -> bool:
     Returns:
         bool: True if the phone number is valid, False otherwise.
     """
-    phone_pattern = r'^\+?[1-9]\d{1,14}$'
+    # Updated regex pattern to support both international formats (with +) and local formats (e.g. 07...)
+    phone_pattern = r'^\+?[1-9]\d{1,14}$|^[0-9]{2,}$'  # Allow local phone numbers starting with digits like 07...
+    
     return bool(re.match(phone_pattern, phone))
 
 

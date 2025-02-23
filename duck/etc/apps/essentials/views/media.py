@@ -14,7 +14,7 @@ from duck.utils.path import (
 from duck.shortcuts import not_found404
 
 
-MEDIA_ROOT = SETTINGS["MEDIA_ROOT"]
+MEDIA_ROOT = str(SETTINGS["MEDIA_ROOT"])
 
 
 def mediafiles_view(request: HttpRequest, ):
