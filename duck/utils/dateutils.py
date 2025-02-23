@@ -277,6 +277,27 @@ def datetime_difference_upto_now(previous_datetime: datetime.datetime) -> dict:
     return datetime_difference(now, previous_datetime)
 
 
+def datetime_difference_from_now(future_datetime: datetime.datetime) -> dict:
+    """
+    Get the difference between now and future datetime obj
+
+    Args:
+        future_datetime (datetime.datetime): The previous datetime object.
+
+    Returns:
+        dict: A dictionary containing the difference in years, months, weeks, days, hours, minutes, and seconds.
+
+    Raises:
+        ValueError: If future_datetime is not an instance of datetime.datetime.
+    """
+    if not isinstance(future_datetime, datetime.datetime):
+        raise ValueError(
+            "Argument future_datetime to 'datetime_difference_from_now' function should be an instance of datetime.datetime"
+        )
+    now = datetime.datetime.now(future_datetime.tzinfo)
+    return datetime_difference(future_datetime, now)
+
+
 def build_readable_date(date_: dict, one_date=False) -> str:
     """
     Build a readable date from a dictionary of datetime values.
