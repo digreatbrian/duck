@@ -24,9 +24,24 @@
 
 @media (max-width: 768px) {
   .card {
-    width: 90%;
+    width: 90% !important;
     height: auto;
     padding: 15px;
+  }
+  body {
+      font-size: 0.75rem !important;
+  }
+  
+  form {
+      width: 100% !important;
+  }
+  
+  .service-cards {
+    justify-content: center !important;
+  }
+  
+  .hero-content {
+      top: 5% !important;
   }
 }
 
@@ -39,10 +54,12 @@ body {
   min-width: 100vw;
   max-width: 100vw;
   color: var(--text-color);
+  display: flex;
 }
 
 #root {
-  width: 100%;
+  width: 100vw;
+  max-width: 100vw;
 }
 
 button {

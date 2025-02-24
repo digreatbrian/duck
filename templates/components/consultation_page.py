@@ -5,8 +5,10 @@ from theme import Theme
 
 from .container import FlexContainer
 from .style import Style
+from .script import Script
 from .form import Form, TextArea, InputField
 from .video import Video
+from .icon import Icon
 
 
 class ConsultationPageStyle(Style):
@@ -14,7 +16,7 @@ class ConsultationPageStyle(Style):
         super().on_create()
         self.inner_body += """
         .consultation-form input, button, textarea, select, checkbox {
-            font-size: 1.75rem !important;
+            font-size: 1.75rem;
             border-radius: {border_radius} !important;
         }
         """.replace("{border_radius}", Theme.border_radius)
@@ -44,7 +46,7 @@ class InputWithLabel(FlexContainer):
             inputfield = self.kwargs.get('input', '')
             if inputfield:
                 inputfield = inputfield.to_string()
-            self.inner_body += inputfield
+                self.inner_body += inputfield
 
 
 class ConsultationForm(Form):
@@ -162,6 +164,8 @@ class ConsultationForm(Form):
         submit.style["background-color"] = "transparent"
         submit.style["backdrop-filter"] = "blur(50px)"
         submit.style["color"] = "#ccc"
+        submit.properties["class"] = "submit-button"
+        submit.properties["onclick"] = "submitApplication()"
         
         notification_label = InputWithLabel(
             label_text="We will confirm your consultation in about 24 hours!",
@@ -169,6 +173,63 @@ class ConsultationForm(Form):
                 "class": "text-center",
             }
          )
+         
+         # Add script for applying for consultation
+        script = Script(
+            inner_body="""
+                function submitApplication(maxSizeMB = 2) {
+                    let form = document.getElementsByClassName('consultation-form')[0];
+                    
+                    // Check if the form is valid using built-in validation
+                    if (!form.checkValidity()) {
+                        form.reportValidity(); // Show native validation messages
+                        return;
+                    }
+                    
+                    // Convert form to jquery form
+                    form = $(form);
+                
+                    // Show progress info status
+                    showConsultationStatus({ "info": "Your application is being processed, please wait a few seconds" });
+                
+                    // Prepare FormData for AJAX
+                    let formData = new FormData(form[0]); // Use form[0] to get the DOM element
+                    
+                    $.ajax({
+                        url: form.attr("action"), // Use form's action attribute
+                        type: form.attr("method") || "POST", // Use form's method (default to POST)
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        dataType: "json", // Expect JSON response
+                        success: function (response, textStatus, xhr) {
+                            if (xhr.status === 200 && response.success) {
+                                // Handle success (200 OK)
+                                showJobConsultationStatus(response);
+                            } else {
+                                // Error response (no success key in the response)
+                                showConsultationStatus(response);
+                            }
+                        },
+                        error: function (xhr, textStatus, errorThrown) {
+                            // Called when server returns non-2xx status code
+                            let errorMsg = "Error submitting application.";
+                
+                            if (xhr.responseJSON && xhr.responseJSON.error) {
+                                errorMsg = xhr.responseJSON.error; // Show error message from server
+                            } else if (xhr.status !== 200) {
+                                errorMsg = "Server returned an error: " + xhr.status + " " + errorThrown;
+                            }
+                
+                            showConsultationStatus({ "error": errorMsg });
+                        }
+                    });
+                }
+            """
+        )
+        
+        # Add script to form
+        self.inner_body += script.to_string()
         
         # Super create
         context = self.kwargs.get("context")
@@ -195,7 +256,167 @@ class ConsultationForm(Form):
         self.inner_body += notification_label.to_string()
 
 
+class Popup(FlexContainer):
+    def on_create(self):
+        self.style["min-width"] = "100vw"
+        self.style["min-height"] = "100vh"
+        self.style["background-color"] = "black"
+        self.style["padding"] = "5px"
+        self.style["position"] = "fixed"
+        self.style["z-index"] = "5"
+        self.style["transition"] = "display 0.3s ease"
+        self.style["top"] = "0"
+        self.style["left"] = "0"
+        self.style["display"] = "none"
+        self.style["flex-direction"] = "column"
+        self.properties["class"] = "popup"
+        
+        script = Script(
+            inner_body="""
+                function movePopupToBody() {
+                    var popup = $('.popup');  // Select popup using jQuery
+                    if (popup.length && popup.parent()[0] !== document.body) {
+                        popup.appendTo('body');  // Move popup to body
+                    }
+                }
+                
+                function closePopup(popup) {
+                    $(popup).css('display', 'none');
+                }
+                
+                // Ensure movePopupToBody is defined elsewhere in your code
+                $(document).ready(function () {
+                    movePopupToBody();
+                    // Event handler for popup clicks
+                    $('.popup').on('click', function (event) {
+                        if ($(event.target).is('.popup')) {
+                            closePopup(this);  // close the popup by using the reference
+                        }
+                    });
+                });
+                
+                // Adjust the position of the popup when the window is resized
+                $(window).resize(movePopupToBody);
+                """
+        )
+        
+        # Lets add toggle button to close popup
+        exit_btn_container = FlexContainer()
+        exit_btn_container.style["padding"] = "5px"
+        exit_btn_container.style["justify-content"] = "flex-end"
+        
+        exit_btn = Icon(icon_class="bi bi-x-circle")
+        exit_btn.style["color"] = "#ccc"
+        exit_btn.style["font-size"] = "1.95rem"
+        exit_btn.properties["onclick"] = "closePopup($(this).closest('.popup'));"
+        
+        # Add exit button to container
+        exit_btn_container.add_child(exit_btn)
+        
+        # add exit button container
+        self.add_child(exit_btn_container)
+        
+        # Add script for adding popup to topmost next body child
+        self.add_child(script)
+
+
+class ConsultationStatus(FlexContainer):
+    def on_create(self):
+        super().on_create()
+        self.style["flex-direction"] = "column"
+        self.style["gap"] = "10px"
+        self.style["padding"] = "10px"
+        self.style["background-color"] = "transparent"
+        self.style["backdrop-filter"] = "blur(50px)"
+        self.style["border-radius"] = Theme.border_radius
+        self.style["border"] = "1px solid #ccc"
+        self.style["justify-content"] = "center"
+        self.style["align-items"] = "center"
+        self.style["color"] = "white"
+        self.properties["class"] = "consultation-status"
+        
+        icon = Icon()
+        icon.style["font-size"] = "5rem"
+        icon.properties["class"] = "consultation-status-icon"
+        
+        message = InputWithLabel(input=None)
+        message.properties["class"] = "consultation-status-label"
+        
+        script = Script(
+            inner_body="""
+                function showConsultationStatus(response, autoHide=false) {
+                    // Select the status message container
+                    const statusContainer = $(".consultation-status");
+                    const statusLabel = statusContainer.find(".consultation-status-label");
+                    const statusIcon = statusContainer.find(".consultation-status-icon");
+                    
+                    let successIconClass = "bi bi-check-circle";
+                    let errorIconClass = "bi bi-exclamation-circle";
+                    let infoIconClass = "bi bi-upload";
+                    let gradientBgClass = "gradient-bg"
+                    let gradientErrorBgClass = "gradient-error-bg"
+                    let gradientSuccessBgClass = "gradient-success-bg"
+                    
+                    // Clear status container, any existing icons before adding new ones
+                    statusIcon.removeClass(successIconClass + ' ' + errorIconClass + ' ' + infoIconClass);
+                    statusContainer.removeClass(gradientSuccessBgClass + ' ' + gradientErrorBgClass + ' ' + gradientBgClass);
+                    
+                    // Open popup already
+                    $('.consultation-popup').css('display', 'flex');
+                    
+                    // Check for "success", "error", or "info" in the response dictionary
+                    if (response.success) {
+                        statusLabel.text(response["success"]);
+                        statusIcon.addClass(successIconClass);
+                        statusContainer.addClass(gradientSuccessBgClass);
+                    } else if (response.error) {
+                        statusLabel.text(response["error"]);
+                        statusIcon.addClass(errorIconClass);
+                        statusContainer.addClass(gradientErrorBgClass);
+                    } else if (response.info) {
+                        statusLabel.text(response["info"]);
+                        statusIcon.addClass(infoIconClass);
+                        statusContainer.addClass(gradientBgClass);
+                    } else {
+                        statusLabel.text("Got unexpected response");
+                        statusIcon.addClass(errorIconClass);
+                        statusContainer.addClass(gradientErrorBgClass);
+                    }
+                    
+                    // Show the status container with fade effect
+                    statusContainer.css('display', 'flex').fadeIn();
+                    
+                    if (autoHide) {
+                        // Hide the message after 5 seconds (you can adjust the time as needed)
+                        setTimeout(function () {
+                            hideConsultationStatus();
+                        }, 5000); // Message will disappear after 5 seconds
+                    }
+                }
+                
+                function hideConsultationStatus() {
+                    const statusContainer = $(".consultation-status");
+                    statusContainer.fadeOut();
+                }
+            """
+        )
+        self.add_children([icon, message, script])
+        
+
 class ConsultationPage(FlexContainer):
+    def display_error_message(self, message):
+        self.style.update({
+            "align-items": "center",
+            "font-size": "1.3rem"
+        })
+        
+        error_icon = Icon()
+        error_icon.style["font-size"] = "3rem"
+        error_icon.properties["class"] = "bi bi-exclamation"
+        
+        self.inner_body += error_icon.to_string()
+        self.inner_body += message
+    
     def on_create(self):
         super().on_create()
         self.style["min-width"] = "80%"
@@ -212,3 +433,28 @@ class ConsultationPage(FlexContainer):
         self.style["gap"] = "15px"
         self.style["align-items"] = "center"
         self.properties["id"] = "consultation-page"
+        
+        # Add popup
+        consultation_popup = Popup()
+        consultation_popup.style["gap"] = "10px"
+        consultation_popup.properties["class"] += " consultation-popup"
+        
+        # Add consultation status cotainer
+        consultation_status_container = FlexContainer()
+        consultation_status_container.style["flex-direction"] = "column"
+        consultation_status_container.style["width"] = "100%"
+        consultation_status_container.style["align-items"] = "center"
+        
+        # Add consultation status to container and container to popup
+        consultation_status = ConsultationStatus()
+        #consultation_status.style["display"] = "none"
+        consultation_status.style["width"] = "80%"
+        consultation_status.style["min-height"] = "50%"
+        
+        consultation_status_container.add_child(consultation_status)
+        consultation_popup.add_child(consultation_status_container)
+        
+        # Add popup
+        self.add_child(consultation_popup)
+        
+        

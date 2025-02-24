@@ -705,7 +705,6 @@ class JobApplicationPage(FlexContainer):
             self.display_error_message("Job unavailable")
             
         except Exception:
-            raise
             self.display_error_message("Error retrieving job application")
             return # no need to add more html elements
     

@@ -110,6 +110,7 @@ BLUEPRINTS: list[str] = [
     "duck.etc.apps.essentials.blueprint.MediaFiles",
     "duck.etc.apps.essentials.blueprint.StaticFiles",
     "duck.etc.apps.react_frontend.blueprint.ReactFrontend",
+    "apps.mail.blueprint.Mail",
 ]
 
 
@@ -398,6 +399,9 @@ HTML_COMPONENTS: dict[str, str] = {
     
     # Terms and conditions page
     "TOSPage": "templates.components.tos.TOSPage",
+
+    # Emailing
+    "SimpleEmail": "apps.mail.templates.components.email.SimpleEmail",
     
 }
 
@@ -681,9 +685,9 @@ VERBOSE_LOGGING: bool = True
 # Do help on duck.automations for more info.
 # Note: Preparing Automation environment may make the application startup a bit slower.
 AUTOMATIONS: dict[str, dict[str, str]] = {
-    #"duck.automation.SampleAutomation": {
-    #   "trigger": "duck.automation.trigger.NoTrigger",
-    # }
+    "automations.EmailAutomation": {
+        "trigger": "duck.automation.trigger.NoTrigger",
+    }
 }
 
 

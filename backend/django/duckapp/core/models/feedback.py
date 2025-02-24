@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Feedback(models.Model):
     """
     Model for storing feedback submissions. This model holds information about the user's full name, 

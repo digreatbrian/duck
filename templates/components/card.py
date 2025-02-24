@@ -55,6 +55,7 @@ class ServiceCard(Card):
                     display: block;
                     font-size: 3rem !important;
                 }
+                
             """
             
             self.inner_body += icon
@@ -83,4 +84,3 @@ class ServiceCards(FlexContainer):
                 
                 # Add service card
                 self.add_child(service_card)
-

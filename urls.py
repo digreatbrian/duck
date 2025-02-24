@@ -15,7 +15,6 @@ urlpatterns = [
     path("/consultation", views.consultation_view, name="consultation"),
     path("/jobs", views.jobs_view, name="jobs"),
     path("/job-application/<job_id>", views.job_application_view, name="job-application"),
-    path("/send-email", views.receive_email_view, name="send-email", methods=["POST"]),
     path("/privacy", views.privacy_view, name="privacy"),
     path("/terms-and-conditions", views.tos_view, name="tos"),
 ]

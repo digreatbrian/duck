@@ -20,7 +20,7 @@ class OurServicesStyle(Style):
             }
             
             .service-card {
-                width: 45% !important;
+                width: 45%;
             }
         """.replace('{url}', static('images/bg-black-gradient.png'))
 

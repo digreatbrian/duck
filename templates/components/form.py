@@ -116,18 +116,22 @@ class FeedbackForm(Form):
             type="text",
             placeholder="Full Name",
             required=True,
-            maxlength=64,)
+            maxlength=64,
+            name="fullname")
         
         email = InputField(
             type="email",
             placeholder="Email",
             required=True,
-            maxlength=64)
+            maxlength=64,
+            name="email"
+            )
         
         textarea = TextArea(
             placeholder="What is it you like to say?",
             maxlength=255,
-            required=True,)
+            required=True,
+            name="feedback")
         
         textarea.properties["rows"] = "4"
         textarea.properties["cols"] = "50"

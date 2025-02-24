@@ -11,6 +11,7 @@ from .video import Video
 from .form import FeedbackForm
 from .icon import IconLink
 from .style import Style
+from .script import Script
 
 
 class ContactDetails(FlexContainer):
@@ -74,15 +75,28 @@ class Content(FlexContainer):
         # Add feedback form
         form_container = FlexContainer()
         form_container.style["flex-direction"] = "column"
+        form_container.style["gap"] = "5px"
         form_container.style["width"] = "100%"
+        
+        # Add feedback message
+        feedback_msg = FlexContainer()
+        feedback_msg.style["color"] = "#ccc"
+        feedback_msg.style["padding"] = "5px"
+        
+        # Add feedback message
+        if "feedback-message" in self.kwargs:
+            msg = self.kwargs.get("feedback-message", "")
+            feedback_msg.inner_body += msg
+            
+        form_container.add_child(feedback_msg)
         
         feedback_form = FeedbackForm(
             enctype="form/multipart-data",
-            action=resolve('feedback', fallback_url='#'),
+            action="#feedback-form",
             method="post",
             **self.kwargs)
-        
         feedback_form.style["width"] = "60%"
+        feedback_form.properties["id"] = "feedback-form"
         
         # Add form to form container
         form_container.add_child(feedback_form)
@@ -114,6 +128,9 @@ class ContactUs(FlexContainer):
         self.properties["id"] = "contact-us"
         
         # Add content
+        context = self.kwargs.get('context')
+        if "feedback-message" in context:
+            self.kwargs["feedback-message"] = context.get('feedback-message')
         content = Content(**self.kwargs)
         self.add_child(content)
         
