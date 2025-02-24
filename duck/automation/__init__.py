@@ -402,6 +402,12 @@ class Automation:
         """
         return self.execution_times
 
+    def prepare_stop(self):
+        """
+        Called before the main application termination.
+        """
+        pass
+        
     def get_running_app(self):
         """
         Returns the main running application

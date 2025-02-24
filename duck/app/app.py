@@ -472,7 +472,8 @@ class App:
             
     def on_pre_stop(self):
         """Event called before final app termination."""
-        pass
+        if SETTINGS['RUN_AUTOMATIONS']:
+            self.automations_dispatcher.prepare_stop()
 
     def stop(self, log_to_console: bool = True, no_exit=False):
         """

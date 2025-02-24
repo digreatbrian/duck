@@ -18,7 +18,7 @@ from duck.urls import path, re_path
 
 from . import views
 
-{blueprint_name} = Blueprint(
+{blueprint_name.title()} = Blueprint(
     location=__file__,
     name="{blueprint_name_lower}",
     urlpatterns=[
@@ -93,9 +93,4 @@ def makeblueprint(
          dirs_exist_ok=overwrite_existing,
          ignore=ignore_pycache,
      )
-    
-    if os.path.isdir(destination_dir):
-        if overwrite_existing:
-            create_blueprint_py(name, destination_dir)
-    else:
-        create_blueprint_py(name, destination_dir)
+    create_blueprint_py(name, destination_dir)

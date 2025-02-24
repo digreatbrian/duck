@@ -279,12 +279,13 @@ class URL:
                 raise InvalidPortError(f"Port obtained from authority (netloc) cannot be converted to integer: {e}")
         return host, port
         
-    def innerjoin(self, head_url: str) -> None:
+    def innerjoin(self, head_url: str):
         """
         Joins the current URL object with new url
         """
         new_url = URL.urljoin(self.to_str(), head_url)
         self.parse(new_url)
+        return self
         
     def split_scheme_and_authority(self, url: str) -> Tuple[str, str, str]:
         """

@@ -395,7 +395,21 @@ def format_date(date: datetime, format_str: str = "%Y-%m-%d %H:%M:%S") -> str:
     return date.strftime(format_str)
 
 
-def parse_date(date_str: str, format_str: str = "%Y-%m-%d %H:%M:%S") -> datetime.datetime:
+def parse_datetime(datetime_str: str, format_str: str = "%d-%m-%Y %H:%M:%S") -> datetime.datetime:
+    """
+    Parses a date string into a datetime object using the given format.
+
+    Args:
+        datetime_str (str): The date string to parse.
+        format_str (str): The format string.
+
+    Returns:
+        datetime: The parsed datetime object.
+    """
+    return datetime.datetime.strptime(datetime_str, format_str)
+
+
+def parse_date(date_str: str, format_str: str = "%d-%m-%Y") -> datetime.datetime:
     """
     Parses a date string into a datetime object using the given format.
 
@@ -407,6 +421,20 @@ def parse_date(date_str: str, format_str: str = "%Y-%m-%d %H:%M:%S") -> datetime
         datetime: The parsed datetime object.
     """
     return datetime.datetime.strptime(date_str, format_str)
+
+
+def parse_time(time_str: str, format_str: str = "%H:%M:%S") -> datetime.datetime:
+    """
+    Parses a time string into a datetime object using the given format.
+
+    Args:
+        time_str (str): The time string to parse.
+        format_str (str): The format string.
+
+    Returns:
+        datetime: The parsed datetime object.
+    """
+    return datetime.datetime.strptime(time_str, format_str)
 
 
 def calculate_date_diff(start_date: datetime, end_date: datetime) -> datetime.timedelta:

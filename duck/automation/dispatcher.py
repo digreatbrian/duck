@@ -115,6 +115,14 @@ class AutomationDispatcher:
         """
         return self.__queue
 
+    def prepare_stop(self):
+        """
+        Called before the main application termination.
+        """
+        for executed_automation in self.executed_automations:
+            if executed_automation.is_running:
+                executed_automation.prepare_stop()
+    
     def unregister(self, trigger: AutomationTrigger, automation: Automation):
         """
         Removes an automation from the ready queue.

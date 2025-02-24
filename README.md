@@ -368,7 +368,7 @@ ProductsBlueprint = Blueprint(
         ),
     ],
     prepend_name_to_urls=False,
-    is_builtin=True,
+    is_builtin=False,
     enable_template_dir=True,
     enable_static_dir=True,
 )

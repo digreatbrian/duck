@@ -360,7 +360,11 @@ class BaseHttp2Server(BaseServer):
              except ssl.SSLEOFError:
                   # Suppress error: EOF occurred in violation of protocol (_ssl.c:2417)
                   pass
-            
+             
+             except ssl.SSLError:
+                 # suppress ssl errors
+                 pass
+                 
     def send_goaway(self, sock, error_code, debug_message: bytes = None):
         """Send a GOAWAY frame with the given error code and debug_message."""
         sock.h2_keep_connection = False
@@ -386,8 +390,9 @@ class BaseHttp2Server(BaseServer):
             
         except Exception as e:
             # Client might have terminated the connection
-            if not "EOF occurred in violation of protocol" in str(e):
-                # Log error only if its not "EOF occurred in violation of protocol" Error
+            if not "EOF occurred in violation of protocol" in str(e) and not "bad length" in str(e):
+                # Log error only if its not "EOF occurred in violation of protocol" Error or
+                # not [SSL: BAD_LENGTH] bad length (_ssl.c:2417)
                 logger.log_raw(f"Error sending GOAWAY: {e}", level=logger.WARNING)
             
         finally:
