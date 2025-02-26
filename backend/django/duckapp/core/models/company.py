@@ -14,3 +14,6 @@ class Company(models.Model):
     The image source for the company's logo or branding. This image is uploaded to 'company_images/'.
     Can be left blank or null if no image is provided.
     """
+    
+    def __str__(self):
+        return f"{self.__class__.__name__} [{self.name}]"

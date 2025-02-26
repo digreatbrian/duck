@@ -140,8 +140,9 @@ class FeedbackForm(Form):
             type="submit",
             value="Submit",)
         
-        submit.style["background-color"] = "transparent"
-        submit.style["backdrop-filter"] = "blur(50px)"
+        submit.style["background-color"] = "rgba(100, 100, 100, .35)"
+        submit.style["border"] = "none"
+        submit.style["font-size"] = "1rem"
         submit.style["color"] = "#ccc"
         
         context = self.kwargs.get("context")

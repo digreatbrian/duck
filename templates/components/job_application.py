@@ -29,6 +29,7 @@ class JobCardTopItems(FlexContainer):
         super().on_create()
         self.style["flex-direction"] = "row"
         self.style["gap"] = "10px"
+        self.style["flex-wrap"] = "wrap"
         self.properties["class"] = "job-card-top-items"
         
         job = self.kwargs["job"]
@@ -36,7 +37,7 @@ class JobCardTopItems(FlexContainer):
         job_posting = job.posting_date
         job_expiration_date = job.expiration_date
         job_description = job.description
-        job_company = job.company
+        job_company = job.company.name
         
         # Create left and right containers
         # Create left container
@@ -97,7 +98,8 @@ class JobCardBottomItems(FlexContainer):
         job_id = job.job_id
         
         # Add job industry
-        self.inner_body += f"<p>Industry:  {job_industry}</p>"
+        if job_industry:
+            self.inner_body += f"<p>Industry:  {job_industry}</p>"
         
         # Add job salary and salary period
         self.inner_body += f"<p>{job_salary}</p>" if job_salary else None
@@ -333,11 +335,11 @@ class FileDragAndDrop(Card):
 
 class Popup(FlexContainer):
     def on_create(self):
-        self.style["min-width"] = "100vw"
+        self.style["width"] = "100%"
         self.style["min-height"] = "100vh"
         self.style["background-color"] = "black"
         self.style["padding"] = "5px"
-        self.style["position"] = "fixed"
+        self.style["position"] = "absolute"
         self.style["z-index"] = "5"
         self.style["transition"] = "display 0.3s ease"
         self.style["top"] = "0"
@@ -550,7 +552,7 @@ class JobApplicationForm(Form):
                             if (xhr.responseJSON && xhr.responseJSON.error) {
                                 errorMsg = xhr.responseJSON.error; // Show error message from server
                             } else if (xhr.status !== 200) {
-                                errorMsg = "Server returned an error: " + xhr.status + " " + errorThrown;
+                                errorMsg = errorMsg + ": " + xhr.status + " " + errorThrown;
                             }
                 
                             showJobApplicationStatus({ "error": errorMsg });
@@ -589,7 +591,6 @@ class JobApplicationStatus(FlexContainer):
         self.style["background-color"] = "transparent"
         self.style["backdrop-filter"] = "blur(50px)"
         self.style["border-radius"] = Theme.border_radius
-        self.style["border"] = "1px solid #ccc"
         self.style["justify-content"] = "center"
         self.style["align-items"] = "center"
         self.style["color"] = "white"
@@ -609,6 +610,11 @@ class JobApplicationStatus(FlexContainer):
                     const statusContainer = $(".job-application-status");
                     const statusLabel = statusContainer.find(".job-application-status-label");
                     const statusIcon = statusContainer.find(".job-application-status-icon");
+                    
+                    // Scroll to statusContainer
+                    $('html, body').animate({
+                        scrollTop: statusContainer.offset().top
+                    }, 1000); // 1000 is the duration in milliseconds (1 second)
                     
                     let successIconClass = "bi bi-check-circle";
                     let errorIconClass = "bi bi-exclamation-circle";

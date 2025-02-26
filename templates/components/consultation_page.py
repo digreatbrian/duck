@@ -161,19 +161,13 @@ class ConsultationForm(Form):
             value="Request consultancy service",
             type="button")
         
-        submit.style["background-color"] = "transparent"
-        submit.style["backdrop-filter"] = "blur(50px)"
+        submit.style["background-color"] = "rgba(100, 100, 100, .35)"
+        submit.style["border"] = "none"
+        submit.style["font-size"] = "1rem"
         submit.style["color"] = "#ccc"
         submit.properties["class"] = "submit-button"
         submit.properties["onclick"] = "submitApplication()"
         
-        notification_label = InputWithLabel(
-            label_text="We will confirm your consultation in about 24 hours!",
-            properties={
-                "class": "text-center",
-            }
-         )
-         
          # Add script for applying for consultation
         script = Script(
             inner_body="""
@@ -205,7 +199,7 @@ class ConsultationForm(Form):
                         success: function (response, textStatus, xhr) {
                             if (xhr.status === 200 && response.success) {
                                 // Handle success (200 OK)
-                                showJobConsultationStatus(response);
+                                showConsultationStatus(response);
                             } else {
                                 // Error response (no success key in the response)
                                 showConsultationStatus(response);
@@ -218,7 +212,7 @@ class ConsultationForm(Form):
                             if (xhr.responseJSON && xhr.responseJSON.error) {
                                 errorMsg = xhr.responseJSON.error; // Show error message from server
                             } else if (xhr.status !== 200) {
-                                errorMsg = "Server returned an error: " + xhr.status + " " + errorThrown;
+                                errorMsg = errorMsg + ": " + xhr.status + " " + errorThrown;
                             }
                 
                             showConsultationStatus({ "error": errorMsg });
@@ -252,9 +246,6 @@ class ConsultationForm(Form):
         # Super Create
         super().on_create()
         
-        # Add notification label
-        self.inner_body += notification_label.to_string()
-
 
 class Popup(FlexContainer):
     def on_create(self):
@@ -262,7 +253,7 @@ class Popup(FlexContainer):
         self.style["min-height"] = "100vh"
         self.style["background-color"] = "black"
         self.style["padding"] = "5px"
-        self.style["position"] = "fixed"
+        self.style["position"] = "absolute"
         self.style["z-index"] = "5"
         self.style["transition"] = "display 0.3s ease"
         self.style["top"] = "0"
@@ -329,7 +320,6 @@ class ConsultationStatus(FlexContainer):
         self.style["background-color"] = "transparent"
         self.style["backdrop-filter"] = "blur(50px)"
         self.style["border-radius"] = Theme.border_radius
-        self.style["border"] = "1px solid #ccc"
         self.style["justify-content"] = "center"
         self.style["align-items"] = "center"
         self.style["color"] = "white"
@@ -349,6 +339,11 @@ class ConsultationStatus(FlexContainer):
                     const statusContainer = $(".consultation-status");
                     const statusLabel = statusContainer.find(".consultation-status-label");
                     const statusIcon = statusContainer.find(".consultation-status-icon");
+                    
+                    // Scroll to statusContainer
+                    $('html, body').animate({
+                        scrollTop: statusContainer.offset().top
+                    }, 1000); // 1000 is the duration in milliseconds (1 second)
                     
                     let successIconClass = "bi bi-check-circle";
                     let errorIconClass = "bi bi-exclamation-circle";

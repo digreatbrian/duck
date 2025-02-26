@@ -26,6 +26,7 @@ class JobCardTopItems(FlexContainer):
         super().on_create()
         self.style["flex-direction"] = "row"
         self.style["gap"] = "10px"
+        self.style["flex-wrap"] = "wrap"
         self.properties["class"] = "job-card-top-items"
         
         job = self.kwargs["job"]
@@ -33,7 +34,7 @@ class JobCardTopItems(FlexContainer):
         job_posting = job.posting_date
         job_expiration_date = job.expiration_date
         job_description = job.description
-        job_company = job.company
+        job_company = job.company.name
         
         # Create left and right containers
         # Create left container
@@ -97,7 +98,8 @@ class JobCardBottomItems(FlexContainer):
         job_id = job.job_id
         
         # Add job industry
-        self.inner_body += f"<p>Industry:  {job_industry}</p>"
+        if job_industry:
+            self.inner_body += f"<p>Industry:  {job_industry}</p>"
         
         # Add job salary and salary period
         self.inner_body += f"<p>{job_salary}</p>" if job_salary else None

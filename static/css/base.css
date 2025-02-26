@@ -28,12 +28,26 @@
     height: auto;
     padding: 15px;
   }
-  body {
-      font-size: 0.75rem !important;
+  
+  p {
+      font-size: .9rem !important;
+  }
+  
+  input, textarea {
+      font-size: 1rem !important;
   }
   
   form {
       width: 100% !important;
+      border: none !important
+  }
+  
+  video, img, .our-services {
+      border: none !important;
+  }
+  
+  .hero-right-content .image-container {
+      display: none !important;
   }
   
   .service-cards {
@@ -41,7 +55,49 @@
   }
   
   .hero-content {
-      top: 5% !important;
+      top: 8% !important;
+  }
+  
+  .contact-intro {
+      font-size: 1.2rem;
+  }
+  
+  .consultation-page {
+      border: none !important;
+  }
+  
+  .info-container, #info-container {
+      font-size: 1rem !important;
+  }
+  
+  div.form-control {
+      font-size: 1rem !important;
+  }
+  
+  .job-card-top-items img {
+      width: 100px !important;
+      height: 100px !important;
+  }
+  
+  #jobs-page, #job-application-page {
+      padding: 0px !important;
+      border: none !important;
+      width: 100%;
+  }
+  
+  footer {
+      font-size: .8rem;
+  }
+  
+  footer p {
+      font-size: .8rem !important;
+  }
+  
+  footer img {
+      width: 25px;
+      height: 25px;
+      margin-top: 5px;
+      margin-bottom: 5px;
   }
 }
 
@@ -122,6 +178,10 @@ button {
   margin-top: 5px;
 }
 
+.form-control input, textarea, select {
+    border-radius: var(--border-radius) !important;
+}
+
 /* Creating the general gradient bg effect with moving gradient */
 .gradient-bg::before {
   content: "";
@@ -149,7 +209,7 @@ button {
   background-size: 400% 400%;
   border-radius: 8px;
   z-index: -1;
-  animation: move-gradient-bg 2s linear infinite, pulse-bg 1s ease-in-out infinite;
+  animation: move-gradient-bg 2s linear infinite;
 }
 
 /* Creating the success bg effect with pulsing and moving gradient */
@@ -164,7 +224,7 @@ button {
   background-size: 400% 400%;
   border-radius: 8px;
   z-index: -1;
-  animation: move-gradient-bg 2s linear infinite, pulse-bg 1s ease-in-out infinite;
+  animation: move-gradient-bg 2s linear infinite;
 }
 
 /* Animation for moving gradient effect */

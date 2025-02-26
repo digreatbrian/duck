@@ -74,7 +74,9 @@ class EmailAutomation(Automation):
                     from_=email["from_"],
                     subject=email["subject"],
                     name=email["name"],
-                    body=email["body"]
+                    body=email["body"],
+                    recipients=email["recipients"],
+                    use_bc=email["use_bc"],
                 ) for email in email_data
             ])
         except FileNotFoundError:
@@ -91,7 +93,9 @@ class EmailAutomation(Automation):
                 "from_": email.from_,
                 "subject": email.subject,  # Include subject
                 "name": email.name,        # Include name
-                "body": email.body
+                "body": email.body,
+                "recipients": email.recipients,
+                "use_bc": email.use_bc,
             }
             emails.append(email_data)
         
@@ -132,7 +136,10 @@ class EmailAutomation(Automation):
             await asyncio.to_thread(email.send)
             logger.log(f"✅ Email sent to {email.to}", level=logger.DEBUG)
         except Exception as e:
-            logger.log(f"⚠️ Failed to send email to {email.to}, re-queuing... {e}", level=logger.WARNING)
+            if not hasattr(email, "last_error"):
+                # Only log email error message once
+                logger.log(f"⚠️ Failed to send email to {email.to}, re-queuing... {e}", level=logger.WARNING)
+                email.last_error = e
             self.emails.append(email)  # Retry by adding it back to the queue
 
     def execute(self):

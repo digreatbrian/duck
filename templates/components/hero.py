@@ -13,7 +13,7 @@ class HeroLeftContent(FlexContainer):
         super().on_create()
         self.style["flex-direction"] = "column"
         self.style['width'] = "50%"
-        self.properties["class"] = "text-color-primary"
+        self.properties["class"] = "hero-left-content text-color-primary"
         
         heading = self.kwargs.get('heading', '')
         subheading = self.kwargs.get('subheading', '')
@@ -43,13 +43,14 @@ class HeroRightContent(FlexContainer):
         self.style["min-height"] = "50vh"
         self.style["min-width"] = "30%"
         self.style["border-radius"] = Theme.border_radius
-        self.properties["class"] = "text-color-primary"
+        self.properties["class"] = "hero-right-content text-color-primary"
         
         # Create and add image and placeholder to image container
         image_container = FlexContainer()
         image_container.style["flex-direction"] = "column"
         image_container.style["position"] = "absolute"
         image_container.style["right"] = "0px"
+        image_container.properties["class"] = "image-container"
         
         # Add image to image container
         image = Image(source=static('images/founder.png'))

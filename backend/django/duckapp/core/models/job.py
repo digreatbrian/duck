@@ -90,11 +90,14 @@ class Job(models.Model):
         """
         
     def __repr__(self):
-        return f"Job({self.job_id}, {self.title}, {self.company}, {self.location}, {self.job_type})"
-
+        return f"{self.__class__.__name__}({self.job_id}, {self.title}, {self.company}, {self.location}, {self.job_type})"
+    
+    def __str__(self):
+        return f"{self.__class__.__name__} ({self.title}, {self.location}, {self.company})"
+    
     @property
     def company_image_url(self):
-        relative_path = self.company_image_source.name
+        relative_path = self.company.image.name
         return media(relative_path.strip() or "/")
         
     @property

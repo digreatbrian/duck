@@ -4,6 +4,9 @@ import smtplib
 from dotenv import load_dotenv
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import formataddr
+
+from duck.shortcuts import render
 
 
 # Load environment variables
@@ -34,7 +37,17 @@ class Gmail:
         send(): Sends the composed email via the Gmail SMTP server.
     """
 
-    def __init__(self, to: str, subject: str, name: str, body: str, app_pwd: str = GMAIL_APP_PWD, from_: str = GMAIL_ACCOUNT):
+    def __init__(
+        self,
+        to: str,
+        subject: str,
+        name: str,
+        body: str,
+        app_pwd: str = GMAIL_APP_PWD,
+        from_: str = GMAIL_ACCOUNT,
+        recipients: list = None,
+        use_bc: bool = True,
+        ):
         """
         Initializes the Email instance with the given details.
 
@@ -45,6 +58,8 @@ class Gmail:
             body (str): Body content of the email.
             app_pwd (str, optional): Gmail app password. Defaults to `GMAIL_APP_PWD`.
             from_ (str, optional): Sender's email address. Defaults to `GMAIL_ACCOUNT`.
+            recipients (list, optional): List of recipient emails
+            use_bc (bool): Whether to use blind carbon copy if recipients provided. Defaults to True
         """
         self.to = to
         self.subject = subject
@@ -52,6 +67,8 @@ class Gmail:
         self.body = body
         self.app_pwd = app_pwd
         self.from_ = from_
+        self.recipients = recipients
+        self.use_bc = use_bc
         self.is_sent = False
 
     def send(self):
@@ -73,17 +90,27 @@ class Gmail:
             body=self.body,
             app_pwd=self.app_pwd,
             from_=self.from_,
+            recipients=self.recipients,
+            use_bc=self.use_bc,
         )
         self.is_sent = True
 
-    
+
+def render_email(context: dict, template: str = "email.html", engine: str = "django") -> str:
+    request = context.get('request')
+    return render(request, template, context, engine=engine).content.decode('utf-8')
+
+
 def send_email(
     to: str,
     subject: str,
     name: str,
     body: str,
     app_pwd: str = GMAIL_APP_PWD,
-    from_: str = GMAIL_ACCOUNT):
+    from_: str = GMAIL_ACCOUNT,
+    recipients: list[str] = None,
+    use_bc: bool = True,
+    ):
     """
     Send an email using SMTP with a simple HTML body.
 
@@ -94,7 +121,9 @@ def send_email(
         body (str): The main content of the email.
         app_pwd (str): The Gmail app password (use an app-specific password or OAuth token).
         from_ (str, optional): The sender's email address. Defaults to `GMAIL_ACCOUNT`.
-
+        recipients (list, optional): List of recipient emails
+        use_bc (bool): Whether to use blind carbon copy if recipients provided. Defaults to True
+        
     Returns:
         None: This function does not return any value. It sends an email.
     
@@ -115,9 +144,14 @@ def send_email(
         
     # Create the email message
     msg = MIMEMultipart()
-    msg['From'] = from_
+    msg['From'] = formataddr((name, from_))
     msg['To'] = to
     msg['Subject'] = subject
+    
+    all_recipients = [to] + (recipients or [])
+    
+    if recipients and not use_bc:
+        msg["Cc"] = ", ".join(recipients)
     
     # Attach the email body to the message
     msg.attach(MIMEText(email_content, 'html'))
@@ -125,4 +159,4 @@ def send_email(
     # Send the email via Gmail's SMTP server
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(from_, app_pwd)
-        server.sendmail(from_, to, msg.as_string())
+        server.sendmail(from_, all_recipients, msg.as_string())

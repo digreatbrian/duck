@@ -34,7 +34,20 @@ class ContactDetails(FlexContainer):
         self.inner_body += phone_icon.to_string()
         
         # Add icon style
-        style = Style(inner_body="""#contact-us-details span.icon {font-size: 3rem;}""")
+        style = Style(
+            inner_body="""
+                #contact-us-details span.icon {
+                    font-size: 3rem;
+                }
+                
+                @media (max-width: 768px) {
+                    #contact-us-details span.icon {
+                        font-size: 1.5rem;
+                    }
+                }
+                
+             """,
+        )
         self.inner_body += style.to_string()
 
 

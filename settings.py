@@ -143,7 +143,7 @@ REQUEST_HANDLING_TASK_EXECUTOR_KWARGS: dict = {
 # Determines whether to use asynchronous request handling.
 # If set to False, the framework defaults to multithreaded request handling.
 # Example: ASYNC_HANDLING=True enables async handling; False uses threads.
-ASYNC_HANDLING: bool = 0
+ASYNC_HANDLING: bool = False
 
 
 # Server Buffer
@@ -243,12 +243,12 @@ PROXY_STREAM_CHUNK_SIZE = 4096
 # DJANGO INTEGRATION
 # Whether to use Django for Backend
 # This will make Duck server act as Proxy for Django
-USE_DJANGO: bool = 0
+USE_DJANGO: bool = False
 
 
 # Django Server Port
 # This is the port where django server will be started on
-DJANGO_BIND_PORT: int = 9898
+DJANGO_BIND_PORT: int = 9888
 
 
 # Django Server Wait Time
@@ -361,6 +361,7 @@ HTML_COMPONENTS: dict[str, str] = {
     
     # App specific components
     "Link": "templates.components.link.Link",
+    "Script": "templates.components.script.Script",
     "Navbar": "templates.components.navbar.Navbar",
     "Hero": "templates.components.hero.Hero",
     "Image": "templates.components.image.Image",

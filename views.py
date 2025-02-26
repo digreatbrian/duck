@@ -6,6 +6,7 @@ from duck.backend.django.utils import to_django_uploadedfile
 from duck.shortcuts import render
 from duck.utils.dateutils import parse_date, parse_time
 from duck.utils.urlcrack import URL
+from duck.utils.safemarkup import mark_safe
 from duck.utils.validation import (
     validate_email,
     validate_phone,
@@ -23,8 +24,11 @@ from backend.django.duckapp.core.models import (
     Feedback, Job,
     ConsultationRequest,
 )
-from apps.mail.mail import Gmail
-from apps.mail.templates.components.email import SimpleEmail
+from apps.mail.mail import (
+    Gmail,
+    render_email,
+    GMAIL_ACCOUNT,
+)
 from automations import queue_email
 from templates.components.jobs_page import JobCard
 
@@ -64,20 +68,24 @@ def contact_view(request):
             if admin_site != "#":
                 admin_site = URL(admin_site).innerjoin("admin").to_str()
                 
-            email = Gmail(
+            our_email = Gmail(
                 to="digreatbrian@gmail.com",
                 subject="New feedback",
                 name="Yannick Web",
-                body=SimpleEmail(
-                    heading=f"New feedback from {fullname}",
-                    subheading=f"Email: {email}",
-                    body=f"{feedback}<br><br>Attend to this directly in Admin site: %s"%(
-                        admin_site),
-                ).to_string(),
+                body=render_email(
+                    context={
+                        "request": request,
+                        "heading": f"New feedback from {fullname}",
+                        "subheading": f"Email: {email}",
+                        "body": f"{feedback}<br><br>Attend to this directly in Admin site: %s"%(admin_site),
+                    }
+                 ),
+                 recipients=[GMAIL_ACCOUNT], # Also send a copy to official company email (the one responsible for sending emails)
+                 use_bc=True,
             )
             
             # Schedule the email
-            queue_email(email)
+            queue_email(our_email)
         except Exception:
             ctx["feedback-message"] = "<p style='color: red'>Error submitting feedback</p>"
     return render(request, "contact.html", ctx, engine="django")
@@ -126,7 +134,12 @@ def consultation_view(request):
             preferred_date = parse_date(
                 preferred_date.replace('/', '-'), "%d-%m-%Y")
         except Exception:
-            return {"error": "Error parsing preferred date"}
+            try:
+                # try in different format for the last time
+                preferred_date = parse_date(
+                    preferred_date.replace('/', '-'), "%Y-%m-%d")
+            except Exception:
+                return {"error": "Error parsing preferred date"}
         
         try:
             preferred_time = parse_time(preferred_time, "%H:%M")
@@ -157,12 +170,16 @@ def consultation_view(request):
             to="digreatbrian@gmail.com",
             subject="New consultation request",
             name="Yannick Web",
-            body=SimpleEmail(
-                heading=f"New consultation request from {fullname}",
-                subheading=f"Email: {email}",
-                body="Attend to this directly in Admin site: %s"%(
-                    admin_site),
-            ).to_string(),
+            body=render_email(
+                context={
+                    "request": request,
+                    "heading": f"New consultation request from {fullname}",
+                    "subheading": f"Email: {email}",
+                    "body": f"Attend to this directly in Admin site: %s"%(admin_site),
+                }
+            ),
+            recipients=[GMAIL_ACCOUNT], # Also send a copy to official company email (the one responsible for sending emails)
+            use_bc=True,
          )
         
         # Schedule client email also
@@ -170,11 +187,14 @@ def consultation_view(request):
             to=email,
             subject="Consultation at Yannick",
             name="Yannick Consultancy",
-            body=SimpleEmail(
-                heading=f"Consultancy Service: {consultancy_service_type}",
-                subheading=f"",
-                body="We have received your consultation request, thank you for choosing Yannick Consultancy.",
-            ).to_string(),
+            body=render_email(
+                context={
+                    "request": request,
+                    "heading": f"Consultancy service at Yannick Consultancy",
+                    "subheading": f"Consultancy Service: {consultancy_service_type}",
+                    "body": "We have received your consultation request, we will get back to you soon. Thank you for choosing Yannick Consultancy.",
+                },
+            )
          )
         
         # Schedule the emails
@@ -189,7 +209,6 @@ def consultation_view(request):
                 return JsonResponse(content=response, status_code=400)
             return JsonResponse(content=response)
         except Exception:
-            raise
             response = {"error": "Error processing request"}
             return JsonResponse(content=response, status_code=400)
     
@@ -317,19 +336,24 @@ def job_application_view(request, job_id):
         admin_site = resolve('home', fallback_url="#")
         
         if admin_site != "#":
-            admin_site = URL(admin_site).innerjoin("admin").to_str()
+            admin_site = URL(admin_site).innerjoin(
+                "/admin/?next=/core/job-applications").to_str()
             
         # Schedule ourselves an email
         our_email = Gmail(
             to="digreatbrian@gmail.com",
             subject="New Job Application",
             name="Yannick Web",
-            body=SimpleEmail(
-                heading=f"New job application from {fullname}",
-                subheading=f"Email: {email}",
-                body="Attend to this directly in Admin site: %s"%(
-                    admin_site),
-            ).to_string(),
+            body=render_email(
+                context={
+                    "request": request,
+                    "heading": f"New job application from {fullname}",
+                    "subheading": mark_safe(f"Role: {job.title}<br>Email: {email}"),
+                    "body": mark_safe("Attend to this directly in <a href='%s'>Admin site</a>"%(admin_site)),
+                }
+            ),
+            recipients=[GMAIL_ACCOUNT], # Also send a copy to official company email (the one responsible for sending emails)
+            use_bc=True,
          )
         
         # Schedule client email also
@@ -337,14 +361,18 @@ def job_application_view(request, job_id):
             to=email,
             subject="Job application at Yannick",
             name="Yannick Consultancy",
-            body=SimpleEmail(
-                heading=f"Job application for {job.title}",
-                subheading=f"",
-                body="We have received your job application, we will get back to you as soon as possible.",
-            ).to_string(),
+            body=render_email(
+                context={
+                    "request": request,
+                    "heading": f"Job application for {job.title} role at Yannick Consultancy",
+                    "subheading": f"Hey job applicant👋",
+                    "body": "We have received your job application, we will get back to you as soon as possible.",
+                },
+            )
          )
         
         # Schedule the emails
+        emails = [client_email, our_email]
         [queue_email(email) for email in emails]
         return {"success": "Application submitted"}
        

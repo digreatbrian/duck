@@ -4,3 +4,4 @@ from django.db import models
 from .consultation import ConsultationRequest
 from .feedback import Feedback
 from .job import Job, JobApplication
+from .company import Company
