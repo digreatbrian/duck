@@ -66,8 +66,9 @@ def contact_view(request):
             admin_site = resolve('home', fallback_url="#")
             
             if admin_site != "#":
-                admin_site = URL(admin_site).innerjoin("admin").to_str()
-                
+                admin_site = URL(admin_site).innerjoin(
+                "/admin/?next=/core/feedbacks").to_str()
+            
             our_email = Gmail(
                 to="digreatbrian@gmail.com",
                 subject="New feedback",
@@ -77,7 +78,7 @@ def contact_view(request):
                         "request": request,
                         "heading": f"New feedback from {fullname}",
                         "subheading": f"Email: {email}",
-                        "body": f"{feedback}<br><br>Attend to this directly in Admin site: %s"%(admin_site),
+                        "body": mark_safe(f"{feedback}<br><br>Attend to this directly in <a href='%s'>Admin site</a>"%(admin_site)),
                     }
                  ),
                  recipients=[GMAIL_ACCOUNT], # Also send a copy to official company email (the one responsible for sending emails)
@@ -163,8 +164,9 @@ def consultation_view(request):
         admin_site = resolve('home', fallback_url="#")
         
         if admin_site != "#":
-            admin_site = URL(admin_site).innerjoin("admin").to_str()
-        
+            admin_site = URL(admin_site).innerjoin(
+                "/admin/?next=/core/consultation-requests").to_str()
+            
         # Schedule ourselves an email
         our_email = Gmail(
             to="digreatbrian@gmail.com",
@@ -175,7 +177,7 @@ def consultation_view(request):
                     "request": request,
                     "heading": f"New consultation request from {fullname}",
                     "subheading": f"Email: {email}",
-                    "body": f"Attend to this directly in Admin site: %s"%(admin_site),
+                    "body": mark_safe("Attend to this directly in <a href='%s'>Admin site</a>"%(admin_site)),
                 }
             ),
             recipients=[GMAIL_ACCOUNT], # Also send a copy to official company email (the one responsible for sending emails)

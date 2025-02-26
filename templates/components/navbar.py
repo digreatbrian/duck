@@ -27,15 +27,26 @@ class NavbarBrand(Link):
         image_source = brand.get("image_source")
         alt = brand.get("alt", "")
         url = brand.get('url', '#')
+        text = brand.get('text', '')
         
-        self.kwargs.update('url', url)
+        self.kwargs.update({'url': url})
         
         if image_source:  # Only add image if the source is provided
             brand_image = Image(source=image_source)
             brand_image.properties['class'] = "nav-brand-image"
+            brand_image.style["height"] = "50px"
+            brand_image.style["width"] = "auto"
+            
+            brand_text = FlexContainer(inner_body=text)
+            brand_text.style["display"] = "inline-flex"
+            brand_text.properties["class"] = "nav-brand-text"
+            
             if alt:
                 brand_image.properties["alt"] = alt
             self.add_child(brand_image)
+            
+            if text:
+                self.add_child(brand_text)
 
 
 class NavbarLinks(InnerHtmlComponent):
