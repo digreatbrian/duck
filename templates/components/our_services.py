@@ -15,8 +15,8 @@ class OurServicesStyle(Style):
             }
             
             .service-cards {
-                justify-content: center !important;
-                gap: 10px !important;
+                justify-content: center;
+                gap: 10px;
             }
             
             .service-card {

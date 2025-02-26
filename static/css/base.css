@@ -46,16 +46,25 @@
       border: none !important;
   }
   
+  .navbar-collapse {
+      justify-content: start !important;
+  }
+  
   .hero-right-content .image-container {
       display: none !important;
   }
   
-  .service-cards {
-    justify-content: center !important;
+  #hero-heading {
+      font-size: 4rem;
   }
   
-  .hero-content {
-      top: 8% !important;
+  #our-services {
+      border: none;
+  }
+  
+  .service-cards {
+    justify-content: center !important;
+    gap: 30px !important;
   }
   
   .contact-intro {
@@ -107,8 +116,8 @@
 }
 
 body {
-  min-width: 100vw;
   max-width: 100vw;
+  width: 100vw;
   color: var(--text-color);
   display: flex;
 }

@@ -675,7 +675,7 @@ class JobApplicationPage(FlexContainer):
         
         error_icon = Icon()
         error_icon.style["font-size"] = "3rem"
-        error_icon.properties["class"] = "bi bi-exclamation"
+        error_icon.properties["class"] = "bi bi-exclamation-circle"
         
         self.inner_body += error_icon.to_string()
         self.inner_body += message

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <meta name="description" content="Yannick Consultancy is a consultancy firm that provides services in business development, marketing, and technology.">
     <meta name="author" content="Yannick Consultancy">
     <title>{% block title %}Yannick{% endblock title %}</title>
@@ -64,7 +64,7 @@
          <section class="nav-hero-section">
            {% Navbar %}
               brand = {
-               "image_src": "{% static 'images/logo.png' %}",
+               "image_source": "{% static 'images/logo.png' %}",
                "alt": "Yannick Consultancy Logo",
                "url": '{% resolve "home" fallback_url="#" %}'
              },

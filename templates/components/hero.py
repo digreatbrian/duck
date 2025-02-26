@@ -86,9 +86,8 @@ class HeroContent(FlexContainer):
         self.properties["class"] = "hero-content"
         self.style["justify-content"] = "space-between"
         self.style["width"] = "98%"
-        self.style["position"] = "absolute"
+        self.style["position"] = "relative"
         self.style["padding"] = Theme.padding
-        self.style["top"] = "25%"
         
         # Add Hero left content
         hero_left_content = HeroLeftContent(**self.kwargs)
