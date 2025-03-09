@@ -19,15 +19,16 @@ from duck.utils.safemarkup import (
 from duck.meta import Meta
 from duck.settings import SETTINGS
 from duck.template.csrf import get_csrf_token
-from duck.shortcuts import resolve
 from duck.etc.templatetags.react_frontend import react_frontend
 
 
-def wrapped_resolve(*args, **kw):
+def resolve(*args, **kw):
     """
     Resolves URL associated with a name
     """
     # wrapped function to call resolve to avoid circular import.
+    from duck.shortcuts import resolve
+    
     url = resolve(*args, **kw)
     return url
 
@@ -104,7 +105,7 @@ media_tag = TemplateTag(
 
 resolve_tag = TemplateTag(
     tagname="resolve",
-    tagcallable=wrapped_resolve,
+    tagcallable=resolve,
 )
 
 react_fronted_tag = BlockTemplateTag(

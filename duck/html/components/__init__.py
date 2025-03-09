@@ -38,6 +38,20 @@ import re
 from typing import Dict, List, Optional
 
 
+def quote(html: str, element: str = 'span'):
+    """
+    Returns an html component quoting the provided html as its body.
+    
+    Args:
+        html (str): The html to quote, to set as the new html component body.
+        element (str): Element to quote with, Defaults to span.
+    
+    Returns:
+        InnerHtmlComponent: The html component with provided html as its body.
+    """
+    return InnerHtmlComponent(inner_body=html, element=element)
+
+
 class PropertiesStore(dict):
     """
     A dictionary subclass to store properties for HTML components, with certain restrictions.
@@ -375,29 +389,18 @@ class InnerHtmlComponent(HtmlComponent):
         return elem_string
 
 
-class DefaultTheme:
-    """
-    Defines the default theme for HTML components.
-    """
-
-    bg_color = "#4CAF50"
-    fg_color = "white"
-    border = "none"
-    border_radius = "5px"
+class Theme:
+    primary_color = "#4B4E75"  # Dark Blue
+    secondary_color = "#A6B48B"  # Soft Green
+    background_color = "#FFFFFF"  # White
+    text_color = "#333333"  # Dark Grey for readability
+    font_family = "Arial, sans-serif"
+    border_radius = "15px"
+    padding = "10px"
+    button_style = {
+        "background": primary_color,
+        "text_color": "#FFFFFF",
+        "border_radius": "5px",
+        "padding": "10px 20px"
+    }
     normal_font_size = "16px"
-
-    @classmethod
-    def get_base_style(cls) -> dict:
-        """
-        Returns the base style for the default theme.
-
-        Returns:
-            dict: The base style properties.
-        """
-        return {
-            "background-color": cls.bg_color,
-            "color": cls.fg_color,
-            "border": cls.border,
-            "border-radius": cls.border_radius,
-            "font-size": cls.normal_font_size,
-        }

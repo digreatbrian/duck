@@ -18,7 +18,7 @@ from duck.urls import path, re_path
 
 from . import views
 
-{blueprint_name.title()} = Blueprint(
+{blueprint_name_title} = Blueprint(
     location=__file__,
     name="{blueprint_name_lower}",
     urlpatterns=[
@@ -60,7 +60,7 @@ def create_blueprint_py(blueprint_name: str, dest_directory):
     with open(blueprint_path, "w") as f:
         f.write(
             BLUEPRINT_TEMPLATE.format(
-                blueprint_name=blueprint_name,
+                blueprint_name_title=blueprint_name.title(),
                 blueprint_name_lower=blueprint_name.lower()
         ))
 

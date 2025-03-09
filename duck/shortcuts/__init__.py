@@ -23,7 +23,11 @@ from duck.contrib.responses import (
     simple_response,
     template_response,
 )
-from duck.exceptions.all import RouteNotFoundError, TemplateError
+from duck.exceptions.all import (
+    RouteNotFoundError,
+    TemplateError,
+)
+
 from duck.meta import Meta
 from duck.routes import RouteRegistry
 
@@ -42,6 +46,9 @@ __all__ = [
     "replace_response",
     "resolve",
     "to_response",
+    "static",
+    "media",
+    "csrf_token",
 ]
 
 
@@ -49,6 +56,36 @@ class URLResolveError(Exception):
     """
     Raised if URL resolving fails.
     """
+
+
+def csrf_token(request) -> str:
+    """
+    Returns the csrf token, whether for django or duck request.
+    """
+    from duck.template.csrf import get_csrf_token
+    
+    if not SETTINGS["USE_DJANGO"]:
+        token = get_csrf_token(request)  # csrf_token
+    else:
+        from django.middleware.csrf import get_token
+        token = get_token(request)
+    return token
+
+
+def static(resource_path: str) -> str:
+    """
+    Returns the absolute static url path for provided resource.
+    """
+    from duck.etc.templatetags import static
+    return static(resource_path)
+
+
+def media(resource_path: str) -> str:
+    """
+    Returns the absolute media url path for provided resource.
+    """
+    from duck.etc.templatetags import media
+    return media(resource_path)
 
 
 def jinja2_render(

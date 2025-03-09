@@ -8,6 +8,9 @@ from duck.html.components import NoInnerHtmlComponent
 class Checkbox(NoInnerHtmlComponent):
     """
     HTML Checkbox component.
+    
+    Args:
+        - checked (bool): Whether the checkbox is checked or not.
     """
     def get_element(self):
         return "input"

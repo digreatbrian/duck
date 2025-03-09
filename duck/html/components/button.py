@@ -2,7 +2,7 @@
 Button Html Components
 """
 from typing import Dict
-from duck.html.components import DefaultTheme, InnerHtmlComponent
+from duck.html.components import Theme, InnerHtmlComponent
 
 
 class Button(InnerHtmlComponent):
@@ -18,11 +18,11 @@ class Button(InnerHtmlComponent):
             "cursor": "pointer",
             "transition": "background-color 0.3s ease",
             "border": "none",
+            "border-radius": Theme.border_radius
         }  # default style
         
         self.style.setdefaults(btn_style)
-        self.style.setdefaults(DefaultTheme.get_base_style())
-
+        
 
 class RoundedButton(Button):
     """
@@ -39,10 +39,8 @@ class FlatButton(Button):
     """
     def on_create(self):
         super().on_create()
-        
         self.style.setdefaults({
-            "background-color": "transparent",
-            "color": DefaultTheme.bg_color,
+            "background-color": "transparent"
         })
     
     

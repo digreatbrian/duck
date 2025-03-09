@@ -4,7 +4,7 @@ Select Html Component
 
 from duck.html.components import (
     InnerHtmlComponent,
-    DefaultTheme,
+    Theme,
 )
 
 
@@ -16,6 +16,9 @@ class Option(InnerHtmlComponent):
 class Select(InnerHtmlComponent):
     """
     HTML Select component.
+    
+    Args:
+        options (list[str]): List of options as text/html, make sure you remove 'option' tag from individual options.
     """
     def get_element(self):
         return "select"
@@ -24,8 +27,8 @@ class Select(InnerHtmlComponent):
         select_style = {
             "padding": "10px",
             "border": "1px solid #ccc",
-            "border-radius": DefaultTheme.border_radius,
-            "font-size": DefaultTheme.normal_font_size,
+            "border-radius": Theme.border_radius,
+            "font-size": Theme.normal_font_size,
         }
         self.style.setdefaults(select_style)
         

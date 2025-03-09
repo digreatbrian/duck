@@ -5,6 +5,10 @@ File containing settings for Duck application.
 import os
 import pathlib
 
+from duck.html.components.utils.include import (
+    BUILTIN_COMPONENTS,
+    components_include,
+)
 from duck.etc.middlewares import middlewares
 from duck.etc.normalizers import normalizers
 from duck.secrets import DUCK_SECRET, SECRET_DOMAIN
@@ -289,14 +293,8 @@ TEMPLATETAGS_MODULE: str = ""
 #             self.properties.setdefault("onclick", self.kwargs.get("onclick")) # you can optionally modify props and style absolutely by using update or indexing
 
 HTML_COMPONENTS: dict[str, str] = {
-    "Button": "duck.html.components.button.Button",
-    "FlatButton": "duck.html.components.button.FlatButton",
-    "RaisedButton": "duck.html.components.button.RaisedButton",
-    "Input": "duck.html.components.input.Input",
-    "CSRFInput": "duck.html.components.input.CSRFInput",
-    "Checkbox": "duck.html.components.checkbox.Checkbox",
-    "Select": "duck.html.components.select.Select",
-    "TextArea": "duck.html.components.textarea.TextArea",
+    "Button": "duck.html.components.button.Button", # example
+    **components_include(BUILTIN_COMPONENTS),
 }
 
 

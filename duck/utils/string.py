@@ -272,3 +272,47 @@ def reverse_words_in_sentence(text: str) -> str:
 def pad_text(text: str, total_length: int, padding_char: str = " ") -> str:
     """Pad a string to a specific total length."""
     return text.ljust(total_length, padding_char)
+
+
+def is_camel_case(s: str) -> bool:
+    """
+    Check if a given string follows CamelCase (UpperCamelCase) or lowerCamelCase.
+    
+    Args:
+        s (str): The input string to check.
+
+    Returns:
+        bool: True if the string is in CamelCase or lowerCamelCase, False otherwise.
+    """
+    # Ensure the string contains only letters and starts correctly
+    return bool(re.fullmatch(r"[a-z]+(?:[A-Z][a-z]*)*", s) or re.fullmatch(r"[A-Z][a-z]*(?:[A-Z][a-z]*)*", s))
+
+
+def is_camel_case(s: str) -> bool:
+    """Checks if a string follows camelCase (lowerCamelCase)."""
+    return bool(re.fullmatch(r"[a-z]+(?:[A-Z][a-z]*)*", s))
+
+
+def is_pascal_case(s: str) -> bool:
+    """Checks if a string follows PascalCase (UpperCamelCase)."""
+    return bool(re.fullmatch(r"[A-Z][a-z]*(?:[A-Z][a-z]*)*", s))
+
+
+def is_snake_case(s: str) -> bool:
+    """Checks if a string follows snake_case."""
+    return bool(re.fullmatch(r"[a-z]+(?:_[a-z]+)*", s))
+
+
+def is_screaming_snake_case(s: str) -> bool:
+    """Checks if a string follows SCREAMING_SNAKE_CASE."""
+    return bool(re.fullmatch(r"[A-Z]+(?:_[A-Z]+)*", s))
+
+
+def is_kebab_case(s: str) -> bool:
+    """Checks if a string follows kebab-case."""
+    return bool(re.fullmatch(r"[a-z]+(?:-[a-z]+)*", s))
+
+
+def is_train_case(s: str) -> bool:
+    """Checks if a string follows Train-Case (Capitalized Kebab Case)."""
+    return bool(re.fullmatch(r"[A-Z][a-z]*(?:-[A-Z][a-z]*)*", s))

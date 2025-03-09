@@ -3,10 +3,9 @@ Mini application of Duck app which may be used for many simple tasks.
 
 Notes:
 	- Mini applications run independently on their own individual ports.
-	- An example of a mini app is Duck's internal HttpsRedirectApp which is used to 
-	redirect http traffic to a more secure https server.
+	- An example of a mini app is Duck's internal HttpsRedirectApp which is used to
+	 redirect http traffic to a more secure https server.
 """
-
 import threading
 
 from duck.http.core.httpd.servers import (
