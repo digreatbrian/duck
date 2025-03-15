@@ -256,21 +256,42 @@ class BaseResponse:
         Return status code for the response.
         """
         return self.payload_obj.status_code
+    
+    @status_code.setter
+    def status_code(self, value: int) -> None:
+        """
+        Set status code for the response.
+        """
+        self.payload_obj.status_code = value
 
     @property
     def status_message(self) -> str:
         """
-        Return the status message for the response
+        Return the status message for the response.
         """
         return self.payload_obj.status_message
+
+    @status_message.setter
+    def status_message(self, value: str) -> None:
+        """
+        Set status message for the response.
+        """
+        self.payload_obj.status_message = value
 
     @property
     def status_explanation(self) -> str:
         """
-        Return the status message explantion for the response
+        Return the status message explanation for the response.
         """
         return self.payload_obj.explanation
 
+    @status_explanation.setter
+    def status_explanation(self, value: str) -> None:
+        """
+        Set status explanation for the response.
+        """
+        self.payload_obj.explanation = value
+        
     def set_multiple_cookies(self, cookies: Dict[str, Dict[str, Any]]) -> None:
         """
         Sets multiple cookies at once. Each cookie is specified by a dictionary of attributes.
@@ -896,7 +917,8 @@ class JsonResponse(HttpResponse):
         headers: Dict = {},
         content_type = "application/json",
     ):
-        json_content = json.dumps(content or {}).encode('utf-8')
+        self.json_obj = content or {}
+        json_content = json.dumps(self.json_obj).encode('utf-8')
         
         super().__init__(
             json_content,

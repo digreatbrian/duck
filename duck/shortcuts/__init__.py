@@ -13,6 +13,7 @@ from duck.http.response import (
     HttpRedirectResponse,
     HttpResponse,
     TemplateResponse,
+    JsonResponse,
 )
 from duck.utils.path import (
     build_absolute_uri,
@@ -40,6 +41,7 @@ __all__ = [
     "django_render",
     "render",
     "redirect",
+    "jsonify",
     "not_found404",
     "merge",
     "content_replace",
@@ -207,6 +209,21 @@ def redirect(location: str, permanent: bool = False, content_type="text/html", *
         permanent=permanent,
         **kw,
     )
+
+
+def jsonify(data: Any, status_code: int = 200, **kw):
+    """
+    Returns a JsonResponse object
+
+    Args:
+        data (Any): Json serializable data
+        status_code (int): The response status code. Defaults to 200.
+        **kwargs: Extra keywords to parse to JsonResponse
+    
+    Returns:
+        JsonResponse: The http json response object.
+    """
+    return JsonResponse(data, status_code=status_code, **kw,) 
 
 
 def not_found404(body: Optional[str] = None, content_type="text/html", **kw):

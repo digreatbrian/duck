@@ -137,6 +137,23 @@ class Request:
         return self.content_obj.data
     
     @property
+    def json(self):
+        """
+        Retrieves the json from the request content.
+
+        Returns:
+            dict: The data of the content associated with the request, typically the payload.
+        
+        Raises:
+            ValueError: If the request body cannot be parsed as JSON.
+        """
+        try:
+            # Load the JSON content from the request body
+            return json.loads(self.content.decode('utf-8'))
+        except json.JSONDecodeError as e:
+            raise ValueError("Invalid JSON data in the request") from e
+    
+    @property
     def protocol(self) -> Optional[str]:
         """
         Retrieves the HTTP version used in the request.

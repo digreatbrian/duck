@@ -38,6 +38,7 @@ class Code(InnerHtmlComponent):
         self.style["display"] = "flex"
         self.style["flex-direction"] = "column"
         self.style["gap"] = "3px"
+        self.style["padding"] = "10px"
         self.properties["class"] = "code-block"
         
         # Add code copy button
@@ -60,7 +61,7 @@ class Code(InnerHtmlComponent):
         self.code_inner.properties["class"] = "code-block-inner"
         self.add_child(self.code_inner)
         
-        # Add global script and style
+        # Add global script
         script = Script(
             inner_body="""
                 function copyCode(copyCodeBtn){
@@ -86,17 +87,8 @@ class Code(InnerHtmlComponent):
                 }
             """
         )
-        
-        style = Style(
-            inner_body="""
-                pre.code-block {
-                    padding: 10px;
-                }
-            """
-        )
         self.add_child(script)
-        self.add_child(style)
-    
+        
     def on_create(self):
         self.add_initial_components()
         
@@ -111,7 +103,10 @@ class Code(InnerHtmlComponent):
         if "code_style" in self.kwargs:
             code_style = self.kwargs.get('code_style') or {}
             self.code_inner.style.update(code_style)
-
+        
+        if "disable_copy_button" in self.kwargs and self.kwargs.get("disable_copy_button"):
+            self.remove_child(self.code_copy_container)
+                
 
 class EditableCode(Code):
     def on_create(self):

@@ -861,7 +861,15 @@ class App:
                 f'WARNING: Domain not set using "{self.domain}" ',
                 level=logger.WARNING,
             )
-
+        
+        if SETTINGS['ENABLE_HTML_COMPONENTS']:
+            # Components are enabled
+            logger.log(
+                "Component system is active"
+                f"\n  └──   Prebuilt components may require Bootstrap (+icons) & JQuery to work well",
+                level=logger.DEBUG,
+            )
+            
         if SETTINGS["RUN_AUTOMATIONS"]:
             logger.log(
                 f"Running all automations with {type(self.automations_dispatcher).__name__}",

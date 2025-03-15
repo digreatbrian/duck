@@ -101,6 +101,12 @@ class HtmlComponentError(Exception):
     """
 
 
+class NoParentError(Exception):
+    """
+    Exception raised for errors when an html component has no parent.
+    """
+
+
 class HtmlComponent:
     """
     Base class for HTML components.
@@ -150,6 +156,7 @@ class HtmlComponent:
         # Set roperties and style for the HTML element/component
         self.__properties = PropertiesStore() # Basic properties
         self.__style = PropertiesStore()  # Properties for CSS styling
+        self.__parent = None
         
         self.element = element
         self.accept_inner_body = accept_inner_body
@@ -164,6 +171,7 @@ class HtmlComponent:
         # add some properties and style
         self.__properties.update(properties)
         self.__style.update(style)
+        
         self.kwargs = kwargs
         self.on_create()
 
@@ -187,6 +195,22 @@ class HtmlComponent:
         """
         return self.__style
 
+    @property
+    def parent(self):
+        """
+        Returns the parent for the html component. This is only resolved if this html component has been added to some html component children.
+        """
+        if not self.__parent:
+            raise NoParentError("Html component has not been added to any parent component.")
+        return self.__parent
+        
+    @parent.setter
+    def parent(self, parent):
+        """
+        Sets the parent for the html component.
+        """
+        self.__parent = parent
+        
     def get_element(self):
         """
         Fallback method to retrieve the html element tag.
@@ -331,6 +355,7 @@ class InnerHtmlComponent(HtmlComponent):
         Args:
             child (HtmlComponent): The child component to add.
         """
+        child.parent = self
         self.children.append(child)
 
     def add_children(self, children: List[HtmlComponent]):

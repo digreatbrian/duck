@@ -48,7 +48,7 @@ class ResponseFinalizer:
         security = SECURITY_HEADERS or {}
 
         for h, v in {**extra, **cors, **security}.items():
-            response.set_header(h, v)
+            response.headers.setdefault(h, v)
 
     @log_failsafe
     def do_set_connection_mode(self, response, request) -> None:
