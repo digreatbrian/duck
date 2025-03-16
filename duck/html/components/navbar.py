@@ -39,7 +39,7 @@ class NavbarBrand(Link):
         if image_source:  # Only add image if the source is provided
             brand_image = Image(source=image_source)
             brand_image.properties['class'] = "nav-brand-image"
-            brand_image.style["height"] = "50px"
+            brand_image.style["height"] = "40px"
             brand_image.style["width"] = "auto"
             
             brand_text = FlexContainer(inner_body=text)

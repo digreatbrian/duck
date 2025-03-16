@@ -79,13 +79,24 @@ def guess_data_mimetype(data: bytes) -> str:
         b"<br",
         b"<b>",
     ]
-    
     if data.startswith(b"\xFF\xD8"):
-        return "image/jpeg"
+        return "image/jpeg"  # JPEG format
     elif data.startswith(b"\x89PNG\r\n\x1A\n"):
-        return "image/png"
+        return "image/png"  # PNG format
     elif data.startswith(b"GIF89a") or data.startswith(b"GIF87a"):
-        return "image/gif"
+        return "image/gif"  # GIF format
+    elif data.startswith(b"\x42\x4D"):  # BMP (Bitmap)
+        return "image/bmp"  # BMP format
+    elif data.startswith(b"\x47\x49\x46\x38"):  # WEBP (WebP Image)
+        return "image/webp"  # WebP format
+    elif data.startswith(b"\x00\x00\x01\x00"):  # ICO (Icon)
+        return "image/vnd.microsoft.icon"  # ICO format
+    elif data.startswith(b"\x49\x20\x20\x00"):  # HEIF (High Efficiency Image Format)
+        return "image/heif"  # HEIF format
+    elif data.startswith(b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"):  # TIFF (TIFF Image)
+        return "image/tiff"  # TIFF format
+    elif data.startswith(b"II*\x00") or data.startswith(b"MM\x00*"):  # TIFF (Big-endian or Little-endian)
+        return "image/tiff"  # TIFF format
     elif data.startswith(b"%PDF-"):
         return "application/pdf"
     elif data.startswith(b"\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1"):  # DOC signature
