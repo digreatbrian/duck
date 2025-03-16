@@ -861,10 +861,10 @@ class HttpRedirectResponse(HttpResponse):
     ):
         headers = {"Location": "%s" % location, **headers}
         self.location = location
-        status_code = 307  # temporary redirect
+        status_code = 302  # temporary redirect
 
         if permanent:
-            status_code = 308  # permanent redirect
+            status_code = 301  # permanent redirect
 
         super().__init__(
             "",
