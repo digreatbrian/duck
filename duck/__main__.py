@@ -112,8 +112,12 @@ def django(args):
 @click.option("-f", "--file", default=None, help="The main python file containing app instance (optional)")
 @click.option("--ipv6", is_flag=True, default=False, help="Run application using IPV6 (optional)")
 @click.option("--reload", is_flag=True, default=False, help="Run application in reload state. Application will run as if it was restarted (optional)")
-def runserver(address, port, domain, settings, ipv6, file, reload):
+@click.option("-dj", "--use-django", is_flag=True, default=False, help="Run application along with Django server. This overrides setting USE_DJANGO in settings.py (optional)")
+def runserver(address, port, domain, settings, ipv6, file, reload, use_django):
     """Run the development or production server."""
+    if use_django:
+        os.environ.setdefault("DUCK_USE_DJANGO", "true")
+        
     RunserverCommand.main(
         address=address,
         port=port,

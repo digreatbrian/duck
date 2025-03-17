@@ -84,3 +84,6 @@ def get_combined_settings() -> Settings:
 
 # Set and load important settings, objects, etc.
 SETTINGS: Settings = get_combined_settings()
+
+if os.getenv("DUCK_USE_DJANGO", None) == "true":
+    SETTINGS["USE_DJANGO"] = True
