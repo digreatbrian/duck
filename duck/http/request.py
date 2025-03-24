@@ -701,8 +701,8 @@ class Request:
         Extracts the query parameters from a given URL.
     
         This method splits the provided URL into two parts:
-        - The base URL (without the query string).
-        - A `QueryDict` containing the parsed query parameters.
+            - The base URL (without the query string).
+            - A `QueryDict` containing the parsed query parameters.
     
         Args:
             url (str): The URL containing the query string (e.g., `/path/?query1=value1&query2=value2`).
@@ -967,7 +967,6 @@ class Request:
         try:
             self._parse_raw_request(raw_request)
         except Exception as e:
-            raise
             if not isinstance(e, RequestSyntaxError) and not isinstance(
                     e, RequestUnsupportedVersionError):
                 e = RequestError(f"General request parse error: {e}")

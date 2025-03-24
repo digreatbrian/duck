@@ -1,5 +1,5 @@
 """
-A simple implementation of socket servers.
+Simple implementations of socket servers.
 """
 import ssl
 import socket

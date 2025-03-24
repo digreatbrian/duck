@@ -1,3 +1,6 @@
+"""
+Module, object and variable importation module.
+"""
 import importlib
 import importlib.util
 import sys

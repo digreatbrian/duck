@@ -1,9 +1,9 @@
 """
-Image html component.
+Image components module.
 
-Available Components:
-    Image: Base html component
-    CircularImage: Rounded circular image.
+Available Images:
+    - Image: Base image component.
+    - CircularImage: Rounded circular image component.
     
 """
 from duck.html.components import NoInnerHtmlComponent
@@ -11,13 +11,13 @@ from duck.html.components import NoInnerHtmlComponent
 
 class Image(NoInnerHtmlComponent):
     """
-    HTML Image component.
+    Basic Image component.
     
     Args:
-        source (str): Image source url
+        source (str): Image source URL.
         alt (str): Image alternative text
-        width (str): Image width
-        height (str): Image height
+        width (str): Image width.
+        height (str): Image height.
     """
     def get_element(self):
         return "img"
@@ -38,7 +38,7 @@ class Image(NoInnerHtmlComponent):
 
 class CircularImage(Image):
     """
-    HTML Circular Image component.
+    Circular Image component.
     """  
     def on_create(self):
         super().on_create()

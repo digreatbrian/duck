@@ -67,137 +67,233 @@ http.client # used by requests library
 ```
 **The above packages will be automatically installed when you do `pip install ./duck`**  
 
-### Create a New Project
+## 🌀 Project structure
 
-*To start a new project, run*:
+The following includes different types of **Duck** project structures. 
 
-```sh
-duck makeproject myproject
-```
+### Full Version
 
-### Duck makeproject modes
-1. **Normal project**:  
-Create a normal average project.
-```sh
-duck makeproject myproject
-```
-2. **Mini project**:  
-Create a mini version project with lesser files and directories.
-```sh
-duck makeproject myproject --mini
-```
-3. **Full project**:  
-Create a full complete project with all settings and necessary files and directories. Use this to see all the 
-or customize the Duck configuration.
-```sh
-duck makeproject myproject --full
-```
-
-*Project structure:*
-
-```
-# Full version
-myproject/
+```bash
+myproject/ # Root Project
 ├── apps/
-│   └── ...
+│   └── ... # Your custom blueprints/apps
 ├── backend/  
-│   ├── django/  
-│   │   └── duckapp/  
-│   │       ├── settings.py  
-│   │       ├── urls.py  
-│   │       ├── views.py  
-│   │       └── ...  
-│   └── manage.py
+│   └── django/  
+│       ├── duckapp/  # Default Django project
+│       │   ├── duckapp/ # Default Django root applicatiob
+│       │   │    ├── urls.py  # Django URL config (edited by Duck)
+│       │   │    ├── views.py  # Django views configuration
+│       │   │    ├── settings.py # Django settings config (edited by Duck)
+│       │   │    └── ...  
+│       │   └── manage.py # Django management file
+│       └── __init__.py # Django initialization module
 ├── etc/
 │   ├── ssl/
-│   │       ├── server.crt
-│   │       └── server.key
-│   └── README.md
-├── .env
-├── .gitignore
-├── automations.py
-├── main.py  
-├── settings.py
-├── templatetags.py
-├── urls.py
-├── views.py
-├── requirements.txt
-├── LICENSE
-├── README.md
-└── TODO.md
+│   │       ├── server.crt # Default Duck server certificate
+│   │       └── server.key # Default Duck server private key
+│   └── README.md # Duck etc readme file
+├── .env # Your environment variables file
+├── .gitignore # Your Gitignore file (useful for Git)
+├── automations.py # Your Duck automations 
+├── main.py # Duck main app execution file
+├── settings.py # Duck settings configuration
+├── templatetags.py # Your custom templatetags
+├── urls.py # Duck URL configuration
+├── views.py # Your request handling views
+├── requirements.txt # Requirements/dependancies for your project
+├── LICENSE # Your License file
+├── README.md # Your project Readme
+└── TODO.md # Your Todo file
 
 ```
 
-```
-# Normal version
+### Normal Version
+
+```bash
 myproject/  
 ├── backend/  
-│   ├── django/  
-│   │   └── duckapp/  
-│   │       ├── settings.py  
-│   │       ├── urls.py  
-│   │       ├── views.py  
-│   │       └── ...  
-│   └── manage.py
+│   └── django/  
+│       ├── duckapp/
+│       │   ├── duckapp/
+│       │   │    ├── urls.py
+│       │   │    ├── views.py
+│       │   │    ├── settings.py
+│       │   │    └── ...  
+│       │   └── manage.py
+│       └── __init__.py
+├── main.py  
+├── settings.py 
+├── urls.py 
+├── LICENSE 
+├── README.md 
+├── TODO.md 
+├── requirements.txt 
+└── views.py 
+```
+
+### Mini Version
+```bash
+myproject/  
+├── backend/  
+│   └── django/  
+│       ├── duckapp/
+│       │   ├── duckapp/
+│       │   │    ├── urls.py
+│       │   │    ├── views.py
+│       │   │    ├── settings.py
+│       │   │    └── ...  
+│       │   └── manage.py
+│       └── __init__.py
 ├── main.py  
 ├── settings.py
 ├── urls.py
-├── LICENSE
-├── README.md
-├── TODO.md
 ├── requirements.txt
 └── views.py
 ```
 
-```
-# Mini version
-myproject/  
-├── backend/  
-│   ├── django/  
-│   │   └── duckapp/  
-│   │       ├── settings.py  
-│   │       ├── urls.py  
-│   │       ├── views.py  
-│   │       └── ...  
-│   └── manage.py
-├── main.py  
-├── settings.py
-├── urls.py
-├── requirements.txt
-└── views.py
+### Example Application Files
+
+#### main.py
+
+This is the main entry point or primary Python file for running a **Duck** project. It can also serve as an alternative to the `duck runserver` command, allowing you to start your application directly.
+
+```py
+from duck.app import App
+
+# Initialize the app with a specified port and address
+# Use App(port=8000, addr='::1', uses_ipv6=True) for IPv6 support
+app = App(port=8000, addr='127.0.0.1')  
+
+if __name__ == '__main__':
+    # Start the application when the script is executed directly
+    app.run()
 ```
 
-**Note: To collect static files from the root rather than blueprint directories, make sure you create and place the static files in `static` directory**
+Explanation:
 
-### Logging
+- **App Object:** This object initializes the application with a specified port (8000) and address (127.0.0.1), which corresponds to localhost. You can easily modify these values to fit your needs. For instance, you can change the port or use IPv6 by setting `addr='::1'` and `uses_ipv6=True`.
+  
+- **app.run():** This method starts the application, allowing it to listen for incoming HTTP requests at the specified address and port. It keeps the server running and responsive to client interactions.
+
+- **if __name__ == "__main__":** This conditional check ensures that the `app.run()` method is only invoked when the script is executed directly. It prevents the app from running if the file is imported as a module into another script.
+
+#### `settings.py`
+
+This is the central configuration file for all Duck project settings, where you can manage various application-wide settings in one place. It simplifies the process of configuring the behavior of your app across different environments and use cases.
+
+#### `views.py`
+
+This file contains the logic for generating content that will be displayed on various URL endpoints of your application. Each view is linked to a specific URL endpoint and is responsible for returning content when a user accesses that endpoint.
+
+For example, the `/home` endpoint might display a simple message, `Hello world`. In this case, the view responsible for this would return a heading like `<h1>Hello world</h1>`. Views can be functions, methods, or any callable objects that return content for preview.
+
+``` {important}
+Every view expects a `request` argument to be passed to it. The `request` represents the user's HTTP request (sent when accessing the browser). The `request` object provides context and data about the user's request, which allows you to dynamically generate responses based on the request. For instance, you could check whether the user is logged in and display different content accordingly.
+
+You can explore the `duck.http.response` module for various types of responses you can send to users. This module includes functionality for handling different data formats, such as plain text, HTML, video, images, and other file types. By using the responses available in this module, you can effectively manage the content you return to users based on their requests.
+```
+
+```py
+
+def home(request):  
+    return "<h1>Hello world</h1>" # or a duck.http.HttpResponse object.
+```
+
+#### `urls.py`
+
+The `urls.py` file serves as the backbone for mapping URL endpoints to their corresponding views in the application. It defines how incoming requests to various URLs are routed to specific views for processing.
+
+In the example below, we link the root URL endpoint `/` to a view called `home`, which is defined in the `views.py` module. The `urls.py` file manages this mapping through a variable called `urlpatterns`, which is a list containing the URL patterns and their associated views.
+
+Each entry in `urlpatterns` consists of:
+- **Route**: The URL path or endpoint.
+- **View**: The view function or callable that handles the request for that route.
+- **Name**: An optional name for the endpoint, allowing you to reference it dynamically.
+
+Here’s a simple example of how URL routing works in `urls.py`:
+
+```py
+
+from duck.urls import path, re_path
+import views # import your views module here
+
+urlpatterns = [  
+    path("/", views.home, "home", methods=["GET"]), # methods argument is optional
+    # you may use re_path here
+]
+
+```
+
+```{note}
+The following section is optional. You may skip to the next chapter if you prefer not to dive into the details of `urls.py`.
+```
+
+#### `urls.py` in Detail
+
+As previously mentioned, `urlpatterns` is a list that contains the mappings of different URL endpoints to their corresponding views. This list is the core of the URL routing system.
+
+The `urlpatterns` list expects each entry to be a `URLPattern` object, which can be easily created using the two functions `path` and `re_path` from the `duck.urls` module.
+
+These functions accept the following arguments:
+- **route**: The URL endpoint that the function will match.
+- **view**: The view function that will handle the request for this URL.
+- **name**: An optional name for the endpoint, allowing you to dynamically retrieve the URL without memorizing the route.
+- **methods**: An optional list of allowed HTTP request methods (e.g., `GET`, `POST`) for accessing the view. Leave empty for no restrictions.
+
+#### URL Endpoints for `path` and `re_path`
+
+**For `path`:**
+- The `path` function allows simple URL endpoints, such as `/` or `/some/long/endpoint`.
+- It also supports special endpoints that include dynamic segments in the form of `/some/endpoint/<some_value>`.
+  - This allows you to define endpoints with placeholders for dynamic values (e.g., `/user/<user_id>`).
+  - The dynamic value (e.g., `user_id`) will be parsed as an additional argument to the corresponding view.
+  - Example: If the user visits `/some/endpoint/home`, the view will receive `request` and `home` as its arguments.
+
+**For `re_path`:**
+- The `re_path` function expects a regular expression (regex) for matching URL patterns.
+  - This allows for more flexible and complex URL matching.
+  - For instance, `/books/ids/.*` will match any URL starting with `/books/ids/`, followed by any characters.
+  - You can use regular expressions to handle a wide variety of patterns and link them to the appropriate views.
+
+Both `path` and `re_path` functions provide powerful mechanisms for routing in Duck, enabling you to create everything from simple to complex URL structures with dynamic and flexible mappings.
+
+This setup ensures efficient and effective route management, which is crucial for building well-structured web applications.
+
+## Logging
 Duck logs everything to both the console and files (in assets/.logs directory). You can customize logging configuration in settings.py.
  
+## 🌟 Running the Server
 
-### Running the Server
+Now comes the exciting part—previewing how your web application looks and behaves in the browser!
 
-To start the Duck server, navigate to your project directory and run:
-```sh
-python main.py # or duck runserver --file main.py
+To start the Duck server, simply navigate to your project directory and run the following command:
+
+```bash
+duck runserver
 ```
 
 *Alternatively, use:*
-```sh
-cd myproject  
-duck runserver -p 8000 -d 'localhost' # The -d flag resolves to the server domain.
+
+```bash
+python3 main.py
 ```
-Then open http://localhost:8000 or https://localhost:8000 if **ENABLE_HTTPS** is enabled in **settings.py**.
 
-**Note**: Running the app from the terminal ignores **main.py** unless explicityly specified using **--file** argument.
+The above command will start your Duck web application at `http://localhost:8000` or `https://localhost:8000` if **ENABLE_HTTPS** is enabled in the **settings.py** file.
 
-You can use **--ipv6** argument to start server on ipv6 address.
+### Notes
 
-*Once you open your browser at the respective url, you should see something like this.*
+- The `duck runserver` command offers several flags and options that you can use to customize how your application runs.
+- Run `duck runserver --help` to explore the available options, which range from adjusting the address and port to running **Duck** with **Django** integration.
+
+### Previewing Your Live Web Application
+
+Once you open your browser at the specified URL, you should see something similar to this:
 
 ![Duck local website](./images/duck-local-site.jpg)
 
-### What Your Terminal Looks Like After Running `duck runserver`
+### Terminal Output After Running `duck runserver`
 
-After running the `duck runserver` command, your terminal should display output similar to the examples below:
+After executing the `duck runserver` command, your terminal should display output like the examples below:
 
 **For Smaller Terminals:**
 ![Duck local website terminal](./images/duck-local-site-small-terminal.jpg)
@@ -206,39 +302,6 @@ After running the `duck runserver` command, your terminal should display output 
 ![Duck local website terminal](./images/duck-local-site-large-terminal.jpg)
 
 ## Don’t just clone or scroll—show your support by leaving a star! ⭐
-
-
-## Example Application Files
-
-```py
-# main.py
-
-from duck.app import App  
-
-app = App(port=8000, addr='127.0.0.1') # App(port=8000, addr='::1', uses_ipv6=True) for ipv6
-
-if __name__ == '__main__':
-	app.run()
-```
-
-```py
-# views.py
-
-def home():  
-    return "<h1>Hello world</h1>" # or a duck.http.HttpResponse object.
-```
-
-```py
-# urls.py
-
-from duck.urls import path, re_path
-from . import views  
-
-urlpatterns = [  
-    path("/", views.home, "home", methods=["GET"]), # methods is optional
-]
-
-```
 
 ## 🚀 HTTP/2 Support  
 

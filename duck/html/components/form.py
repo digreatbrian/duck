@@ -1,9 +1,9 @@
 """
-Form Html components.
+Form components module.
 
 Available Forms:
-    Form: Basic form.
-    FeedbackForm: Basic feedback form
+    - Form: Basic form component.
+    - FeedbackForm: Basic feedback form component.
     
 """
 from duck.html.components import InnerHtmlComponent
@@ -15,6 +15,8 @@ from .textarea import TextArea
 
 class Form(InnerHtmlComponent):
     """
+    Basic Form component.
+    
     Args:
         action (str): Form URL action.
         method (str): Form method.
@@ -47,8 +49,13 @@ class Form(InnerHtmlComponent):
 
 class FeedbackForm(Form):
     """
-    Form for feedback submission.
+    Feedback Form component.
     
+    Notes:
+        - Use this form directly inside a template so that it will be able to access the current
+          request or parse context argument (dictionary with request key provided).
+        - This is done to be so that the form will have the CSRF token (needed for security reasons).
+        
     Available Fields:
         fullname (Input): Text Input html component
         email (Input): Email Input html component.
@@ -78,8 +85,7 @@ class FeedbackForm(Form):
             placeholder="Email",
             required=True,
             maxlength=64,
-            name="email"
-            )
+            name="email")
         
         textarea = TextArea(
             placeholder="What is it you like to say?",
@@ -90,10 +96,7 @@ class FeedbackForm(Form):
         textarea.properties["rows"] = "4"
         textarea.properties["cols"] = "50"
             
-        submit = Input(
-            type="submit",
-            value="Submit",)
-        
+        submit = Input(type="submit", value="Submit",)
         submit.style["border"] = "none"
         submit.style["font-size"] = "1rem"
         submit.style["color"] = "#ccc"

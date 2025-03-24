@@ -1,5 +1,5 @@
 """
-Button Html Components
+This module contains various types of Button components.
 """
 from typing import Dict
 from duck.html.components import Theme, InnerHtmlComponent
@@ -7,7 +7,7 @@ from duck.html.components import Theme, InnerHtmlComponent
 
 class Button(InnerHtmlComponent):
     """
-    HTML Button component.
+    Basic button component.
     """
     def get_element(self):
         return "button"
@@ -26,7 +26,7 @@ class Button(InnerHtmlComponent):
 
 class RoundedButton(Button):
     """
-    HTML Rounded Button component.
+    Rounded button component.
     """
     def on_create(self):
         super().on_create()
@@ -35,7 +35,7 @@ class RoundedButton(Button):
 
 class FlatButton(Button):
     """
-    HTML FlatButton component.
+    Flat button component.
     """
     def on_create(self):
         super().on_create()
@@ -46,7 +46,7 @@ class FlatButton(Button):
     
 class RaisedButton(Button):
     """
-    HTML RaisedButton component.
+    Raised button component.
     """
     def on_create(self):
         super().on_create()

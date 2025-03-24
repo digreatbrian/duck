@@ -14,7 +14,7 @@ Usage:
     - EditableCode: Display editable code with copy functionality.
 
 Example:
-    ```python
+    ```py
     code_block = Code(code="print('Hello, world!')", code_props={"class": "highlighted"})
     editable_code_block = EditableCode(code="x = 5", code_style={"color": "blue"})
     ```

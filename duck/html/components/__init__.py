@@ -4,33 +4,32 @@ This module defines HTML components or elements that can be inserted into HTML p
 These components are applied only if a templating engine is in use, such as Jinja2 or Django Template Engine.
 
 Example Usage:
-# Jinja2 Template
-{{ Button(
-     properties={
-         "value": "Hello world",
-          "id": "btn"
-      },
-      style={
-          "background-color": "red",
-           "color": "white",
-        },
-        optional_argument="Some value",
-      )
-}}
-
-# Django Template
-{% Button %}
-     properties={
-         "id": "btn",
-         "value": "Hello world"
-      },
-      style={
-           "background-color": "blue",
-            "color": "white"
-       },
-       optional_argument="Some value"
-{% endButton %}
-
+    # Jinja2 Template
+    {{ Button(
+         properties={
+             "value": "Hello world",
+              "id": "btn"
+          },
+          style={
+              "background-color": "red",
+               "color": "white",
+            },
+            optional_argument="Some value",
+          )
+    }}
+    
+    # Django Template
+    {% Button %}
+         properties={
+             "id": "btn",
+             "value": "Hello world"
+          },
+          style={
+               "background-color": "blue",
+                "color": "white"
+           },
+           optional_argument="Some value"
+    {% endButton %}
 """
 
 import re
@@ -415,6 +414,9 @@ class InnerHtmlComponent(HtmlComponent):
 
 
 class Theme:
+    """
+    Default Duck theme.
+    """
     primary_color = "#4B4E75"  # Dark Blue
     secondary_color = "#A6B48B"  # Soft Green
     background_color = "#FFFFFF"  # White

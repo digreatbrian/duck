@@ -1,5 +1,5 @@
 """
-Input Html Component
+Input components module.
 """
 
 from duck.html.components import (
@@ -9,9 +9,9 @@ from duck.html.components import (
 from .container import FlexContainer
 
 
-class Input(NoInnerHtmlComponent):
+class BaseInput(NoInnerHtmlComponent):
     """
-    HTML Input component.
+    Base Input component.
     """
     def get_element(self):
         return "input"
@@ -29,13 +29,14 @@ class Input(NoInnerHtmlComponent):
              self.properties.setdefault("value", self.kwargs.get("value"))
 
 
-class Input(Input):
+class Input(BaseInput):
     """
-    Input html component.
+    Input component.
     
     Args:
-         name (str): Name of textarea
-         placeholder (str): Placeholder for textarea
+         type (str): The type of input, e.g. text, url, etc.
+         name (str): Name of the input component.
+         placeholder (str): Placeholder for input component.
          required (bool): Whether the field is required or not.
          maxlength (int): The maximum allowed characters.
      """
@@ -64,11 +65,11 @@ class Input(Input):
 
 class InputWithLabel(FlexContainer):
     """
-    InputWithLabel html component.
+    InputWithLabel component which contains a label alongside an input component.
     
     Args:
         label_text (str): Text for the label
-        input (HtmlComponent): Html component.
+        input (HtmlComponent): Any html component (e.g fileinput.FileDragAndDrop), preferrebly Input component.
         
     Example Usage:
         fullname = InputWithLabel(
@@ -113,7 +114,9 @@ class InputWithLabel(FlexContainer):
 
 class CSRFInput(Input):
     """
-    Csrf HTML Input component.
+    Csrf Input component - This component is useful in situations where you don't want to use the
+    csrf_token tag. You only need to parse a request to generate csrfmiddleware field so as to avoid
+    cross site request forgery attacks.
     """
     def __init__(self, request,):
         self.request = request

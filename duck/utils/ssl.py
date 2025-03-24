@@ -1,3 +1,6 @@
+"""
+SSL related tools and utilities.
+"""
 import os
 import struct
 import subprocess
@@ -11,8 +14,11 @@ def is_ssl_data(data: bytes) -> bool:
     """
     Checks if the given data is an SSL/TLS record.
 
-    :param data: Raw bytes received from a socket.
-    :return: True if data appears to be SSL/TLS, False otherwise.
+    Args:
+        data (bytes): Raw bytes received from a socket.
+    
+    Returns:
+        bool: True if data appears to be SSL/TLS, False otherwise.
     """
     if len(data) < 3:
         return False  # Not enough data to determine SSL

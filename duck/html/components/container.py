@@ -1,9 +1,12 @@
+"""
+Container components module.
+"""
 from duck.html.components import InnerHtmlComponent
 
 
 class Container(InnerHtmlComponent):
     """
-    HTML Container component.
+    Basic Container component derived from <div> tag.
     
     Args:
         inner_body (str): Body for the component.
@@ -14,7 +17,7 @@ class Container(InnerHtmlComponent):
 
 class FlexContainer(Container):
     """
-    A container with flexbox layout.
+    Flex container component.
     """
     def on_create(self):
         self.style.setdefault("display", "flex")
@@ -22,7 +25,7 @@ class FlexContainer(Container):
 
 class GridContainer(Container):
     """
-    A container using CSS grid layout.
+    Grid container component.
     """
     def on_create(self):
         self.style.setdefault("display", "grid")
@@ -30,7 +33,7 @@ class GridContainer(Container):
 
 class FluidContainer(Container):
     """
-    A full-width container.
+    A full-width container component.
     """
     def on_create(self):
         self.style.setdefault("width", "100%")
@@ -38,7 +41,7 @@ class FluidContainer(Container):
 
 class FixedContainer(Container):
     """
-    A container with a fixed maximum width.
+    Container component with a fixed maximum width.
     """
     def on_create(self):
         default_style = {

@@ -1,17 +1,13 @@
 """
-Basic Hero component.
+Hero component module.
 """
 from duck.html.components import Theme
-
 from .container import FlexContainer
 
 
 class Hero(FlexContainer):
     """
-    HTML Hero component.
-    
-    Args:
-        background_html: Html for hero background.
+    Basic Hero component.
     """
     def on_create(self):
         super().on_create()

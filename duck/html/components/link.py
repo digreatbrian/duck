@@ -1,5 +1,5 @@
 """
-Link html component.
+Link component module.
 """
 
 from duck.html.components import InnerHtmlComponent
@@ -8,10 +8,10 @@ from duck.html.components import Theme
 
 class Link(InnerHtmlComponent):
     """
-    HTML Link component.
+    Link component.
     
     Args:
-        url (str): The link's URL
+        url (str): The link's URL.
         text (str): Text for the link.
     """
     def get_element(self):

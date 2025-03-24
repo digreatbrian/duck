@@ -1,23 +1,19 @@
 """
-Duck: A Python-based web server and proxy with robust Django integration.
+# Duck
 
-Duck is a flexible and secure web server designed specifically for Python applications, with seamless support for Django. 
-It enables easy deployment of web applications, supports HTTPS out of the box, and automates SSL certificate generation, 
-making it a great choice for developers aiming to simplify the hosting and security of their Django projects.
+**Duck** is a new advanced, Python-based **web server**, **framework**, and proxy designed for seamless integration with **Django**. It simplifies **web development** by providing built-in **HTTPS support**, simple **SSL certificate generation**, and powerful **customization options**. With **Duck**, developers can quickly deploy secure, high-performance applications with minimal configuration. Ideal for creating scalable, secure, and customizable **web solutions**, **Duck** streamlines the development process while ensuring top-notch security and performance.
 
-### Key Features:
-- **Django Compatibility**: Deep integration with Django, allowing easy setup and serving of Django applications.
-- **HTTPS and SSL**: Built-in HTTPS support and automated SSL certificate generation for secure connections.
-- **Proxy Capabilities**: Acts as both a web server and a proxy, offering versatile deployment options.
-
-### Quick Start Example:
+## Quick Start Example:
 To start using Duck, initialize an `App` instance with your desired port and address, then run the application:
 
-```python
+```py
 from duck.app import App
 
 app = App(port=5000, addr='127.0.0.1', domain='localhost')
-app.run()
+
+if __name__ == '__main__':
+    app.run()
+```
 """
 
 from duck.version import version

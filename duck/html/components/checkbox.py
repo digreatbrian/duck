@@ -1,13 +1,12 @@
 """
-Checkbox Html Component
+Checkbox component module.
 """
-
 from duck.html.components import NoInnerHtmlComponent
 
 
 class Checkbox(NoInnerHtmlComponent):
     """
-    HTML Checkbox component.
+    Basic Checkbox component.
     
     Args:
         - checked (bool): Whether the checkbox is checked or not.

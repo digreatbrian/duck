@@ -1,13 +1,15 @@
 """
-Card component.
+Card component module
 """
 
 from duck.html.components import Theme
-
 from .container import FlexContainer
 
 
 class Card(FlexContainer):
+    """
+    Basic Card component derived from flex container.
+    """
     def on_create(self):
         super().on_create()
         self.style["padding"] = Theme.padding

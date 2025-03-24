@@ -1,3 +1,6 @@
+"""
+Platform targeted tools.
+"""
 import os
 import platform
 

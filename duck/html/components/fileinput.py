@@ -1,17 +1,27 @@
 """
-Contains file drag n drop input html component.
+File Input components module (including FileDragAndDrop component).
 """
+from .input import Input
 from .script import Script
 from .card import Card
 
 
+class FileInput(Input):
+    """
+    Basic FileInput component.
+    """
+    def on_create(self):
+        super().on_create()
+        self.properties["type"] = "file"
+
+
 class FileDragAndDrop(Card):
     """
-    File Drag N Drop html component.
+    File Drag N Drop component with capabilities of dropping files rather than selecting only.
     
     Args:
         label_text (str): Text for the file drag n drop component
-        input (Input): File Html component.
+        input (FileInput): FileInput component with properties like `name` set.
     """
     def on_create(self):
         super().on_create()

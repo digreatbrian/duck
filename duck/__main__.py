@@ -89,12 +89,13 @@ def makeproject(name, dest, overwrite, project_type):
 
 @cli.command(help="Create a Duck blueprint directory structure")
 @click.argument("name")
+@click.option("-d", "--dest", help="Destination for blueprint creation.")
 @click.option("-O", "--overwrite", is_flag=True, help="Overwrite an existing blueprint.")
-def makeblueprint(name, overwrite):
+def makeblueprint(name, dest, overwrite):
    """
    Create a new Blueprint for organizing routes, similar to Flask's Blueprint system.
    """
-   MakeBlueprintCommand.main(name, overwrite_existing=overwrite)
+   MakeBlueprintCommand.main(name, destination=dest, overwrite_existing=overwrite)
 
 
 @cli.command(help="Execute Django management commands for your project")

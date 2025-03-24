@@ -1,13 +1,26 @@
+"""
+Footer component module.
+"""
 from duck.html.components import InnerHtmlComponent
+from duck.html.components.duck import MadeWithDuck
 from duck.html.components import Theme
 
 from .container import FlexContainer
-from .image import Image
 from .style import Style
 from .link import Link
 
 
 class FooterBlock(FlexContainer):
+    """
+    Footer Block component which will contain a list of footer items.
+    
+    Notes:
+        - This component may have different footer blocks with different headings and items.
+    
+    Args:
+        heading (str): The heading for the footer block
+        elements (list[str]): List containing block elements as html e.g ['<b>Value</b>', ...]
+    """
     def on_create(self):
         super().on_create()
         self.style["flex-direction"] = "column"
@@ -23,6 +36,13 @@ class FooterBlock(FlexContainer):
 
 
 class FooterItems(FlexContainer):
+    """
+    Main container component for storing footer items.
+    
+    Args:
+        footer_items (dict[str, list[str]]): A dictionary containing a mapping of footer block headings to a
+                                                                list of different html elements as strings. 
+    """
     def on_create(self):
         super().on_create()
         self.style["gap"] = "10px"
@@ -33,33 +53,16 @@ class FooterItems(FlexContainer):
                  self.add_child(footer_block)
 
 
-class MadeWithDuck(FlexContainer):
-    def on_create(self):
-        super().on_create()
-        from duck.etc.templatetags import static
-        
-        self.style["gap"] = "10px"
-        self.style["align-items"] = "center"
-        self.style["justify-content"] = "center"
-        
-        # Add image left
-        image = Image(source=static('images/duck-logo.png'))
-        image.style["object-fit"] = "contain"
-        self.inner_body += image.to_string()
-        
-        # Add info
-        self.inner_body += "Proudly made with Duck"
-        
-
 class Footer(InnerHtmlComponent):
     """
-    Footer Html Component,
+    Footer component.
     
     Args:
-        footer_items (dict): Dictionary containing footer items. A mapping of headings and their elements.
+        footer_items (dict[str, list[str]]): A dictionary containing a mapping of footer block headings to a
+                                                                list of different html elements as strings. 
         copyright (str): Copyright info.
         
-    Example Template Usage:
+    Template Usage:
         {% Footer %}
            footer_items = {
              "Company": [

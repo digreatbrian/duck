@@ -48,7 +48,7 @@ class Blueprint:
 
         Args:
                 location (str): The absolute path to where the blueprint is located.
-                name (string): A valid string.
+                name (str): A valid string.
                 urlpatterns (Optional[List[URLPattern]]): List of urlpatterns created using duck.urls.path or re_path.
                 prepend_name_to_urls (bool): Whether to prepend name to urlpatterns. Defaults to True.
                 is_builtin (bool): Flag the route blueprint as an internal builtin blueprint, Defaults to False (optional).

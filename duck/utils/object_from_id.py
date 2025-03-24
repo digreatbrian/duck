@@ -1,3 +1,6 @@
+"""
+Retrieving an object by using its memory address.
+"""
 import ctypes
 
 

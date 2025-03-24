@@ -1,5 +1,5 @@
 """
-Module for Path Operations, .e.g path sanitization, manipulations, etc.
+Module for Path Operations, .e.g path sanitization, manipulations, joining etc.
 """
 import re
 import os

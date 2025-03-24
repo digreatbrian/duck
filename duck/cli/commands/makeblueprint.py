@@ -20,20 +20,22 @@ class MakeBlueprintCommand:
     def main(
         cls,
         name,
+        destination: str = '.',
         overwrite_existing: bool = False,
      ):
         cls.setup()
-        cls.makeblueprint(name, overwrite_existing)
+        cls.makeblueprint(name, destination, overwrite_existing)
         
     @classmethod
     def makeblueprint(cls,
         name,
+        destination,
         overwrite_existing: bool = False,
      ):
         from duck.settings import SETTINGS
         from duck.setup.makeblueprint import makeblueprint
         
-        dest_dir = os.path.abspath(str(SETTINGS["BASE_DIR"]))
+        dest_dir = os.path.abspath(destination)
         
         # Log something
         console.log(f'Creating Awesome Duck Blueprint', level=console.DEBUG)

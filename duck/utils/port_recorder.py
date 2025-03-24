@@ -1,3 +1,6 @@
+"""
+Module for recording and managing used ports within your web application.
+"""
 from duck.exceptions.all import PortError
 
 

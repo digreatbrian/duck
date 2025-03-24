@@ -283,7 +283,7 @@ DJANGO_COMMANDS_ON_STARTUP: list[str] = [
 # such as static/media file serving.  
 DUCK_EXPLICIT_URLS: list = [
     ".*"
-] # Optimized fast mode, remove .* for normal optimum flow'
+] # Optimized fast mode, remove ".*" for normal optimum flow'
 
 
 # URLS to  be parsed straight to django
