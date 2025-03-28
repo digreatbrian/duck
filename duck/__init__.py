@@ -17,14 +17,14 @@ Quick Start Example
 To start using Duck, initialize an ``App`` instance with your desired port and address, 
 then run the application:
 
-.. code-block:: python
+```py
+from duck.app import App
 
-    from duck.app import App
+app = App(port=5000, addr='127.0.0.1', domain='localhost')
 
-    app = App(port=5000, addr='127.0.0.1', domain='localhost')
-
-    if __name__ == '__main__':
-        app.run()
+if __name__ == '__main__':
+    app.run()
+```
 """
 
 from duck.version import version

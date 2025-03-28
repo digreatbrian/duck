@@ -84,10 +84,14 @@ class Meta:
 
         if domain is None:
             raise MetaError("Variable DUCK_SERVER_DOMAIN not set.")
+        
         if port is None:
-            raise MetaError("Variable DUCK_SERVER_PORT not set.")
+            # Port is optional
+            pass
+            
         if protocol is None:
             raise MetaError("Variable DUCK_SERVER_PROTOCOL not set.")
+        
         if uses_ipv6 is None:
             raise MetaError("Variable DUCK_USES_IPV6 not set.")
 

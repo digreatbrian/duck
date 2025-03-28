@@ -34,52 +34,78 @@ class BaseRouteRegistry:
 
     def extract_kwargs_from_url(self, url: str, registered_url: str) -> dict:
         """
-        Extracts arguments from a URL that matches the registered URL in the format '/first/<any>/home'.
-
-        ### Example
-        Consider the following:
+        Extracts dynamic parameters from a URL based on a registered URL pattern.
+    
+        ### Example:
+        
+        Given:
         
         - **url**: `/articles/what-is-money/1/`
         - **registered_url**: `/articles/<name>/<article-number>/`
         
-        Here:
-        - The `url` represents the specific path for an article.
-        - The `registered_url` is a template pattern for dynamically generating article URLs, where:
-          - `<name>` is the article's title or identifier.
-          - `<article-number>` corresponds to the unique identifier or index of the article.
-          
-        This will produce kwargs as this:
-         
-         ```py
-         {
-             "name":"what-is-money",
-             "article-number":"1",
-          }
-        ```
+        This function identifies and extracts dynamic values based on placeholders
+        in the registered URL pattern.
+    
+        **How it works:**
+        - `<name>` captures `what-is-money`
+        - `<article-number>` captures `1`
         
+        The result is a dictionary:
+        
+        ```py
+        {
+            "name": "what-is-money",
+            "article-number": "1"
+        }
+        ```
+    
+        ### Edge Case:
+        If the registered pattern ends with a dynamic placeholder (`/<path>`), 
+        the remaining part of the URL is assigned to that variable. 
+    
+        Example:
+        
+        - **url**: `/files/user/docs/readme.txt`
+        - **registered_url**: `/files/<path>`
+        
+        Produces:
+        
+        ```py
+        {"path": "user/docs/readme.txt"}
+        ```
+    
         Args:
-                url: The URL path string to match with the pattern
-                registered_url: The URL pattern that the url was registered under eg /path/<variable>/
-
+            url (str): The actual URL to process.
+            registered_url (str): The template pattern containing placeholders.
+    
         Returns:
-                A dictionary containing the extracted arguments as keys and values.
+            dict: A dictionary of extracted parameters and their corresponding values.
+    
+        Raises:
+            RouteError: If the provided URL does not match the registered pattern.
         """
-        _url = re.sub(r"<[^>]+>", "*", url)
-        pattern = re.compile(re.escape(_url).replace(r"\*", ".*"))
-
+        _url = re.sub(r"<[^>]+>", "*", url)  # Replace placeholders with '*' to create a matchable pattern
+        pattern = re.compile(re.escape(_url).replace(r"\*", ".*"))  # Convert '*' into regex wildcard
+    
         if not pattern.fullmatch(_url):
-            raise RouteError("Pattern provided and URL doesn't match")
-
-        parts = url.strip("/").split("/")  # url should start and endswith /
-        parts_b = registered_url.strip("/").split("/")
+            raise RouteError("Provided URL does not match the registered pattern")
+    
+        parts = url.strip("/").split("/")  # Normalize URL by removing leading/trailing slashes and splitting by '/'
+        parts_b = registered_url.strip("/").split("/")  # Normalize registered pattern in the same way
         kwargs = {}
-
+    
         for i, part in enumerate(parts_b):
-            if part.startswith("<"):
-                arg_name = part.strip("<").strip(">")
+            if part.startswith("<") and part.endswith(">"):  # Identify placeholders
+                arg_name = part.strip("<>")  # Extract variable name from '<var>'
                 value = parts[i]
-
-                kwargs[arg_name] = value
+    
+                # Handle cases where a dynamic placeholder might capture the remaining path
+                # Example: `/files/user/docs/readme.txt` should match `/files/<path>`
+                if i == len(parts_b) - 1:  # If it's the last placeholder in the pattern
+                    value = "/".join(parts[i:])  # Capture everything remaining in the URL
+    
+                kwargs[arg_name] = value  # Store extracted value
+    
         return kwargs
     
     def regex_register(
@@ -246,6 +272,7 @@ class BaseRouteRegistry:
                 RouteError: If URL in bad format
         """
         normalized_url = normalize_url_path(url_path)
+        
         if not is_good_url_path(normalized_url):
             raise RouteError(
                 f"Bad URL path provided, should be in form '/path/subpath/' not '{url}' "

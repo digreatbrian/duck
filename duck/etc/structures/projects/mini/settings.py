@@ -122,3 +122,37 @@ TEMPLATE_DIRS: list[str | pathlib.Path] = [pathlib.Path("templates/").resolve()]
 # List of all middlewares as strings in form "middleware.MiddlewareClass"
 # WARNING: The middlewares should be arranged in order at this point.
 MIDDLEWARES: list[str] = middlewares
+
+
+# IMPORTANT DIRS
+# These directories is a must to be defined as leaving these will use default Duck internal directories 
+
+# These are global static directories to lookup for static files when
+# `collectstatic` command is used
+GLOBAL_STATIC_DIRS: list[str] = [BASE_DIR / "static"]
+
+
+# The root directory for storing static files.
+# Auto created if it does'nt exist
+STATIC_ROOT: str = BASE_DIR / "assets/staticfiles"
+
+
+# MEDIA FILES HANDLING
+
+# Media Root
+# This is where the media files will reside in.
+# Auto created if it does'nt exist
+MEDIA_ROOT: str = BASE_DIR / "assets/media"
+
+
+# File Upload Directory Configuration
+# Specifies the directory where uploaded files will be stored.
+# - Required if `PersistentFileUpload` is used as the `FILE_UPLOAD_HANDLER`.
+# - The directory will be automatically created if it doesn't already exist.
+FILE_UPLOAD_DIR: str = BASE_DIR / "assets/uploads"
+
+
+# LOGGING SETTINGS
+# Logging Directory
+# This is the directory to place all logs
+LOGGING_DIR: str = BASE_DIR / "assets/.logs"
