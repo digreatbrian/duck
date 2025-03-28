@@ -2,9 +2,8 @@
 Form components module.
 
 Available Forms:
-    - Form: Basic form component.
-    - FeedbackForm: Basic feedback form component.
-    
+- `Form`: Basic form component.
+- `FeedbackForm`: Basic feedback form component.
 """
 from duck.html.components import InnerHtmlComponent
 from duck.html.components import Theme
@@ -52,14 +51,14 @@ class FeedbackForm(Form):
     Feedback Form component.
     
     Notes:
-        - Use this form directly inside a template so that it will be able to access the current
-          request or parse context argument (dictionary with request key provided).
-        - This is done to be so that the form will have the CSRF token (needed for security reasons).
+    - Use this form directly inside a template so that it will be able to access the current
+      request or parse context argument (dictionary with request key provided).
+   - This is done to be so that the form will have the CSRF token (needed for security reasons).
         
     Available Fields:
-        fullname (Input): Text Input html component
-        email (Input): Email Input html component.
-        feedback (TextArea): TextArea html component.
+    - `fullname` (Input): Text Input html component
+    - `email` (Input): Email Input html component.
+    - `feedback` (TextArea): TextArea html component.
     """
     def on_create(self):
         # Set form style

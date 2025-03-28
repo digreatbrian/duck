@@ -1,5 +1,7 @@
 """
-Duck's own reloader module.
+# Ducksight Reloader
+
+Watches for file changes and enables dynamic reloading in **DEBUG mode**.
 """
 import os
 import time

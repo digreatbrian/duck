@@ -11,11 +11,11 @@ class BaseMiddleware:
     Base middleware class.
 
     Usage:
-        - You can set and access class-specific attributes directly (e.g., `Middleware.{attrib}`).
-        - Each subclass manages its own attributes independently, similar to how instances work.
+    - You can set and access class-specific attributes directly (e.g., `Middleware.{attrib}`).
+    - Each subclass manages its own attributes independently, similar to how instances work.
 
     Notes:
-        - Make sure the middleware class names are different for them to behave independently.
+    - Make sure the middleware class names are different for them to behave independently.
     """
 
     debug_message: str = "Middleware error"

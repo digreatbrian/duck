@@ -1,45 +1,64 @@
 """
-Module for creating and running base applications using Duck framework.
+This module provides the core application class, `App`, for setting up and running a **Duck-based web application**. It supports various features, including:
 
-This module provides the core application class, `App`, for setting up and running a Duck-based web application. It supports various features including HTTP and HTTPS servers, Django server integration, automation dispatching, SSL management, and more. The application can be configured to handle incoming requests, enforce HTTPS, and run various background processes such as a file reloader and automation scripts.
-
-Key Features:
 - **HTTP/HTTPS Server**: Configures and starts an HTTP or HTTPS server based on application settings.
-- **Django Integration**: Can forward requests to a Django server, with support for custom commands on startup.
+- **Django Integration**: Can forward requests to a Django server, supporting custom commands on startup.
 - **SSL Management**: Checks and manages SSL certificates for secure communication.
 - **Force HTTPS**: Redirects all HTTP traffic to HTTPS when enabled.
-- **Automations**: Supports running automations during runtime.
-- **File Reloader**: Watches for file changes in the application for dynamic reloading (in DEBUG mode).
-- **Port Management**: Ensures that application ports are not used by other applications.
-- **Signal Handling**: Gracefully handles termination signals (e.g., Ctrl-C) to stop the application.
+- **Automations**: Supports running automation scripts during runtime.
+- **Ducksight Reloader**: Watches for file changes and enables dynamic reloading in **DEBUG mode**.
+- **Port Management**: Ensures that application ports are available.
+- **Signal Handling**: Gracefully handles termination signals (e.g., `Ctrl+C`) for clean shutdown.
 
-Attributes:
-    - `DUCK_HOME_DIR`: The application's home directory.
-    - `DJANGO_ADDR`: The address and port for the Django server.
-    - `DOMAIN`: The domain name for the application.
-    - `DJANGO_SERVER_WAIT_TIME`: The time to wait for the Django server to start.
-    - `server_up`: Whether the main application server is running.
-    - `django_server_up`: Whether the Django server is running and responsive.
+---
 
-Methods:
-    - `run()`: Starts the application and its associated services.
-    - `stop()`: Stops the application and terminates the program.
-    - `restart()`: Restarts the application.
-    - `start_server()`: Starts the main application server.
-    - `start_django_server()`: Starts the Django server and uses Duck as a reverse proxy.
-    - `start_force_https_app()`: Starts the HTTPS redirection server.
-    - `start_ducksight_reloader()`: Starts the file watcher for dynamic reloading.
-    - `start_automations_dispatcher()`: Starts the automation dispatcher.
-    - `register_signals()`: Registers the signal handler for appropriate signals.
-    - `on_app_start()`: Event called when the application setup is complete.
-    
-The `App` class is intended for creating a primary application instance, and it ensures that only a single instance of the application is allowed to run at a time. For running smaller microservices or apps, the `MicroApp` class should be used instead.
+## Attributes
 
-Exceptions handled:
-    - `ApplicationError`: Raised if more than one application instance is created.
-    - `SettingsError`: Raised if there are misconfigurations in the application settings.
-    - `SSLError`: Raised if SSL certificate or private key is missing or invalid.
+| Attribute                  | Description |
+|----------------------------|-------------|
+| `DUCK_HOME_DIR`            | The application's home directory. |
+| `DJANGO_ADDR`              | The address and port for the Django server. |
+| `DOMAIN`                   | The domain name for the application. |
+| `DJANGO_SERVER_WAIT_TIME`  | Time to wait for the Django server to start. |
+| `server_up`                | Indicates if the main application server is running. |
+| `django_server_up`         | Indicates if the Django server is responsive. |
+
+---
+
+## Methods
+
+### **Application Control**
+- `run()`: Starts the application and all services.
+- `stop()`: Stops the application and terminates processes.
+- `restart()`: Restarts the application.
+
+### **Server Management**
+- `start_server()`: Starts the main application server.
+- `start_django_server()`: Starts Django and configures Duck as a reverse proxy.
+- `start_force_https_app()`: Launches the HTTPS redirection service.
+
+### **Background Services**
+- `start_ducksight_reloader()`: Monitors file changes for live reloading.
+- `start_automations_dispatcher()`: Handles scheduled automation scripts.
+
+### **Event Handling & Security**
+- `register_signals()`: Registers signal handlers for clean exits.
+- `on_app_start()`: Event triggered when the application setup is complete.
+
+---
+
+## **Application Instance Management**
+The `App` class ensures that only **one instance** of the application is running at a time.  
+For **microservices or smaller applications**, use the `MicroApp` class instead.
+
+---
+
+## **Exceptions Handled**
+- **`ApplicationError`**: Raised if multiple instances of `App` are created.
+- **`SettingsError`**: Raised for misconfigurations in application settings.
+- **`SSLError`**: Raised if SSL certificates or private keys are missing/invalid.
 """
+
 import os
 import sys
 import json
@@ -410,8 +429,8 @@ class App:
         Starts force https redirect app.
 
         Conditions:
-                ENABLE_HTTPS = True
-                FORCE_HTTPS = True
+            - `ENABLE_HTTPS = True`
+            - `FORCE_HTTPS = True`
         """
 
         def start_force_https_app():
@@ -430,8 +449,8 @@ class App:
         Starts the DuckSight Reloader for reloading app on file modifications, deletions, etc.
 
         Conditions:
-            DEBUG = True
-            ducksight_reloader_process_alive = False
+            - `DEBUG = True`
+            - `ducksight_reloader_process_alive = False`
         """
         # Note: Production server should not be restarted at any point only start duck sight reloader on DEBUG
         if SETTINGS["DEBUG"]:
@@ -444,7 +463,7 @@ class App:
         Starts Automations Dispatcher for executing automations during runtime.
 
         Conditions:
-            RUN_AUTOMATIONS = True
+            - `RUN_AUTOMATIONS = True`
         """
         if SETTINGS["RUN_AUTOMATIONS"]:
             self.automations_dispatcher_thread.start()
@@ -592,7 +611,7 @@ class App:
         Method to be called on different signals.
 
         Signals:
-                SIGINT (Ctrl-C), SIGTERM (Terminate): Quits the server/application.
+                - `SIGINT` (Ctrl-C), `SIGTERM` (Terminate): Quits the server/application.
         """
         try:
             reloader.stop_ducksight_reloader_process(
@@ -675,7 +694,8 @@ class App:
 
     def needs_reload(self) -> bool:
         """
-        Checks if the '--reload' flag is present in the command-line arguments (sys.argv).
+        Checks if the `--reload` flag is present in the command-line arguments (sys.argv).
+        
         Returns:
             bool: True if flag `--reload` is in sys.argv else False
         """
@@ -700,7 +720,10 @@ class App:
             - This method calls method `_restart` right away if flag is found.
 
         Example usage:
-            application.reload_if_needed()  # Triggers a restart if '--reload' is in sys.argv
+        
+        ```py
+        application.reload_if_needed()  # Triggers a restart if '--reload' is in sys.argv
+        ```
         """
         if self.needs_reload():
             self._restart()

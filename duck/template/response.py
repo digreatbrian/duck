@@ -1,18 +1,19 @@
 """
-Module for HTTP template responses.
+# HTTP Template Responses Module
 
-Do not mix DjangoTemplateResponse and Jinja2TemplateResponse if the templates being used extend from each other. This is to prevent template syntax errors between the two template backends.
+This module handles HTTP template responses and provides guidance on using different template backends.
 
-Example:
-    # templates/base.html
-    # Jinja2 template
-    {{ custom_tag("input") }}
-    
-    # templates/home.html
-    # Django template
-    {% extends 'base.html' %}
-    
-This may raise a Django TemplateSyntaxError if home.html is being rendered, as the file it tries to extend from contains invalid syntax for Django but valid syntax for Jinja2. The error will result from the Jinja2 form: {{ custom_tag("input") }}, which is expected to be {% custom_tag "input" %} by Django.
+``` {important}
+Avoid mixing `DjangoTemplateResponse` and `Jinja2TemplateResponse` when the templates extend from each other. Mixing these two can lead to syntax errors, as they have different template syntax rules.
+```
+
+## Common Error Scenario
+
+This issue may result in a `Django TemplateSyntaxError` when rendering a template like `home.html`. If the template extends from a file that contains syntax valid in `Jinja2` but invalid in `Django`, the error occurs. 
+
+For example, in Jinja2, the tag `{{ custom_tag("input") }}` is used, whereas in Django templates, the correct syntax would be `{% custom_tag "input" %}`.
+
+To prevent such errors, ensure consistency between the template backends being used.
 """
 
 from duck.http.response import DjangoTemplateResponse, Jinja2TemplateResponse

@@ -34,10 +34,10 @@ class NavbarBrand(Link):
 
     Args:
         brand (dict): A dictionary containing brand details:
-            - image_source (str): The URL of the brand image.
-            - alt (str): Alternative text for the brand image.
-            - url (str): The destination URL when the brand is clicked.
-            - text (str): The text displayed next to the brand image.
+            * image_source (str): The URL of the brand image.
+            * alt (str): Alternative text for the brand image.
+            * url (str): The destination URL when the brand is clicked.
+            * text (str): The text displayed next to the brand image.
     """
 
     def on_create(self):
@@ -87,8 +87,8 @@ class NavbarLinks(InnerHtmlComponent):
     Args:
         links (list): A list of dictionaries representing navigation links.
             Each dictionary should have:
-            - text (str): The display text for the link.
-            - url (str): The URL the link navigates to.
+            * text (str): The display text for the link.
+            * url (str): The URL the link navigates to.
     """
 
     def get_element(self):
@@ -160,12 +160,9 @@ class NavbarContainer(FlexContainer):
                 function toggleCollapse(elem) {
                     elem = $(elem);
                     if (elem.is(':hidden')) {
-                        elem.css('opacity', 0).css('display', 'flex');
-                        elem.stop(true).animate({ opacity: 1 }, 500);
+                        elem.css('display', 'flex');
                     } else {
-                        elem.stop(true).animate({ opacity: 0 }, 500, function() {
-                            elem.css('display', 'none');
-                        });
+                        elem.css('display', 'none');
                     }
                 }
             """
@@ -181,7 +178,8 @@ class Navbar(InnerHtmlComponent):
     a responsive toggler button for mobile screens.
 
     Example Template Usage:
-    ```html
+    
+    ```django
     {% Navbar %}
         brand = {
             "image_source": "{% static 'images/logo.png' %}",

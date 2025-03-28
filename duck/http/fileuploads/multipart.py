@@ -6,30 +6,34 @@ multipart form-data, particularly from raw bytes input. It is useful for handlin
 file uploads or form submissions where the data is received in a multipart format.
 
 Classes:
-    BytesMultiPartParser: A parser for multipart form-data.
+- `BytesMultiPartParser`: A parser for multipart form-data.
 
 Exceptions:
-    MultiPartParserError: Raised when parsing errors occur.
+- `MultiPartParserError`: Raised when parsing errors occur.
 
 Usage Example:
-    headers = {
-        'Content-Type': b'multipart/form-data; boundary=---------------------------354901075210407969363875912417'
-    }
-    input_data = b'''-----------------------------354901075210407969363875912417
-    Content-Disposition: form-data; name="field1"
 
-    value1
-    -----------------------------354901075210407969363875912417
-    Content-Disposition: form-data; name="file1"; filename="example.txt"
-    Content-Type: text/plain
+```py
+headers = {
+    'Content-Type': b'multipart/form-data; boundary=---------------------------354901075210407969363875912417'
+}
+input_data = b'''-----------------------------354901075210407969363875912417
+Content-Disposition: form-data; name="field1"
 
-    Hello, world!
-    -----------------------------354901075210407969363875912417--'''.replace(b'\n', b'\r\n')
+value1
+-----------------------------354901075210407969363875912417
+Content-Disposition: form-data; name="file1"; filename="example.txt"
+Content-Type: text/plain
 
-    parser = BytesMultiPartParser(headers, input_data)
-    for headers, content in parser.get_parts():
-        print("Headers:", headers)
-        print("Content:", content)
+Hello, world!
+-----------------------------354901075210407969363875912417--'''.replace(b'\n', b'\r\n')
+
+parser = BytesMultiPartParser(headers, input_data)
+for headers, content in parser.get_parts():
+    print("Headers:", headers)
+    print("Content:", content)
+```
+
 """
 
 import re

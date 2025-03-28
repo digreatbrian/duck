@@ -1,5 +1,5 @@
 """
-Module containing error classes.
+Module containing Duck error classes.
 """
 
 
@@ -122,7 +122,7 @@ class DjangoTemplateError(TemplateError):
 class SSLError(BaseError):
     """
     Raised when ssl certfile or ssl private key is not found in locations specified in settings.py if and only if
-    ENABLE_HTTPS=True
+    `ENABLE_HTTPS=True`
     """
 
 

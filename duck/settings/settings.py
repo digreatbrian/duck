@@ -1,5 +1,5 @@
 """
-Provides access to application settings
+Provides access to application settings.
 """
 import os
 import sys

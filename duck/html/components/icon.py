@@ -2,7 +2,7 @@
 Icon component module.
 
 Notes:
-    - This depends on your JS/CSS bundle you are using for icons.
+- This depends on your JS/CSS bundle you are using for icons.
 """
 from duck.html.components import InnerHtmlComponent
 from .link import Link

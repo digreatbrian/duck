@@ -18,12 +18,11 @@ from duck.utils.path import (
 )
 
 
-class RouteRegistry:
+class BaseRouteRegistry:
     """
     A registry for storing and retrieving routes (URL patterns) with associated handlers.
 
     This registry supports wildcard patterns (*), automatically replacing angle bracket placeholders like <name> with wildcards. It ensures uniqueness of routes both by name and by URL pattern.
-
     """
 
     url_map = defaultdict(
@@ -37,16 +36,27 @@ class RouteRegistry:
         """
         Extracts arguments from a URL that matches the registered URL in the format '/first/<any>/home'.
 
-        Example:
-        url -> /articles/what-is-money/1/
-        registered_url -> /articles/<name>/<article-number>/
-
+        ### Example
+        Consider the following:
+        
+        - **url**: `/articles/what-is-money/1/`
+        - **registered_url**: `/articles/<name>/<article-number>/`
+        
+        Here:
+        - The `url` represents the specific path for an article.
+        - The `registered_url` is a template pattern for dynamically generating article URLs, where:
+          - `<name>` is the article's title or identifier.
+          - `<article-number>` corresponds to the unique identifier or index of the article.
+          
         This will produce kwargs as this:
-                {
-                        "name":"what-is-money",
-                        "article-number":"1",
-                }
-
+         
+         ```py
+         {
+             "name":"what-is-money",
+             "article-number":"1",
+          }
+        ```
+        
         Args:
                 url: The URL path string to match with the pattern
                 registered_url: The URL pattern that the url was registered under eg /path/<variable>/
@@ -256,4 +266,4 @@ class RouteRegistry:
             f'Route "{url_path}" doesn\'t match any registered routes')
 
 
-RouteRegistry = RouteRegistry()
+RouteRegistry = BaseRouteRegistry()

@@ -107,9 +107,9 @@ class HostMiddleware(BaseMiddleware):
 class HeaderInjectionMiddleware(BaseMiddleware):
     """
     HeaderInjectionMiddleware class mitigating against various
-     header injection attacks like Potential Session Fixation (Multiple Cookies),
-     XSS (Script Tag Detected), Potential Open Redirect (External URL),
-     Potential Cache Poisoning (Anti-Caching Headers).
+    header injection attacks like `Potential Session Fixation` (Multiple Cookies),
+    `XSS` (Script Tag Detected), `Potential Open Redirect` (External URL),
+    `Potential Cache Poisoning` (Anti-Caching Headers).
     """
 
     debug_message: str = (

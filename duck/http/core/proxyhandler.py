@@ -1,6 +1,5 @@
 """
 Module containing proxy handler class.
-		
 """
 import ssl
 import socket
@@ -93,17 +92,20 @@ class HttpProxyResponse(StreamingHttpResponse):
     such as modifying headers, handling chunk sizes, or managing specific proxy behaviors.
 
     Example Usage:
-        response = HttpProxyResponse(
-            target_socket,
-            payload_obj,
-            content_obj,
-            chunk_size,
-       )
+    
+    ```py
+    response = HttpProxyResponse(
+        target_socket,
+        payload_obj,
+        content_obj,
+        chunk_size,
+    )
         
-        for content in response.iter_content():
-            # Content logic here
-            pass
-
+    for content in response.iter_content():
+        # Content logic here
+        pass
+    ```
+    
     Attributes:
         target_socket: The socket already connected used for communication with the proxy server.
         payload_obj: The response payload associated with the HTTP response.
@@ -209,6 +211,7 @@ class HttpProxyResponse(StreamingHttpResponse):
 class HttpProxyHandler:
     """
     HttpProxyHandler class to handle forwarding TCP requests to target hosts.
+    
     This class supports both IPv4 and IPv6 and allows modification of headers
     before forwarding the data to the client.
     """

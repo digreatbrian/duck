@@ -13,9 +13,9 @@ class SessionMiddleware(BaseMiddleware):
     This middleware for creating and updating user sessions
 
     Notes:
-        - This middleware is responsible for creating, updating and saving user sessions
-        - Duck is lazy and it explicitly save the sessions on response bases (if session modified).
-        - Request session should not be explicitly saved if you want session to be sent to the client in Set-Cookie header.
+    - This middleware is responsible for creating, updating and saving user sessions
+    - Duck is lazy and it explicitly save the sessions on response bases (if session modified).
+    - Request session should not be explicitly saved if you want session to be sent to the client in Set-Cookie header.
     """
 
     debug_message: str = "SessionMiddleware: Session error"

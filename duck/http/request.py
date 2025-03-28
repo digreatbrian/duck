@@ -1152,10 +1152,10 @@ class Request:
           to the request method as a QueryDict.
     
         Updates:
-            - self.COOKIES: Extracted cookies from the request.
-            - self.AUTH: Extracted authentication data from the request.
-            - self.QUERY: Updated global QueryDict with URL and content query data.
-            - self.method.upper(): A QueryDict containing the combined URL and content queries.
+        - `self.COOKIES`: Extracted cookies from the request.
+        - `self.AUTH`: Extracted authentication data from the request.
+        - `self.QUERY`: Updated global QueryDict with URL and content query data.
+        - `self.method`.upper(): A QueryDict containing the combined URL and content queries.
         """
         # Extract session, auth, and query data
         self.COOKIES = self.extract_cookies_from_request(self)
@@ -1219,8 +1219,11 @@ class HttpProxyRequest(Request):
     This kind of request may contain 2 http requests in single http request.
 
     Example:
-            CONNECT /192.xxx.xxx.xxx HTTP/1.1\r\n\r\nGET / HTTP/2.1\r\n\r\nHost: xxx.com\r\nConnection: Keep-Alive
-
+    
+    ```http
+    CONNECT /192.xxx.xxx.xxx HTTP/1.1\r\n\r\nGET / HTTP/2.1\r\n\r\nHost: xxx.com\r\nConnection: Keep-Alive
+    ```
+    
     Not Implemented yet
     """
 

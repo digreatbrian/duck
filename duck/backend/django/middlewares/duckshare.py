@@ -23,12 +23,15 @@ Dependencies:
     - `x_import`: Utility for dynamic imports, used to load `DJANGO_MIDDLEWARE`.
 
 Example:
-    # settings.py
-    MIDDLEWARE = [
-        ...
-        "duck.http.middlewares.DuckMiddleware",
-        ...
-    ]
+
+```py
+# settings.py
+MIDDLEWARE = [
+    ...
+    "duck.http.middlewares.DuckMiddleware",
+    ...
+]
+```
 """
 from django.contrib.sessions.middleware import MiddlewareMixin
 from django.conf import settings
@@ -50,35 +53,37 @@ class DuckMiddleware(MiddlewareMixin):
     data is injected into Django's request `META`.
 
     Responsibilities:
-        - Decompile and process headers with a specific prefix that indicate 
-          shared data between Duck and Django.
-        - Inject processed header data into Django's `META` dictionary, making 
-          it accessible within Django views or middleware.
-        - Safely discard unsupported header types to ensure stability.
+    - Decompile and process headers with a specific prefix that indicate 
+      shared data between Duck and Django.
+    - Inject processed header data into Django's `META` dictionary, making 
+      it accessible within Django views or middleware.
+    - Safely discard unsupported header types to ensure stability.
 
     Notes:
-        - Shared headers that do not match the expected format or have unsupported 
-          data types will be discarded and will not be added to Django's request `META`.
-        - This middleware depends on `DJANGO_MIDDLEWARE.restore_django_request` for 
-          restoring and processing the request.
+    - Shared headers that do not match the expected format or have unsupported 
+      data types will be discarded and will not be added to Django's request `META`.
+    - This middleware depends on `DJANGO_MIDDLEWARE.restore_django_request` for 
+      restoring and processing the request.
 
     Methods:
-        - process_request(request):
-            Restores and processes the incoming request to inject shared header 
-            data into Django's request `META`.
+    - process_request(request):
+      - Restores and processes the incoming request to inject shared header 
+        data into Django's request `META`.
 
     Usage:
-        Add `DuckMiddleware` to the `MIDDLEWARE` list in your Django settings to 
-        enable header processing and data sharing.
+    - Add `DuckMiddleware` to the `MIDDLEWARE` list in your Django settings to 
+      enable header processing and data sharing.
 
     Example:
-        # settings.py
-        MIDDLEWARE = [
-            ...
-            "duck.http.middlewares.DuckMiddleware",
-            ...
-        ]
-
+    
+    ```py
+    # settings.py
+    MIDDLEWARE = [
+        ...
+        "duck.http.middlewares.DuckMiddleware",
+        ...
+    ]
+    ```
     """
 
     def process_request(self, request):
@@ -90,13 +95,13 @@ class DuckMiddleware(MiddlewareMixin):
             request (HttpRequest): The incoming HTTP request object.
 
         Workflow:
-            1. Calls `DJANGO_MIDDLEWARE.restore_django_request` to process headers 
-               and restore them to Django's request `META`.
-            2. Removes processed headers from the original request object to 
-               prevent redundancy or leakage of shared data.
+        1. Calls `DJANGO_MIDDLEWARE.restore_django_request` to process headers 
+             and restore them to Django's request `META`.
+        2. Removes processed headers from the original request object to 
+             prevent redundancy or leakage of shared data.
 
         Returns:
             None: The method modifies the request object in place.
         """
-        #duck_meta = DJANGO_MIDDLEWARE.resolve_meta_from_headers(request.headers) # This is the META that the Duck request has
+        # duck_meta = DJANGO_MIDDLEWARE.resolve_meta_from_headers(request.headers) # This is the META that the Duck request has
         

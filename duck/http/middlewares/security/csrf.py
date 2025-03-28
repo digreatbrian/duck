@@ -136,7 +136,7 @@ def get_csrf_token(request):
     Generates a new CSRF token and saves the CSRF secret in the request.META.
 
     Args:
-            request: The http request.
+        request: The http request.
 
     This function performs the following actions:
     1. Generates a new CSRF token (Csrf_Token), a scrambled/random token to be sent to the user.
@@ -211,8 +211,8 @@ class CSRFMiddleware(BaseMiddleware):
                                     proxied to Django.
 
     Methods:
-        process_request(request): Verifies the CSRF token in the request and compares it 
-                                  with the Csrf Cookie/Secret to ensure authenticity.
+    - process_request(request): Verifies the `CSRF token` in the request and compares it 
+      with the `Csrf Cookie/Secret` to ensure authenticity.
 
     """
 

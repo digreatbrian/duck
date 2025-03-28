@@ -3,18 +3,23 @@ This module provides a simple inter-process communication (IPC) mechanism using 
 It allows processes to communicate by writing to and reading from a shared file.
 
 Functions:
-    get_writer() -> FileWriter: Returns a FileWriter object for writing messages.
-    get_reader() -> FileReader: Returns a FileReader object for reading messages.
+- `get_writer()` -> `FileWriter`: Returns a FileWriter object for writing messages.
+- `get_reader()` -> `FileReader`: Returns a FileReader object for reading messages.
     
 Example Usage:
-    # Process 1
-    with get_writer() as writer:
-        writer.write_message('Hello from Process 1')
-    
-    # Process 2
-    with get_reader() as reader:
-        message = reader.read_message()
-        print(message)
+
+```py
+# Process 1
+with get_writer() as writer:
+    writer.write_message('Hello from Process 1')
+```
+
+```py
+# Process 2
+with get_reader() as reader:
+    message = reader.read_message()
+    print(message)
+```
 """
 
 import os

@@ -1,41 +1,50 @@
 """
 Module for duplicating callables (functions and methods) with the same signature.
 
-This module provides a utility function `duplicate_callable` that can create a 
-duplicate of any given callable (function or method) with the same signature. 
-The duplicated callable retains the original callable's metadata, such as its 
-name and docstring, and can optionally be given a custom name. Additionally, 
-a decorator can be applied to the duplicated callable.
+This module provides a utility function ``duplicate_callable`` that allows you to create a duplicate
+of any given callable (function or method) while retaining its original signature, name, and docstring.
+The duplicated callable can optionally be assigned a custom name and can also have a decorator applied.
 
-Usage Example:
+Features
+--------------
 
-    # Define a function to be duplicated
-    def example_function(arg1, arg2, kwarg1=None, kwarg2=None):
-        '''
-        An example function that takes two positional arguments and two keyword arguments.
-        '''
+- Duplicates functions and methods while preserving their signature, name, and docstring.
+- Allows assignment of custom names to duplicated callables.
+- Supports applying decorators to the duplicated callables.
+
+Usage Example
+-------------------------
+
+```py
+# Define a function to be duplicated
+def example_function(arg1, arg2, kwarg1=None, kwarg2=None):
+    # An example function that takes two positional arguments and two keyword arguments
+    return f"arg1: {arg1}, arg2: {arg2}, kwarg1: {kwarg1}, kwarg2: {kwarg2}"
+
+# Create a duplicate of the function with a custom name
+duplicated_function = duplicate_callable(example_function, new_name="duplicated_function")
+
+# Call the duplicated function
+result = duplicated_function(1, 2, kwarg1="test", kwarg2="example")
+print(result)  
+# Output: arg1: 1, arg2: 2, kwarg1: test, kwarg2: example
+
+# Define a class with a method to be duplicated
+class MyClass:
+    def example_method(self, arg1, arg2, kwarg1=None, kwarg2=None):
+        # An example method that takes two positional arguments and two keyword arguments
         return f"arg1: {arg1}, arg2: {arg2}, kwarg1: {kwarg1}, kwarg2: {kwarg2}"
 
-    # Create a duplicate of the function with a custom name
-    duplicated_function = duplicate_callable(example_function, new_name="duplicated_function")
-    result = duplicated_function(1, 2, kwarg1="test", kwarg2="example")
-    print(result)  # Output: arg1: 1, arg2: 2, kwarg1: test, kwarg2: example
-    
-    # Define a class with a method to be duplicated
-    class MyClass:
-        def example_method(self, arg1, arg2, kwarg1=None, kwarg2=None):
-            '''
-            An example method that takes two positional arguments and two keyword arguments.
-            '''
-            return f"arg1: {arg1}, arg2: {arg2}, kwarg1: {kwarg1}, kwarg2: {kwarg2}"
+# Create a duplicate of the method with a custom name
+MyClass.duplicated_method = duplicate_callable(MyClass.example_method, new_name="duplicated_method")
 
-    # Create a duplicate of the method with a custom name
-    MyClass.duplicated_method = duplicate_callable(MyClass.example_method, new_name="duplicated_method")
-    obj = MyClass()
-    result = obj.duplicated_method(1, 2, kwarg1="test", kwarg2="example")
-    print(result)  # Output: arg1: 1, arg2: 2, kwarg1: test, kwarg2: example
+# Instantiate the class and call the duplicated method
+obj = MyClass()
+result = obj.duplicated_method(1, 2, kwarg1="test", kwarg2="example")
+print(result)  
+# Output: arg1: 1, arg2: 2, kwarg1: test, kwarg2: example
+```
 """
-
 import inspect
 import functools
 
@@ -57,38 +66,40 @@ def duplicate_callable(callable_obj, new_name=None, decorator=None):
         callable: A new callable with the same signature as the original callable.
 
     Safety:
-        - This function avoids using exec, which mitigates the risk of executing arbitrary code.
-        - The function uses closures to ensure that the wrapper is correctly referenced, preventing name errors.
-        - By preserving the callable's signature and using functools.wraps, the callable's metadata
+    - This function avoids using exec, which mitigates the risk of executing arbitrary code.
+    - The function uses closures to ensure that the wrapper is correctly referenced, preventing name errors.
+    - By preserving the callable's signature and using functools.wraps, the callable's metadata
           (like name and docstring) is maintained.
 
     Example Usage:
+    
+    ```py
+    # Define a function to be duplicated
+    def example_function(arg1, arg2, kwarg1=None, kwarg2=None):
+        '''
+        An example function that takes two positional arguments and two keyword arguments.
+        '''
+        return f"arg1: {arg1}, arg2: {arg2}, kwarg1: {kwarg1}, kwarg2: {kwarg2}"
 
-        # Define a function to be duplicated
-        def example_function(arg1, arg2, kwarg1=None, kwarg2=None):
+    # Create a duplicate of the function with a custom name
+    duplicated_function = duplicate_callable(example_function, new_name="duplicated_function")
+    result = duplicated_function(1, 2, kwarg1="test", kwarg2="example")
+    print(result)  # Output: arg1: 1, arg2: 2, kwarg1: test, kwarg2: example
+
+    # Define a class with a method to be duplicated
+    class MyClass:
+        def example_method(self, arg1, arg2, kwarg1=None, kwarg2=None):
             '''
-            An example function that takes two positional arguments and two keyword arguments.
+            An example method that takes two positional arguments and two keyword arguments.
             '''
             return f"arg1: {arg1}, arg2: {arg2}, kwarg1: {kwarg1}, kwarg2: {kwarg2}"
 
-        # Create a duplicate of the function with a custom name
-        duplicated_function = duplicate_callable(example_function, new_name="duplicated_function")
-        result = duplicated_function(1, 2, kwarg1="test", kwarg2="example")
-        print(result)  # Output: arg1: 1, arg2: 2, kwarg1: test, kwarg2: example
-
-        # Define a class with a method to be duplicated
-        class MyClass:
-            def example_method(self, arg1, arg2, kwarg1=None, kwarg2=None):
-                '''
-                An example method that takes two positional arguments and two keyword arguments.
-                '''
-                return f"arg1: {arg1}, arg2: {arg2}, kwarg1: {kwarg1}, kwarg2: {kwarg2}"
-
-        # Create a duplicate of the method with a custom name
-        MyClass.duplicated_method = duplicate_callable(MyClass.example_method, new_name="duplicated_method")
-        obj = MyClass()
-        result = obj.duplicated_method(1, 2, kwarg1="test", kwarg2="example")
-        print(result)  # Output: arg1: 1, arg2: 2, kwarg1: test, kwarg2: example
+    # Create a duplicate of the method with a custom name
+    MyClass.duplicated_method = duplicate_callable(MyClass.example_method, new_name="duplicated_method")
+    obj = MyClass()
+    result = obj.duplicated_method(1, 2, kwarg1="test", kwarg2="example")
+    print(result)  # Output: arg1: 1, arg2: 2, kwarg1: test, kwarg2: example
+    ```
     """
     # Get the signature of the original callable
     sig = inspect.signature(callable_obj)

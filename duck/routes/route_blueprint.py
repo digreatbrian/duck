@@ -2,11 +2,15 @@
 Module for route arrangements using Blueprint. This acts as a set of routes, much like how Flask's blueprints organize routes in a module.
 
 Example:
-	app = Blueprint(location=__file__, name="products", urlpatterns=...)
 
-Notes:
-    - To resolve a url for a blueprint, the name should be {blueprint_name}.{path_name} .e.g:
-        "api.followers" for blueprint named `api` and a path registered with name `followers`
+```py
+app = Blueprint(location=__file__, name="products", urlpatterns=...)
+```
+
+``` {note}
+To resolve a url for a blueprint, the name should be `{blueprint_name}.{path_name}` .e.g.,
+  `"api.followers"` for blueprint named `api` and a path registered with name `followers`
+```
 """
 
 import pathlib
@@ -44,8 +48,8 @@ class Blueprint:
         enable_static_dir: bool = True,
     ):
         """
-        Initialize Blueprint
-
+        Initialize the Blueprint.
+        
         Args:
                 location (str): The absolute path to where the blueprint is located.
                 name (str): A valid string.
@@ -109,7 +113,7 @@ class Blueprint:
         
         Notes:
             - This reconfigures the urlpattern to belong to the blueprint before adding
-        the url pattern.
+              the url pattern.
         """
         name = urlpattern["name"]
         route = urlpattern["url"]

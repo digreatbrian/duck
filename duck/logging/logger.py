@@ -2,7 +2,7 @@
 Logging module for Duck with console color support using colorama module.
 
 Notes:
-	- Whenever DEBUG=True, redirect all console output if LOG_TO_FILE=True but ignore log_to_file argument which may be provided in functions 'log' and 'log_raw'.
+- Whenever `DEBUG=True`, redirect all console output if `LOG_TO_FILE=True` but ignore log_to_file argument which may be provided in functions 'log' and 'log_raw'.
 """
 import os
 import sys
@@ -279,9 +279,9 @@ def log_raw(
         msg (str): The message to log.
         level (int): The log level of the message.
         use_colors (bool): Whether to log message with some colors, i.e. red for Errors, Yellow for warnings, etc.
-        custom_color (string): The custom color to use, .e.g '\x1b[31m'.
+        custom_color (string): The custom color to use.
         The use colors argument is required to use custom color.
-        end (str): The log suffix, defaults to "\n" for newline.
+        end (str): The log suffix, defaults to `"\n"` for newline.
     """
     log_level = level
     std = sys.stdout
@@ -329,8 +329,8 @@ def log(
         prefix (str): The prefix to prepend to the message.
         level (int): The log level of the message.
         use_colors (bool): Whether to log message with some colors, ie, red for Errors, Yellow for warnings, etc
-        custom_color (string): The custom color to use, .e.g '\x1b[31m'. Arg use_colors is required to use custom color.
-        end (str): The log suffix, defaults to "\n" for newline.
+        custom_color (string): The custom color to use. Argument `use_colors` is required to use custom color.
+        end (str): The log suffix, defaults to `"\n"` for newline.
     """
     formatted_msg = f"{prefix} {msg}"
     log_level = level

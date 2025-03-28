@@ -2,9 +2,8 @@
 Image components module.
 
 Available Images:
-    - Image: Base image component.
-    - CircularImage: Rounded circular image component.
-    
+- `Image`: Base image component.
+- `CircularImage`: Rounded circular image component.
 """
 from duck.html.components import NoInnerHtmlComponent
 

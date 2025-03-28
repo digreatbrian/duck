@@ -1,3 +1,7 @@
+"""
+Module containing RequestHandlingExecutor which handles execution of async coroutines and threaded tasks efficiently.
+"""
+
 import asyncio
 import threading
 import concurrent.futures

@@ -1,6 +1,6 @@
 """
 Module containing the default view to handle all Django requests through
- redirecting them to the appropriate Duck view to produce a response.
+redirecting them to the appropriate Duck view to produce a response.
 """
 from typing import Callable
 from functools import wraps
@@ -29,8 +29,8 @@ def request_meta_update(func: Callable):
     with the Duck request.META before processing the function.
     
     Why Do This:
-        - Keeps the Django request.META in sync with the Duck request.META.
-        - Ensures consistency in metadata between the two request objects.
+    - Keeps the Django request.META in sync with the Duck request.META.
+    - Ensures consistency in metadata between the two request objects.
     
     Args:
         func (Callable): The function to be wrapped.

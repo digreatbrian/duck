@@ -56,7 +56,7 @@ class AutomationTrigger:
         return f"<{self.__class__.__name__} name={name} at {addr}>"
 
 
-class NoTrigger(AutomationTrigger):
+class NoTriggerBase(AutomationTrigger):
     """
     A trigger that always returns True.
 
@@ -74,4 +74,4 @@ class NoTrigger(AutomationTrigger):
 
 
 # Default triggers definition
-NoTrigger = NoTrigger()
+NoTrigger = NoTriggerBase()

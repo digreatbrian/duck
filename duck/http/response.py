@@ -222,8 +222,7 @@ class BaseResponse:
         Returns the content encoding for the response.
         
         Notes:
-            - This is not retrieved from headers but directly from the content object.
-
+        - This is not retrieved from headers but directly from the content object.
         """
         return self.content_obj.encoding
 

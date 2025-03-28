@@ -21,8 +21,8 @@ class TableOfContentsSection(FlexContainer):
     Each section consists of a heading (anchor link target) and body content.
 
     Args:
-        heading (str): The heading of the section, which will be linked in the Table of Contents.
-        body (str): The main content of the section, which can be plain text or HTML.
+    - `heading` (str): The heading of the section, which will be linked in the Table of Contents.
+    - `body` (str): The main content of the section, which can be plain text or HTML.
     """
     
     def on_create(self):

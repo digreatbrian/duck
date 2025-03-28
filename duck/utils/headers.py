@@ -10,7 +10,7 @@ def parse_headers_from_bytes(data: bytes, delimiter: str = "\r\n") -> Dict[str, 
     
     Args:
         data (bytes): The raw header data in bytes format.
-        delimiter (str | bytes): Delimiter separating headers (defaults to "\r\n").
+        delimiter (str | bytes): Delimiter separating headers.
     
     Returns:
         Dict[str, List[str]]: A dictionary with header names as keys (in lowercase) and lists of their respective values.

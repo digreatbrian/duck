@@ -1,5 +1,13 @@
 """
-Duck shortcuts, etc.
+This module provides various utility functions and shortcuts for handling 
+common operations in the Duck framework. 
+
+It includes functions for rendering templates, generating responses, 
+resolving URLs, managing CSRF tokens, handling static and media resources, 
+and manipulating HTTP responses.
+
+The module also defines `URLResolveError`, an exception raised when 
+URL resolution fails.
 """
 
 from typing import Optional, Any, Union
@@ -31,7 +39,7 @@ from duck.exceptions.all import (
 
 from duck.meta import Meta
 from duck.routes import RouteRegistry
-
+import os
 
 __all__ = [
     "simple_response",
@@ -227,7 +235,7 @@ def jsonify(data: Any, status_code: int = 200, **kw):
 
 
 def not_found404(body: Optional[str] = None, content_type="text/html", **kw):
-    """Returns a 404 HttpNotFoundResponse object either a simple response or a template response given DEBUG mode is on or off.
+    """Returns a 404 `HttpNotFoundResponse` object either a simple response or a template response given DEBUG mode is on or off.
 
     Args:
         content (Optional[body]): Body for the response, defaults to None
@@ -339,15 +347,18 @@ def resolve(name: str, absolute: bool = True, fallback_url: Optional[str] = None
         absolute (bool): This will return the absolute url instead of registered path only but it requires the app to be in running state
         fallback_url (Optional[str]): The fallback url to use if the URL is not found.
         
-    Notes:
-        It only works on URL's that were registered as plain urls in form:
-            pattern = '/url/path'
+    ``` {important}
+    This function is primarily designed for resolving URLs registered as plain, static paths. 
+     It is strongly recommended to use this function only with URLs registered in the form:
+         > pattern = '/url/path'
 
-            # not
-            pattern = '/url/<some_input>/path'
-            # or
-            pattern = '/url/hello*'
-
+     Using this function with dynamic URLs (e.g., those containing path parameters or regular expression patterns) will return the raw, unregistered pattern, which is typically not useful for direct use. 
+     For example, using it with:
+         > pattern = '/url/<some_input>/path'
+         > pattern = '/url/hello*'
+    will return those patterns as is, and not a resolved URL.
+    ```
+    
     Raises:
         (URLResolveError): Raised if there is no url associated with the name, url associated with the name is not a plain url
     """

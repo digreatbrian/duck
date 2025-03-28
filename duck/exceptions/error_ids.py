@@ -1,3 +1,6 @@
+"""
+Module for generating unique identifiers (IDs) for errors and exceptions.
+"""
 import hashlib
 import traceback
 

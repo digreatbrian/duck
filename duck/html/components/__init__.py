@@ -3,33 +3,39 @@ This module defines HTML components or elements that can be inserted into HTML p
 
 These components are applied only if a templating engine is in use, such as Jinja2 or Django Template Engine.
 
-Example Usage:
-    # Jinja2 Template
-    {{ Button(
-         properties={
-             "value": "Hello world",
-              "id": "btn"
-          },
-          style={
-              "background-color": "red",
-               "color": "white",
-            },
-            optional_argument="Some value",
-          )
-    }}
-    
-    # Django Template
-    {% Button %}
-         properties={
-             "id": "btn",
-             "value": "Hello world"
-          },
-          style={
-               "background-color": "blue",
-                "color": "white"
-           },
-           optional_argument="Some value"
-    {% endButton %}
+Example Usage:  
+
+**Jinja2 Template**
+
+```jinja
+{{ Button(
+    properties={
+        "value": "Hello world",
+        "id": "btn"
+     },
+     style={
+         "background-color": "red",
+         "color": "white",
+      },
+      optional_argument="Some value",
+    )
+}}
+```
+
+**Django Template**
+
+```django
+{% Button %}
+     properties={
+         "id": "btn",
+         "value": "Hello world"
+      },
+      style={
+          "background-color": "blue",
+          "color": "white"
+      },
+      optional_argument="Some value"
+{% endButton %}
 """
 
 import re
@@ -285,15 +291,15 @@ class NoInnerHtmlComponent(HtmlComponent):
     """
     This is the HTML component with no Inner Body.
 
-    Form:
-        <mytag> or <mytag/>
-
-        Example:
-            <input>
-            <textarea>
-
+    Example:
+    
+    ```html
+    <input> <!--Input element does not accept inner html (inner body)-->
+    <b/> <!--Same applies with the bold tag-->
+    ```
+   
     Notes:
-        - The html components that fall in this category are usually HTML Input elements.
+    - The html components that fall in this category are usually HTML Input elements.
     """
 
     def __init__(
@@ -317,15 +323,21 @@ class InnerHtmlComponent(HtmlComponent):
     This is the HTML component with Inner Body presence.
 
     Form:
-        <mytag>Text here</mytag>
-
-        Example:
-            <p>Text here</p>
-            <h2>Text here</h2>
-            <ol>List elements here</ol>
-
+    
+    ```html
+    <mytag>Text here</mytag>
+    ```
+    
+    Example:
+    
+    ```html
+    <p>Text here</p>
+    <h2>Text here</h2>
+    <ol>List elements here</ol>
+    ```
+    
     Notes:
-        - The html components that fall in this category are usually basic HTML elements.
+    - The html components that fall in this category are usually basic HTML elements.
     """
 
     def __init__(

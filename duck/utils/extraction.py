@@ -7,17 +7,17 @@ and other patterns that are commonly needed in text processing tasks such as web
 or text analysis.
 
 Functions include:
-- extract_urls: Extracts all URLs from a given text.
-- extract_emails: Extracts all email addresses from a given text.
-- extract_phone_numbers: Extracts all phone numbers from a given text.
-- extract_hashtags: Extracts all hashtags from a given text.
-- extract_mentions: Extracts all mentions (usernames) from a given text.
+- `extract_urls`: Extracts all URLs from a given text.
+- `extract_emails`: Extracts all email addresses from a given text.
+- `extract_phone_numbers`: Extracts all phone numbers from a given text.
+- `extract_hashtags`: Extracts all hashtags from a given text.
+- `extract_mentions`: Extracts all mentions (usernames) from a given text.
 - extract_dates: Extracts all date-like patterns from a given text.
-- extract_currency: Extracts all currency values from a given text.
-- extract_ips: Extracts all IP addresses from a given text.
-- extract_social_handles: Extracts social media handles (like Twitter, Instagram) from a given text.
-- extract_hex_colors: Extracts all hex color codes from a given text.
-- extract_skus: Extracts all product SKUs (Stock Keeping Units) from a given text.
+- `extract_currency`: Extracts all currency values from a given text.
+- `extract_ips`: Extracts all IP addresses from a given text.
+- `extract_social_handles`: Extracts social media handles (like Twitter, Instagram) from a given text.
+- `extract_hex_colors`: Extracts all hex color codes from a given text.
+- `extract_skus`: Extracts all product SKUs (Stock Keeping Units) from a given text.
 """
 
 import re

@@ -14,12 +14,12 @@ class FooterBlock(FlexContainer):
     """
     Footer Block component which will contain a list of footer items.
     
-    Notes:
-        - This component may have different footer blocks with different headings and items.
-    
     Args:
         heading (str): The heading for the footer block
         elements (list[str]): List containing block elements as html e.g ['<b>Value</b>', ...]
+    
+    Notes:
+    - This component may have different footer blocks with different headings and items.
     """
     def on_create(self):
         super().on_create()
@@ -59,24 +59,27 @@ class Footer(InnerHtmlComponent):
     
     Args:
         footer_items (dict[str, list[str]]): A dictionary containing a mapping of footer block headings to a
-                                                                list of different html elements as strings. 
-        copyright (str): Copyright info.
+            list of different html elements as strings. 
+        copyright (str): Copyright information.
         
     Template Usage:
-        {% Footer %}
-           footer_items = {
+     
+     ```django
+     {% Footer %}
+         footer_items = {
              "Company": [
-               '{% Link %}text="About Us", url="{% resolve 'about' fallback_url='#' %}"{% endLink %}',
-               '{% Link %}text="Contact Us", url="{% resolve 'contact' fallback_url='#' %}"{% endLink %}',
-               '{% Link %}text="Our Services", url="{% resolve 'services' fallback_url='#' %}"{% endLink %}',
+                 '{% Link %}text="About Us", url="{% resolve 'about' fallback_url='#' %}"{% endLink %}',
+                 '{% Link %}text="Contact Us", url="{% resolve 'contact' fallback_url='#' %}"{% endLink %}',
+                 '{% Link %}text="Our Services", url="{% resolve 'services' fallback_url='#' %}"{% endLink %}',
              ], # Quick links
              "Legal": [
-               '{% Link %}text="Privacy Policy", url="{% resolve 'privacy' fallback_url='#' %}"{% endLink %}',
-               '{% Link %}text="Terms & Conditions", url="{% resolve 'tos' fallback_url='#' %}"{% endLink %}',
+                 '{% Link %}text="Privacy Policy", url="{% resolve 'privacy' fallback_url='#' %}"{% endLink %}',
+                 '{% Link %}text="Terms & Conditions", url="{% resolve 'tos' fallback_url='#' %}"{% endLink %}',
              ],
            },
            copyright="&copy; 2025 Duck. All rights reserved.",
-         {% endFooter %}
+   {% endFooter %}
+    ```
     """
     def get_element(self):
         return "footer"

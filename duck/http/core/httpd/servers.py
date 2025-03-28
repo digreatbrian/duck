@@ -1,8 +1,8 @@
 """
 Module containing server classes.
 """
-
 import socket
+
 from typing import Dict, Optional, Tuple
 
 from duck.etc.ssl_defaults import SSL_DEFAULTS

@@ -206,8 +206,8 @@ def remove_punctuation(text: str) -> str:
     return re.sub(r'[^\w\s]', '', text)
 
 
-def remove_non_alphanumeric(text: str) -> str:
-    """Remove all non-alphanumeric characters (keeps letters and numbers)."""
+def re_remove_non_alphanumeric(text: str) -> str:
+    """Remove all non-alphanumeric characters (keeps letters and numbers) using Regex."""
     return re.sub(r'[^a-zA-Z0-9]', '', text)
 
 
@@ -286,11 +286,6 @@ def is_camel_case(s: str) -> bool:
     """
     # Ensure the string contains only letters and starts correctly
     return bool(re.fullmatch(r"[a-z]+(?:[A-Z][a-z]*)*", s) or re.fullmatch(r"[A-Z][a-z]*(?:[A-Z][a-z]*)*", s))
-
-
-def is_camel_case(s: str) -> bool:
-    """Checks if a string follows camelCase (lowerCamelCase)."""
-    return bool(re.fullmatch(r"[a-z]+(?:[A-Z][a-z]*)*", s))
 
 
 def is_pascal_case(s: str) -> bool:

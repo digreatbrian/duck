@@ -8,20 +8,24 @@ This module handles URLs gracefully, even those without a scheme, addressing lim
 - Supports URLs with or without schemes.
 - Easily update host, port, query, and other components.
 
+``` {note}
+This method is more reliable than `urllib` and similar packages, as they often struggle to handle URLs that lack a scheme (e.g., `https`).
+```
+
 ### Example Usage:
-    from urlcrack import URL
+
+```py
+from urlcrack import URL
+
+url_obj = URL('digreatbrian.tech/some/path?query=something#resource')
+
+# Manipulate the URL object
+url_obj.host = "new_site.com"
+url_obj.port = 1234  # Set port to None to remove it
     
-    url_obj = URL('digreatbrian.tech/some/path?query=something#resource')
-    
-    # Parse a new URL
-    new_url_obj = URL.parse('example.com:8080/new/path')
-    
-    # Manipulate the URL object
-    url_obj.host = "new_site.com"
-    url_obj.port = 1234  # Set port to None to remove it
-    
-    print(url_obj.to_str()) 
-    # Output: new_site.com:1234/some/path?query=something#resource
+print(url_obj.to_str()) 
+# Output: new_site.com:1234/some/path?query=something#resource
+```
 
 ### Author:
 Brian Musakwa <digreatbrian@gmail.com>
@@ -174,7 +178,7 @@ class URL:
                 This means whether to replace the query and fragment even if they are empty in head URL. Defaults to True.
             
         Example:
-            https://digreatbrian.tech/some/path + http://digreatbrian.tech/path/endpoint = https://digreatbrian.tech/some/path/endpoint
+            > https://digreatbrian.tech/some/path + http://digreatbrian.tech/path/endpoint = https://digreatbrian.tech/some/path/endpoint
         """
         base_url_obj = URL(base_url)
         head_url_obj = URL(head_url)

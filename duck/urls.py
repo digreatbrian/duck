@@ -1,25 +1,28 @@
 """"
-Functions for easy creation of url patterns info
+Functions for easy creation and organization of url patterns data.
 
 Example usage:
-	# urls.py
-	from duck.urls import path, re_path
-	from duck.shortcuts import render
+
+```py
+# urls.py
+from duck.urls import path, re_path
+from duck.shortcuts import render
 	
-	def home_view(request):
-		return "Hello world"
+def home_view(request):
+	return "Hello world"
 	
-	def profile_view(request, user_id):
-	    return render('profile.html', request, context={'user_id': user_id})
+def profile_view(request, user_id):
+	return render('profile.html', request, context={'user_id': user_id})
 	
-	def documents_view(request):
-		return f"Document {request.path}"
+def documents_view(request):
+	return f"Document {request.path}"
 	
-	urlpatterns = [
-		path('/', home_view, 'home', ['GET']),
-		path("/user/<user_id>/profile", profile_view, 'profile'),
-		re_path('/doc/.*', documents_view, 'docs', ['GET'])
-	]
+urlpatterns = [
+    path('/', home_view, 'home', ['GET']),
+	path("/user/<user_id>/profile", profile_view, 'profile'),
+	re_path('/doc/.*', documents_view, 'docs', ['GET'])
+]
+```
 """
 from typing import List, Callable, Optional
 

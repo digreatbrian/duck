@@ -11,8 +11,8 @@ from duck.html.components import InnerHtmlComponent
 class TextArea(InnerHtmlComponent):
     """
     A reusable HTML `<textarea>` component for multi-line text input.
-
-    **Args:**
+    
+    Args:
         name (str, optional):  
             The name attribute of the textarea, used for form submissions.
 
@@ -25,7 +25,8 @@ class TextArea(InnerHtmlComponent):
         maxlength (int, optional):  
             The maximum number of characters allowed in the textarea.
 
-    **Example Usage:**
+    Example:
+    
     ```py
     textarea = TextArea(
         name="user_message",
@@ -46,7 +47,7 @@ class TextArea(InnerHtmlComponent):
     - Minimum width is set to `50%` and minimum height to `80px`.
 
     **Returns:**
-        - A `<textarea>` HTML element.
+    - A `<textarea>` HTML element.
     """
 
     def get_element(self):

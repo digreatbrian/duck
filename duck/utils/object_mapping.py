@@ -19,13 +19,15 @@ def map_data_to_object(obj, data: dict):
         TypeError: If the provided data is not a dictionary.
 
     Example:
-        class Example:
-            pass
+    
+    ```py
+    class Example:
+        pass
 
-        e = Example()
-        map_data_to_object(e, {'name': 'Alice', 'age': 30})
-        print(e.name)  # Output: Alice
-        print(e.age)   # Output: 30
+    e = Example()
+    map_data_to_object(e, {'name': 'Alice', 'age': 30})
+    print(e.name)  # Output: Alice
+    print(e.age)   # Output: 30
     """
     if not isinstance(data, dict):
         raise TypeError(

@@ -2,10 +2,10 @@
 Module containing ResponseFinalizer class focusing on putting on the final touches to the response.
 
 The final touches include:
-	- Content compression.
-	- Content length calculation and insertion.
-	- Content encoding determination and insertion.
-	- etc.
+- Content compression.
+- Content length calculation and insertion.
+- Content encoding determination and insertion.
+- etc.
 """
 
 from duck.http.request import HttpRequest

@@ -26,10 +26,13 @@ Functions:
 - log(msg, prefix, level, use_colors, custom_color): Logs a formatted message with a prefix.
 
 Example Usage:
-    log("This is an info message.", level=INFO)
-    log("This is a warning!", level=WARNING)
-    log("This is an error!", level=ERROR)
-    log_raw("Raw debug message", level=DEBUG, use_colors=True, custom_color=Fore.MAGENTA)
+
+```py
+log("This is an info message.", level=INFO)
+log("This is a warning!", level=WARNING)
+log("This is an error!", level=ERROR)
+log_raw("Raw debug message", level=DEBUG, use_colors=True, custom_color=Fore.MAGENTA)
+```
 """
 
 import sys
@@ -49,18 +52,17 @@ def log_raw(
     level: int = INFO,
     use_colors: bool = True,
     custom_color: str = None,
-    end: str = "\n",
-):
+    end: str = "\n"):
     """
     Logs a raw message to the console without any modifications or prefixes.
-
+    
     Args:
         msg (str): The message to log.
         level (int): The log level of the message (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL).
         use_colors (bool): Whether to apply color formatting to the message.
-        custom_color (str): A custom ANSI color code for the message (e.g., '\x1b[31m' for red).
-                           Requires `use_colors` to be `True`.
-        end (str): The log suffix, defaults to "\n" for newline.
+        custom_color (str): A custom ANSI color code for the message.
+            Requires `use_colors` to be `True`.
+        end (str): The log suffix, defaults to `"\n"` for newline.
     """
     std = sys.stderr if level in {ERROR, CRITICAL} else sys.stdout
     color = Style.RESET_ALL  # Default: no color
@@ -90,19 +92,18 @@ def log(
     level: int = INFO,
     use_colors: bool = True,
     custom_color: str = None,
-    end: str = "\n",
-):
+    end: str = "\n"):
     """
     Logs a formatted message to the console with a prefix and optional colors.
-
+    
     Args:
         msg (str): The message to log.
         prefix (str): A prefix to prepend to the message, e.g., '[ * ]', 'INFO', 'ERROR'.
         level (int): The log level of the message (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL).
         use_colors (bool): Whether to apply color formatting to the message.
-        custom_color (str): A custom ANSI color code for the message (e.g., '\x1b[31m' for red).
-                           Requires `use_colors` to be `True`.
-        end (str): The log suffix, defaults to "\n" for newline.
+        custom_color (str): A custom ANSI color code for the message.
+            Requires `use_colors` to be `True`.
+        end (str): The log suffix, defaults to `"\n"` for newline.
     """
     formatted_msg = f"{prefix} {msg}"
     std = sys.stderr if level in {ERROR, CRITICAL} else sys.stdout

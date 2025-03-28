@@ -3,56 +3,62 @@ Module for automations used in automating tasks, jobs, actions, and more.
 
 This module provides classes and utilities to define and manage automated tasks. It includes a base `Automation` class for creating and running tasks with various scheduling options, as well as supporting threading and callback functionalities.
 
-Classes:
-    - AutomationError: Custom exception for automation-related errors.
-    - AutomationThread: Threading class for executing automations.
-    - Automation: Base class for automating tasks, jobs, actions, etc.
+## Classes
 
-Usage example:
-    import os
-    from duck.automation.dispatcher import DispatcherV1
-    from duck.automation.trigger import NoTrigger
+- **`AutomationError`**: Custom exception for automation-related errors.
+- **`AutomationThread`**: Threading class for executing automations.
+- **`Automation`**: Base class for automating tasks, jobs, actions, etc.
 
-    class SimpleAutomation(Automation):
-        def execute(self):
-            # Execute a shell script
-            os.system('bash some_script.sh')
+## Usage Example
 
-    # Instantiate the automation with specified parameters
-    automation = SimpleAutomation(
-        name="Sample Automation",
-        description="Sample automation",
-        start_time='immediate',
-        schedules=1,
-        interval=0,
-    )  # Set automation schedules to -1 for infinite schedules
+```py
+import os
+from duck.automation.dispatcher import DispatcherV1
+from duck.automation.trigger import NoTrigger
 
-    # Instantiate a trigger that executes immediately
-    trigger = NoTrigger()
-    # You can create a custom trigger by implementing the `check_trigger` method
-    # in your AutomationTrigger subclass and returning True or False based on 
-    # whether the trigger condition is satisfied
+class SimpleAutomation(Automation):
+    # Execute a shell script
+    def execute(self):
+        os.system('bash some_script.sh')
 
-    # Create a dispatcher to manage and execute automations
-    dispatcher = DispatcherV1()  # The first argument is the main running web application (optional)
+# Instantiate the automation with specified parameters
+automation = SimpleAutomation(
+    name="Sample Automation",
+    description="Sample automation",
+    start_time='immediate',
+    schedules=1,
+    interval=0,
+)  # Set automation schedules to -1 for infinite schedules
 
-    # Register the trigger and automation with the dispatcher
-    dispatcher.register(trigger, automation)
-    dispatcher.start()  # Listen for triggers and execute automations infinitely
+# Instantiate a trigger that executes immediately
+trigger = NoTrigger()
 
-    # Alternatively, use a callback function for the automation task
-    def callback():
-        # Perform the automation tasks here
-        # Avoid using while loops; set the number of schedules to -1 for infinite schedules
+# You can create a custom trigger by implementing the `check_trigger` method
+# in your AutomationTrigger subclass and returning True or False based on
+# whether the trigger condition is satisfied
 
-    automation = Automation(
-        callback=callback,
-        name="Sample Automation",
-        description="Sample automation"
-    )
-    # Register the trigger and automation with the dispatcher
-    dispatcher.register(trigger, automation)
-    dispatcher.start()  # Listen for triggers and execute automations infinitely
+# Create a dispatcher to manage and execute automations
+dispatcher = DispatcherV1()  # The first argument is the main running web application (optional)
+
+# Register the trigger and automation with the dispatcher
+dispatcher.register(trigger, automation)
+dispatcher.start()  # Listen for triggers and execute automations infinitely
+
+# Alternatively, use a callback function for the automation task
+def callback():
+    # Perform the automation tasks here
+    # Avoid using while loops; set the number of schedules to -1 for infinite schedules
+    pass
+
+automation = Automation(
+    callback=callback,
+    name="Sample Automation",
+    description="Sample automation"
+)
+
+# Register the trigger and automation with the dispatcher
+dispatcher.register(trigger, automation)
+dispatcher.start()  # Listen for triggers and execute automations infinitely
 """
 
 import datetime
@@ -76,7 +82,7 @@ class AutomationThread(threading.Thread):
         Set a callback that will be called whenever the thread finishes execution.
 
         Notes:
-                - Make sure callback doesn't allow any positional or keyword arguments.
+    - Make sure callback doesn't allow any positional or keyword arguments.
         """
         if not callable(callback):
             raise TypeError(
@@ -104,19 +110,19 @@ class Automation:
     Automation class for automating tasks, jobs, actions, etc.
 
     Events:
-        - on_pre_execute: Called before every execution cycle.
-        - on_post_execute: Called after every execution cycle.
-        - on_start: Called once when the automation starts.
-        - on_finish: Called once when the automation finishes.
-        - on_error: Called whenever there is an error during execution. Override this method to suppress or handle all errors.
+    - `on_pre_execute`: Called before every execution cycle.
+    - `on_post_execute`: Called after every execution cycle.
+    - `on_start`: Called once when the automation starts.
+    - `on_finish`: Called once when the automation finishes.
+    - `on_error`: Called whenever there is an error during execution. Override this method to suppress or handle all errors.
 
     Notes:
-        - The `start` method is the initial method to run an automation.
-        - The `callback` argument is optional; if not provided, the `execute` method must be implemented.
-        - Provide a name and description for more descriptive Automations.
-        - The `join` method can be used to stop the next execution cycle, meaning the automation will stop immediately before entering the next execution cycle.
-        - Using a while loop in the `callback` or `execute` method will cause the automation to hang, and `join` will not work if the callback is in a loop.
-        - The `join` method works properly before the next execution cycle or after the current execution cycle.
+    - The `start` method is the initial method to run an automation.
+    - The `callback` argument is optional; if not provided, the `execute` method must be implemented.
+    - Provide a name and description for more descriptive Automations.
+    - The `join` method can be used to stop the next execution cycle, meaning the automation will stop immediately before entering the next execution cycle.
+    - Using a while loop in the `callback` or `execute` method will cause the automation to hang, and `join` will not work if the callback is in a loop.
+    - The `join` method works properly before the next execution cycle or after the current execution cycle.
     """
 
     def __init__(
@@ -296,7 +302,7 @@ class Automation:
         This returns the Thread for running automation.
 
         Notes:
-                - The thread is only created once.
+            - The thread is only created once.
         """
         if not hasattr(self, "_base_thread"):
             self._base_thread = self.wrap_automation()
@@ -384,7 +390,7 @@ class Automation:
         Returns whether the automation has already been executed for the first time.
 
         Notes:
-                - Take a look a property execution_times to see the number of times the Automation was Executed.
+            - Take a look a property execution_times to see the number of times the Automation was Executed.
         """
         return self.__first_execution
 
@@ -570,7 +576,7 @@ class Automation:
         Method called once the execution has been started.
 
         Notes:
-                - Method "on_start" is called before method "on_pre_execute"
+            - Method "on_start" is called before method "on_pre_execute"
         """
 
     def on_finish(self):
@@ -599,7 +605,7 @@ class Automation:
             ")")
 
 
-class SampleAutomation(Automation):
+class SampleAutomationBase(Automation):
     """
     A placeholder automation class designed for testing or sampling purposes.
 
@@ -620,4 +626,4 @@ class SampleAutomation(Automation):
         """
 
 
-SampleAutomation = SampleAutomation()
+SampleAutomation = SampleAutomationBase()

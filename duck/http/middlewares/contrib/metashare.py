@@ -2,7 +2,7 @@
 Module containing middleware for sharing request META as headers.
 
 Notes:
-    These headers generated from META will be a unique header starting with a secure string prefix.
+- These headers generated from META will be a unique header starting with a secure string prefix.
 """
 import ast
 
@@ -21,10 +21,12 @@ class MetaShareMiddleware(BaseMiddleware):
     This middleware compiles request.META and inject everything as headers, but each header key will be 
     startwith certain secure string prefix so that it is easy to identify as data that is meant to be shared.
     
-    Notes:
-            - If there is a key in request.META which startswith the secure_string_prefix,
-            the key will be skipped as this assumes that this middleware has already been used on
-            request.META to come up with the key with the secure_string_prefix.
+    ``` {note}
+    If there is a key in `request.META` which startswith the `secure_string_prefix`,
+    the key will be skipped as this assumes that this middleware has already been used on
+    `request.META` to come up with the key with the `secure_string_prefix`.
+    ```
+    
     """
     @classmethod
     def resolve_meta_from_headers(cls, headers: Dict) -> Dict:
@@ -41,41 +43,44 @@ class MetaShareMiddleware(BaseMiddleware):
             headers: The HTTP headers to be resolved.
     
         Workflow:
-            1. Retrieves a secret prefix derived from the first 8 characters of the `RAND_SECRET` 
+        1. Retrieves a secret prefix derived from the first 8 characters of the `RAND_SECRET` 
                variable to identify custom headers (e.g., `X-<secret>-<key>`).
-            2. Iterates through request headers:
-                - If a header matches the prefix, it is processed:
-                    - Decodes, decompresses, and converts the value to its original type using 
+        2. Iterates through request headers:
+             - If a header matches the prefix, it is processed:
+                 - Decodes, decompresses, and converts the value to its original type using 
                       predefined converters (e.g., `int`, `dict`, `bool`, etc.).
                     
         Returns:
              Dict: The dictionary with the new meta (keys converted to uppercase)
     
         Notes:
-            - Custom headers must follow the format `<compressed_and_encoded_data>@<type>`.
-            - Headers already processed by the middleware are skipped.
-            - The `ast.literal_eval` function is used to convert string representations of complex data 
-              types (e.g., dict, list, tuple), which may pose a security risk if untrusted 
-              data is passed.
-            - Errors during processing (e.g., incorrect header format) are silently ignored.
+        - Custom headers must follow the format `<compressed_and_encoded_data>@<type>`.
+        - Headers already processed by the middleware are skipped.
+        - The `ast.literal_eval` function is used to convert string representations of complex data 
+           types (e.g., dict, list, tuple), which may pose a security risk if untrusted 
+           data is passed.
+        - Errors during processing (e.g., incorrect header format) are silently ignored.
     
         Example:
-            headers = {
-                "X-Abcdef12-User-Id": "eJwL8Q0BA...@int",  # Encoded and compressed integer
-                "X-Abcdef12-Settings": "eJwL...@dict",       # Encoded and compressed dictionary
-            }
+        
+        ```py
+        headers = {
+            "X-Abcdef12-User-Id": "eJwL8Q0BA...@int",  # Encoded and compressed integer
+            "X-Abcdef12-Settings": "eJwL...@dict",       # Encoded and compressed dictionary
+        }
             
-            cls.resolve_meta_from_headers(headers)
+        cls.resolve_meta_from_headers(headers)
             
-            print(request.META)
-            # Outputs: {
-            #     "USER_ID": 123,
-            #     "SETTINGS": {"theme": "dark", "language": "en"}
-            # }
-    
+        print(request.META)
+        # Outputs: {
+        #     "USER_ID": 123,
+        #     "SETTINGS": {"theme": "dark", "language": "en"}
+        # }
+        ```
+        
         Warnings:
-            - Using `eval` can lead to security vulnerabilities if headers contain untrusted data.
-            - Ensure that only trusted data is processed by this method to mitigate risks.
+        - Using `eval` can lead to security vulnerabilities if headers contain untrusted data.
+        - Ensure that only trusted data is processed by this method to mitigate risks.
         """
         meta = {}
         secret = RAND_SECRET[:8].title()
@@ -124,17 +129,25 @@ class MetaShareMiddleware(BaseMiddleware):
             Dict: The new headers.
         
         Workflow:
-            1. Convert meta to something like this:
-                {
-                    f"X-{secret}-{meta_key}": "{new_value}@{value_type}"
-                }
-           2. The secret is the first 8 characters from RAND_SECRET and meta_key is the value converted to 
-                titlecase and '_' converted to '-'.
-           3. The new_value is the compressed and encoded value, lastly, value_type is the 
-                data type (as a string) before the value converted to string e.g:
-                {
-                    "X-Fjsu6dj3-Http-Host": "eJwL8Q0BA...@str",
-                }
+        
+        1. Convert meta to something like this:
+             
+             ```py
+             {
+                 f"X-{secret}-{meta_key}": "{new_value}@{value_type}"
+              }
+             ```
+             
+        2. The secret is the first 8 characters from RAND_SECRET and meta_key is the value converted to 
+             titlecase and '_' converted to '-'.
+        3. The new_value is the compressed and encoded value, lastly, value_type is the 
+             data type (as a string) before the value converted to string e.g:
+             
+             ```py
+             {
+                  "X-Fjsu6dj3-Http-Host": "eJwL8Q0BA...@str",
+             }
+             ```
         """
         # Only use 8 bits of secret to construct a header
         secret = RAND_SECRET[:8].title()

@@ -110,10 +110,10 @@ def get_django_formatted_log(
         str: The formatted log message with color codes based on the HTTP status.
     
     The log format includes:
-        - HTTP status code, with color changes based on success, client errors, redirection, or server errors.
-        - Optional request path for 500 errors.
-        - Optional debug message if provided.
-        - Support for redirections with status codes 301 and 307.
+     - HTTP status code, with color changes based on success, client errors, redirection, or server errors.
+     - Optional request path for 500 errors.
+     - Optional debug message if provided.
+     - Support for redirections with status codes 301 and 307.
     """
     # Initialize variables
     info = ""

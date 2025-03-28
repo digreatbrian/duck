@@ -20,7 +20,6 @@ cookies_module = importlib.import_module("http.cookies")
 SimpleCookie = cookies_module.SimpleCookie
 
 
-
 class BaseResponsePayload:
     """
     BaseResponsePayload class.
@@ -182,22 +181,22 @@ class SimpleHttpResponsePayload(BaseResponsePayload):
         headers (Headers): A `Headers` object containing the HTTP response headers. Defaults to `None`.
 
     Methods:
-        set_topheader(topheader: str):
-            Updates the top header (status line) of the response.
+    - set_topheader(topheader: str):
+          Updates the top header (status line) of the response.
 
-        set_headers(headers: dict):
-            Updates the HTTP headers using a dictionary input.
+    - set_headers(headers: dict):
+        Updates the HTTP headers using a dictionary input.
 
     Properties:
-        status_code (int):
-            Extracts and returns the status code from the `topheader`.
+    - status_code (int):
+        Extracts and returns the status code from the `topheader`.
 
-        status_message (str):
-            Extracts and returns the status message from the `topheader`. Defaults to an empty string if the 
+    - status_message (str):
+        Extracts and returns the status message from the `topheader`. Defaults to an empty string if the 
             `topheader` is not set.
 
-        explanation (str):
-            A placeholder for additional explanation or description of the status. Currently always returns an 
+    - explanation (str):
+          A placeholder for additional explanation or description of the status. Currently always returns an 
             empty string.
     """
 
@@ -313,9 +312,12 @@ class HttpResponsePayload(BaseResponsePayload):
     ResponsePayload class for storing response top header and headers.
 
     Example payload:
-            200 OK\r\n
-            Connection: close\r\n
-            Content-Type: text/html\r\n
+    
+    ```http
+    200 OK\r\n
+    Connection: close\r\n
+    Content-Type: text/html\r\n
+    ```
     """
 
     def __init__(self, **kwargs):

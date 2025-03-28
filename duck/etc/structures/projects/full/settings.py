@@ -17,7 +17,7 @@ from duck.storage import duck_storage
 
 
 # Base directory where the Duck application is running from
-BASE_DIR: str | pathlib.Path = pathlib.Path(".").resolve()
+BASE_DIR: str | pathlib.Path = pathlib.Path(__file__).resolve().parent
 
 
 # SECURITY WARNING: Keep the secret key used in production secret!

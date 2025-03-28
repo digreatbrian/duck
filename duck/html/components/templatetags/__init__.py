@@ -2,7 +2,10 @@
 HTML components template tags.
 
 Example Usage:
-# Jinja2 Template
+
+**Jinja2 Template**  
+
+```jinja
 {{ Button(
      properties={
          "value": "Hello world",
@@ -15,8 +18,11 @@ Example Usage:
         optional_argument="Some value",
       )
 }}
+```
 
-# Django Template
+**Django Template**
+
+```django
 {% Button %}
      properties={
          "id": "btn",
@@ -28,6 +34,7 @@ Example Usage:
        },
        optional_argument="Some value"
 {% endButton %}
+```
 """
 import re
 import ast
@@ -43,32 +50,39 @@ class HtmlComponentTemplateTag(TemplateTag):
     HtmlComponentTemplateTag class.
 
     Example Usage:
-            # Jinja2 Template
-            {{ Button(
-                    properties={
-                        "value": "Hello world",
-                         "id": "btn"
-                     },
-                     style={
-                           "background-color": "red",
-                            "color": "white",
-                     },
-                     optional_argument="Some value",
-                 )
-            }}
 
-            # Django Template
-            {% Button %}
-                    properties={
-                        "id": "btn",
-                        "value": "Hello world"
-                    },
-                    style={
-                        "background-color": "blue",
-                        "color": "white"
-                    },
-                    optional_argument="Some value"
-          {% endButton %}
+    **Jinja2 Template**  
+    
+    ```jinja
+    {{ Button(
+         properties={
+             "value": "Hello world",
+              "id": "btn"
+          },
+          style={
+              "background-color": "red",
+               "color": "white",
+            },
+            optional_argument="Some value",
+          )
+    }}
+    ```
+    
+    **Django Template**
+    
+    ```django
+    {% Button %}
+         properties={
+             "id": "btn",
+             "value": "Hello world"
+          },
+          style={
+               "background-color": "blue",
+                "color": "white"
+           },
+           optional_argument="Some value"
+    {% endButton %}
+    ```
     """
 
     def __init__(

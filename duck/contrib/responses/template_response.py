@@ -1,6 +1,5 @@
 """
-This module provides a shortcut to create a better mid response with a given response class and icon link.
-
+This module provides a shortcut to create a better-mid response with a given response class and icon link.
 """
 
 from typing import Type

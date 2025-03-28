@@ -3,7 +3,6 @@ All utilities and tools a server needs to startup.
 
 This module provides the necessary components for initializing and running a server, including 
 handling requests, managing timeouts, and logging.
-
 """
 import re
 import ssl

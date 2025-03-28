@@ -1,16 +1,19 @@
 """
-This file is created by Duck to register tags or filters that were initially registered by Duck, making them readily available in Django as well.
+Module for registering tags or filters that were initially registered by `Duck`, making them readily available in `Django` as well.
 
-**WARNING**: Do not delete or edit this file unless you understand its purpose and functionality.
+``` {warning}
+Do not delete or edit this file unless you understand its purpose and functionality.
+```
 
 Notes:
-	- By default, in all TemplateResponses, The tags registered here will be available for use as builtins.
-	- In Django Sided Templates (Templates rendered by using django.shortcuts.render), for you to use the template filters and tags defined within Duck,
-	You need to load the duck tags by using this line:
-		```
-		{% load ducktags %}
-		
-		```
+- By default, in all TemplateResponses, The tags registered here will be available for use as builtins.
+- In Django Sided Templates (Templates rendered by using django.shortcuts.render), for you to use the template filters and tags defined within Duck,
+
+You need to load the duck tags by using this line:
+
+```django
+{% load ducktags %}
+```
 """
 from functools import partial
 from typing import Dict, Any

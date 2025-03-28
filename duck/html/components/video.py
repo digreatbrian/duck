@@ -29,6 +29,7 @@ This module provides a customizable `Video` component for embedding video conten
   Allows the video to play inline on mobile devices (i.e., not in full-screen mode). Defaults to `False`.
 
 **Example Usage:**
+
 ```py
 video = Video(
     source="path/to/video.mp4",

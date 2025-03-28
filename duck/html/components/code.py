@@ -5,19 +5,20 @@ These classes represent a code block component that can be embedded within an HT
 They provide functionality to display code with options for styling, interactivity, and copying code to the clipboard.
 
 Classes:
-    - CodeInner: Represents the inner `<code>` element within a `<pre>` tag.
-    - Code: The base code block component, wrapped in a `<pre>` tag, with a copy button functionality.
-    - EditableCode: Extends the `Code` component, allowing the code block to be editable.
+- `CodeInner`: Represents the inner `<code>` element within a `<pre>` tag.
+- `Code`: The base code block component, wrapped in a `<pre>` tag, with a copy button functionality.
+- `EditableCode`: Extends the `Code` component, allowing the code block to be editable.
 
 Usage:
-    - Code: Display static code with copy functionality.
-    - EditableCode: Display editable code with copy functionality.
+- `Code`: Display static code with copy functionality.
+- `EditableCode`: Display editable code with copy functionality.
 
 Example:
-    ```py
-    code_block = Code(code="print('Hello, world!')", code_props={"class": "highlighted"})
-    editable_code_block = EditableCode(code="x = 5", code_style={"color": "blue"})
-    ```
+
+```py
+code_block = Code(code="print('Hello, world!')", code_props={"class": "highlighted"})
+editable_code_block = EditableCode(code="x = 5", code_style={"color": "blue"})
+```
 """
 from duck.html.components import InnerHtmlComponent
 from duck.html.components.textarea import TextArea
@@ -30,7 +31,7 @@ from duck.html.components import Theme
 
 class CodeInner(InnerHtmlComponent):
     """
-    Represents the inner <code> element in the HTML code block.
+    Represents the inner `<code>` element in the HTML code block.
 
     This component is a simple representation of the <code> tag used inside the <pre> tag for code display.
     """
@@ -43,21 +44,24 @@ class Code(InnerHtmlComponent):
     Code HTML component - The base component is built on the <pre> tag.
     
     This component is used to display a block of code inside a `<pre>` tag, with a copy-to-clipboard button and 
-    customizable properties for the code block and its inner `<code>` tag.
+    customizable properties for the code block and its inner `<code>`' tag.
 
     Example Output:
-        <pre>
-          <code>Code text here</code>
-        </pre>
-
+     
+     ```html
+    <pre>
+        <code>Code text here</code>
+    </pre>
+    ```
+    
     Args:
         code (str): The target code text that will be displayed inside the code block.
         code_props (dict): Dictionary of properties that will be applied to the <code> tag (e.g., `{"class": "highlighted"}`).
         code_style (dict): Dictionary of styles that will be applied to the <code> tag (e.g., `{"color": "blue"}`).
 
     Methods:
-        add_initial_components: Adds initial components like styling, copy button, and script.
-        on_create: Sets the initial content and properties for the code block.
+    - add_initial_components: Adds initial components like styling, copy button, and script.
+    - on_create: Sets the initial content and properties for the code block.
 
     Attributes:
         code_copy_container (FlexContainer): Container for the copy button.
@@ -107,7 +111,7 @@ class Code(InnerHtmlComponent):
             inner_body="""
                 function copyCode(copyCodeBtn){
                     const copyBtn = $(copyCodeBtn);
-                    const codeBlock = copyCodeBtn.closest('code');
+                    const codeBlock = copyBtn.parent().parent().find('code');
                     let initialCopyIconClass = "bi bi-copy";
                     let successCopyIconClass = "bi bi-check";
                     
@@ -115,7 +119,7 @@ class Code(InnerHtmlComponent):
                     copyBtn.removeClass(successCopyIconClass);
                     
                     // Copy the content to clipboard here (use Clipboard API)
-                    navigator.clipboard.writeText(codeBlock.innerText)
+                    navigator.clipboard.writeText(codeBlock[0].innerText)
                         .then(() => {
                             copyBtn.removeClass(initialCopyIconClass);
                             copyBtn.addClass(successCopyIconClass);
@@ -163,18 +167,21 @@ class EditableCode(Code):
     The `<pre>` block and the `<code>` block are both made content-editable.
 
     Example:
-        editable_code = EditableCode(code="print('Hello, world!')", code_style={"color": "green"})
+    
+    ```py
+    editable_code = EditableCode(code="print('Hello, world!')", code_style={"color": "green"})
+    ```
     
     Args:
         code (str): The target code text.
         code_style (dict): Dictionary for styling the <code> element (e.g., `{"color": "red"}`).
     
     Methods:
-        on_create: Extends the `Code.on_create` method and adds the `contenteditable` attribute.
+    - on_create: Extends the `Code.on_create` method and adds the `contenteditable` attribute.
     """
     def on_create(self):
         """
-        Extends the on_create method to add the 'contenteditable' attribute to allow code editing.
+        Extends the `on_create` method to add the `contenteditable` attribute to allow code editing.
         """
         super().on_create()
         self.properties["contenteditable"] = "true"

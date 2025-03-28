@@ -1,6 +1,5 @@
 """
 This module provides a shortcut to create a simple response with a given response class and icon link.
-
 """
 
 import os

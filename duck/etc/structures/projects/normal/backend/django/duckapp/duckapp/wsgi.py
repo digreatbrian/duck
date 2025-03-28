@@ -1,5 +1,5 @@
 """
-WSGI config for ss project.
+WSGI config for duckapp project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

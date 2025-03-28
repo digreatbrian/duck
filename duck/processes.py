@@ -2,21 +2,24 @@
 Module for retrieving or saving all processes created by Duck.
 
 Attributes:
-	- `set_main_pid`: Saves the main application process ID in json file.
+- `set_main_pid`: Saves the main application process ID in json file.
 
 Notes:
-	- When opening a file, an exclusive lock is acquired to avoid race conditions.
+- When opening a file, an exclusive lock is acquired to avoid race conditions.
 	
 Process JSON Format:
-	{
-		"process-name": {
-			"id": "xxx",
-			"other-data": "xxx"
-		},
-		"another-process": {
-			"id": "xxx",
-		}
+
+```json
+{
+	"process-name": {
+	    "id": "xxx",
+	    "other-data": "xxx"
+    },
+	"another-process": {
+	    "id": "xxx",
 	}
+}
+```
 """
 
 import json

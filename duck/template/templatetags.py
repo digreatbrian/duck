@@ -32,17 +32,21 @@ class TemplateTag:
     Usage:
         1. Define a callable function to handle the tag logic:
         
-            def do_something(arg):
-                # Perform some operations with the argument
-                return f"Processed: {arg}"
-
+        ```py
+        def do_something(arg):
+            # Perform some operations with the argument
+            return f"Processed: {arg}"
+        ```
+        
         2. Register the callable as a template tag:
         
-            tag = TemplateTag("my_tag", tagcallable=do_something)
-
+        ```py
+        tag = TemplateTag("my_tag", tagcallable=do_something)
+        ```
+        
     Supported Syntax:
-        - Django: {% my_tag arg1 arg2 %}
-        - Jinja2: {{ my_tag(arg1, arg2) }}
+        - Django: `{% my_tag arg1 arg2 %}`
+        - Jinja2: `{{ my_tag(arg1, arg2) }}`
     """
 
     __all_tags = defaultdict(str)
@@ -136,17 +140,19 @@ class BlockTemplateTag(TemplateTag):
     To use this, name and tagcallable arguments should be provided.
     
     Notes:
-        - The tagcallable should be a callable object accepting context as first argument if takes_context=True,
-        and the second argument as the content wrapped between the tags.
-        - The tagcallable should always return the new modified content after processing.
+    - The tagcallable should be a callable object accepting context as first argument if takes_context=True,
+       and the second argument as the content wrapped between the tags.
+    - The tagcallable should always return the new modified content after processing.
         
     Example:
-        
-        def do_something(content):
-            # process and modify content logic
-            return content
+    
+    ```py
+    def do_something(content):
+        # process and modify content logic
+        return content
             
-        tag = BlockTemplateTag("some_name", tagcallable=do_something)
+    tag = BlockTemplateTag("some_name", tagcallable=do_something)
+    ```
     """
     def register_in_django(self, library):
         """
@@ -244,10 +250,14 @@ class TemplateFilter:
         - TemplateFilter does not support takes_context. You need to parse the context directly if you need it.
 
         Example:
-                {{ variable | myfilter:context }}
+        ```django
+        {{ variable | myfilter:context }}
+        ```
 
     Form:
-        {{ variable | myfilter }}
+    ```django
+    {{ variable | myfilter }}
+    ```
     """
 
     __all_filters = defaultdict(str)

@@ -41,7 +41,7 @@ BUILTIN_COMPONENTS = [
 
 def components_include(modules: List[str]) -> Dict[str, str]:
     """
-    This looks up HTML components in the provided modules and returns a dictionary.
+    This looks up HTML components in the provided modules and returns a dictionary containing the components found.
 
     Args:
         modules (List[str]): The list of module names containing HTML components in PascalCase.

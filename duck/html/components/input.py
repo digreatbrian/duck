@@ -72,28 +72,30 @@ class InputWithLabel(FlexContainer):
         input (HtmlComponent): Any html component (e.g fileinput.FileDragAndDrop), preferrebly Input component.
         
     Example Usage:
-        fullname = InputWithLabel(
-            label_text="Full Name",
-            input=Input(
-                type="text",
-                name="fullname",
-                placeholder="Full Name",
-                required=True,
-                maxlength=64,
-            )
+    
+    ```py
+    fullname = InputWithLabel(
+        label_text="Full Name",
+        input=Input(
+            type="text",
+            name="fullname",
+            placeholder="Full Name",
+            required=True,
+            maxlength=64,
         )
+    )
         
-        email = InputWithLabel(
-            label_text="Email",
-            input=Input(
-                type="email",
-                name="email",
-                placeholder="Email",
-                required=True,
-                maxlength=64,
-            )
+    email = InputWithLabel(
+        label_text="Email",
+        input=Input(
+            type="email",
+            name="email",
+            placeholder="Email",
+            required=True,
+            maxlength=64,
         )
-        
+    )
+    ```
     """
     def on_create(self):
         self.style["gap"] = "10px"
@@ -115,8 +117,8 @@ class InputWithLabel(FlexContainer):
 class CSRFInput(Input):
     """
     Csrf Input component - This component is useful in situations where you don't want to use the
-    csrf_token tag. You only need to parse a request to generate csrfmiddleware field so as to avoid
-    cross site request forgery attacks.
+    `csrf_token` tag. You only need to parse a request to generate `csrfmiddleware` field so as to avoid
+    `cross site request forgery attacks`.
     """
     def __init__(self, request,):
         self.request = request

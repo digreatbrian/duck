@@ -6,23 +6,26 @@ It includes an `AutomationDispatcher` class for dispatching automations based on
 and a custom exception class for handling dispatcher-related errors.
 
 Classes:
-    AutomationDispatcherError: Custom exception for automation dispatcher-related errors.
-    AutomationDispatcher: Class for dispatching automations based on triggers.
+    - `AutomationDispatcherError`: Custom exception for automation dispatcher-related errors.
+    - `AutomationDispatcher`: Class for dispatching automations based on triggers.
 
 Usage example:
-    from duck.automation import Automation
-    from duck.automation.trigger import AutomationTrigger
+ 
+ ```py
+from duck.automation import Automation
+from duck.automation.trigger import AutomationTrigger
 
-    # Define your automations and triggers
-    trigger = AutomationTrigger(...)
-    automation = Automation(...)
+# Define your automations and triggers
+trigger = AutomationTrigger(...)
+automation = Automation(...)
 
-    # Create a dispatcher and register automations with triggers
-    dispatcher = AutomationDispatcher(application)
-    dispatcher.register(trigger, automation)
+# Create a dispatcher and register automations with triggers
+dispatcher = AutomationDispatcher(application)
+dispatcher.register(trigger, automation)
 
-    # Start the dispatcher to listen for triggers and run automations
-    dispatcher.start()
+# Start the dispatcher to listen for triggers and run automations
+dispatcher.start()
+```
 """
 
 import time
@@ -42,7 +45,7 @@ class AutomationDispatcher:
     Automation dispatcher class.
 
     Notes:
-            - You can create your own dispatcher class by creating a subclass from this class and implement method `listen`
+    - You can create your own dispatcher class by creating a subclass from this class and implement method `listen`
     """
 
     __queue: dict[AutomationTrigger, list[Automation]] = {}
@@ -81,15 +84,18 @@ class AutomationDispatcher:
         Implement this method to customize how automations should be run based on your specific requirements.
 
         Notes:
-            - You can check if a trigger is satisfied by using the "check_trigger" method on that trigger.
-            - Potential RuntimeError may be raised if you try accessing self.queue.keys convert self.queue.keys to another type instead to avoid this error.
+        - You can check if a trigger is satisfied by using the "check_trigger" method on that trigger.
+        - Potential RuntimeError may be raised if you try accessing self.queue.keys convert self.queue.keys to another type instead to avoid this error.
 
         Example:
-            def listen(self):
-                for trigger in set(self.queue.keys()):
-                    trigger_satisfied = trigger.check_trigger()  # whether trigger is satisfied or fulfilled
-                    if trigger_satisfied:
-                        self.run_automations(self.queue.pop(trigger))  # pop trigger and execute corresponding automations
+        
+        ```py
+        def listen(self):
+            for trigger in set(self.queue.keys()):
+                trigger_satisfied = trigger.check_trigger()  # whether trigger is satisfied or fulfilled
+                if trigger_satisfied:
+                    self.run_automations(self.queue.pop(trigger))  # pop trigger and execute corresponding automations
+        ```
         """
         raise NotImplementedError('Method "listen" should be implemented.')
 

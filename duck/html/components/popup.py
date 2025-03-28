@@ -18,8 +18,8 @@ class Popup(FlexContainer):
     can be displayed when needed. Clicking outside the popup content or pressing the close button will hide it.
 
     **Dependencies:**  
-    - This component relies on **Bootstrap Icons** for the exit button.
-    - It also includes jQuery-based JavaScript functions to manage popup behavior.
+    - This component relies on **`Bootstrap Icons`** for the exit button.
+    - It also includes `jQuery-based JavaScript` functions to manage popup behavior.
 
     **Features:**
     - Full-screen overlay with a semi-transparent background.

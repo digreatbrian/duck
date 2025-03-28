@@ -10,39 +10,16 @@ how to create and use safe strings in both template engines.
 
 The function `mark_safe` can also be used to mark strings safe as a decorator to the function which returns a string or to a mere string.
 
-Example:
-	
-	safe_string = mark_safe("<h1>Hello worlf</h1>")
-	
-	# or
-	
-	@mark_safe
-	def my_func():
-		return "<h2>Hello world</h2>"
-
-
 Usage Example:
 
-    # Example usage for Jinja2
-    from jinja2 import Template
-    from duck.utils.safemarkup import MarkupSafeString
+```py
+safe_string = mark_safe("<h1>Hello world</h1>")
 
-    safe_string = MarkupSafeString('<strong>bold</strong>')
-
-    jinja_template = Template('{{ safe_string }}')
-    jinja_rendered = jinja_template.render(safe_string=safe_string)
-    print(jinja_rendered)  # Output: <strong>bold</strong>
-
-    # Example usage for Django
-    from django.template import Template as DjangoTemplate, Context
-    from safemarkup import SafeMarkup
-
-    safe_string = MarkupSafeString('<strong>bold</strong>')
-
-    django_template = DjangoTemplate('{{ safe_string }}')
-    django_context = Context({'safe_string': safe_string})
-    django_rendered = django_template.render(django_context)
-    print(django_rendered)  # Output: <strong>bold</strong>
+# or using as a decorator
+@mark_safe
+def my_func():
+    return "<h2>Hello world</h2>"
+```
 """
 
 from django.utils.safestring import SafeString
@@ -60,19 +37,11 @@ class MarkupSafeString(SafeString, Markup):
         value (str): The string to mark as safe.
 
     Example Usage:
-        safe_string = MarkupSafeString('<strong>bold</strong>')
-
-        # Safe for Jinja2
-        jinja_template = Template('{{ safe_string }}')
-        jinja_rendered = jinja_template.render(safe_string=safe_string)
-        print(jinja_rendered)  # Output: <strong>bold</strong>
-
-        # Safe for Django
-        from django.template import Template as DjangoTemplate, Context
-        django_template = DjangoTemplate('{{ safe_string }}')
-        django_context = Context({'safe_string': safe_string})
-        django_rendered = django_template.render(django_context)
-        print(django_rendered)  # Output: <strong>bold</strong>
+    
+    ```py
+    safe_string = MarkupSafeString('<strong>bold</strong>')
+    # You can use the safe string in templates.
+    ```
     """
 
 
@@ -81,8 +50,8 @@ def mark_safe(func_or_str) -> MarkupSafeString:
     Decorator and function to mark string as safe for inserting in html templates
 
     Behavior:
-            - Works well as a decorator with no arguments
-            - If func provided is a string, then Markup instance of the func is returned.
+    - Works well as a decorator with no arguments
+    - If func provided is a string, then Markup instance of the func is returned.
     """
     if isinstance(func_or_str, str):
         return MarkupSafeString(func_or_str)

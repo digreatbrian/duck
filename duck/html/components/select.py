@@ -17,7 +17,7 @@ class Option(InnerHtmlComponent):
     This component is used to define selectable items inside a `Select` component.
 
     **Example Usage:**
-    ```python
+    ```py
     option = Option(inner_body="Option 1")
     select.add_child(option)
     ```
@@ -48,7 +48,7 @@ class Select(InnerHtmlComponent):
             **Note:** The 'option' tag should not be included in individual options.
 
     **Example Usage:**
-    ```python
+    ```py
     select = Select(
         options=[
             "Option 1",
