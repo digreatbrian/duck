@@ -3,7 +3,7 @@ URLCrack - A lightweight module providing a robust URL class for parsing and man
 
 This module handles URLs gracefully, even those without a scheme, addressing limitations found in `urllib.parse` and similar libraries.
 
-### Features:
+## Features:
 - Parse and manipulate URLs effortlessly.
 - Supports URLs with or without schemes.
 - Easily update host, port, query, and other components.
@@ -12,7 +12,7 @@ This module handles URLs gracefully, even those without a scheme, addressing lim
 This method is more reliable than `urllib` and similar packages, as they often struggle to handle URLs that lack a scheme (e.g., `https`).
 ```
 
-### Example Usage:
+## Example Usage:
 
 ```py
 from urlcrack import URL
@@ -27,7 +27,7 @@ print(url_obj.to_str())
 # Output: new_site.com:1234/some/path?query=something#resource
 ```
 
-### Author:
+## Author:
 Brian Musakwa <digreatbrian@gmail.com>
 """
 
@@ -67,6 +67,21 @@ class InvalidPortError(Exception):
     Raised when the port of the URL is invalid.
     """
     pass
+
+
+def joinpaths(path1: str, path2: str, *more):
+    """
+    Returns joined paths but makes sure all paths are included in the final path rather than os.path.join
+    """
+    path1 = path1.rstrip("/")
+    path2 = path2.lstrip("/")  # clean paths
+    finalpath = os.path.join(path1, path2)
+
+    for p in more:
+        finalpath = finalpath.rstrip("/")
+        p = p.lstrip("/")
+        finalpath = os.path.join(finalpath, p)
+    return finalpath
 
 
 class URL:
@@ -170,7 +185,7 @@ class URL:
         
         Args:
             base_url (str): The base URL
-            head_url (str): The URL to concanetate to the base URL
+            head_url (str): The URL or URL path to concanetate to the base URL
             replace_netloc (bool):
                 Whether to replace URL authority (netloc). If head url has a netloc, it will be the final netloc and this also replaces the
                 final scheme if it is present in head URL. Defaults to False.
@@ -194,7 +209,7 @@ class URL:
             if not base_url_obj.path or base_url_obj.path == '/':
                 base_url_obj.path = head_url_obj.path
             else:
-                base_url_obj.path = os.path.join(base_url_obj.path, head_url_obj.path)
+                base_url_obj.path = joinpaths(base_url_obj.path, head_url_obj.path)
             if full_path_replacement:
                 base_url_obj.query = head_url_obj.query
                 base_url_obj.fragment = head_url_obj.fragment
@@ -285,7 +300,7 @@ class URL:
         
     def innerjoin(self, head_url: str):
         """
-        Joins the current URL object with new url
+        Joins the current URL object with new url or urlpath.
         """
         new_url = URL.urljoin(self.to_str(), head_url)
         self.parse(new_url)

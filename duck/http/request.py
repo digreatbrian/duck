@@ -26,7 +26,7 @@ from duck.utils.importer import import_module_once
 from duck.utils.object_mapping import map_data_to_object
 from duck.utils.urldecode import url_decode
 from duck.utils.urlcrack import URL
-
+from duck.utils.path import build_absolute_uri
 
 SUPPORTED_HTTP_VERSIONS = ["HTTP/1.0", "HTTP/1.1"]
 
@@ -462,13 +462,12 @@ class Request:
         and path to the requested resource.
     
         Returns:
-            str: The absolute URI of the request, including protocol and domain.
-    
-        Notes:
-            - This method relies on the request's `path` and a method 
-              (`build_absolute_uri`) to generate the full URI.
+            str: The absolute URI of the request, including scheme and domain.
         """
-        return self.build_absolute_uri(self.path)
+        root_url = URL(self.host)
+        root_url.scheme = self.scheme
+        root_url = root_url.to_str()
+        return build_absolute_uri(root_url, self.path)
 
     @property
     def META(self) -> dict:
@@ -572,9 +571,12 @@ class Request:
                             is found, an empty dictionary is returned.
     
         Example:
-            request = SomeRequestObject()
-            auth_data = extract_auth_from_request(request)
-            print(auth_data)  # {'auth': 'Bearer token_value', 'proxy_auth': 'Basic proxy_token'}
+        
+        ```py
+        request = SomeRequestObject()
+        auth_data = extract_auth_from_request(request)
+        print(auth_data)  # Outputs {'auth': 'Bearer token_value', 'proxy_auth': 'Basic proxy_token'}
+        ```
         """
         # Initialize the dictionary to hold the extracted authentication data
         data: Dict[str, str] = {}
@@ -838,11 +840,9 @@ class Request:
         Returns:
             str: A fully constructed absolute URL.
         """
-        path = path or self.path
-        assert bool(path), "Request path invalid, expected a URL path instead."
-        host_obj = URL(self.host)
-        host_obj.path = path
-        return host_obj.to_str()
+        if not path:
+            return self.absolute_uri
+        return build_absolute_uri(self.absolute_uri, path)
     
     def set_connection(self, mode: str):
         """Sets the request connection mode by modifying the connection header."""

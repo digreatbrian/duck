@@ -313,7 +313,7 @@ class HttpResponsePayload(BaseResponsePayload):
 
     Example payload:
     
-    ```http
+    ```
     200 OK\r\n
     Connection: close\r\n
     Content-Type: text/html\r\n

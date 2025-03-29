@@ -349,13 +349,20 @@ def resolve(name: str, absolute: bool = True, fallback_url: Optional[str] = None
         
     ``` {important}
     This function is primarily designed for resolving URLs registered as plain, static paths. 
+     
      It is strongly recommended to use this function only with URLs registered in the form:
-         > pattern = '/url/path'
+     `
+     pattern = '/url/path'
+     `
 
      Using this function with dynamic URLs (e.g., those containing path parameters or regular expression patterns) will return the raw, unregistered pattern, which is typically not useful for direct use. 
+     
      For example, using it with:
-         > pattern = '/url/<some_input>/path'
-         > pattern = '/url/hello*'
+     `
+     pattern = '/url/<some_input>/path'
+     pattern = '/url/hello*'
+     `
+         
     will return those patterns as is, and not a resolved URL.
     ```
     

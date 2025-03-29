@@ -429,8 +429,8 @@ class App:
         Starts force https redirect app.
 
         Conditions:
-            - `ENABLE_HTTPS = True`
-            - `FORCE_HTTPS = True`
+         - `ENABLE_HTTPS = True`
+         - `FORCE_HTTPS = True`
         """
 
         def start_force_https_app():
@@ -449,8 +449,8 @@ class App:
         Starts the DuckSight Reloader for reloading app on file modifications, deletions, etc.
 
         Conditions:
-            - `DEBUG = True`
-            - `ducksight_reloader_process_alive = False`
+        - `DEBUG = True`
+        - `ducksight_reloader_process_alive = False`
         """
         # Note: Production server should not be restarted at any point only start duck sight reloader on DEBUG
         if SETTINGS["DEBUG"]:
@@ -463,7 +463,7 @@ class App:
         Starts Automations Dispatcher for executing automations during runtime.
 
         Conditions:
-            - `RUN_AUTOMATIONS = True`
+        - `RUN_AUTOMATIONS = True`
         """
         if SETTINGS["RUN_AUTOMATIONS"]:
             self.automations_dispatcher_thread.start()
@@ -611,7 +611,7 @@ class App:
         Method to be called on different signals.
 
         Signals:
-                - `SIGINT` (Ctrl-C), `SIGTERM` (Terminate): Quits the server/application.
+        - `SIGINT` (Ctrl-C), `SIGTERM` (Terminate): Quits the server/application.
         """
         try:
             reloader.stop_ducksight_reloader_process(
@@ -717,7 +717,7 @@ class App:
         without initiating any reload or restart action.
 
         Notes:
-            - This method calls method `_restart` right away if flag is found.
+        - This method calls method `_restart` right away if flag is found.
 
         Example usage:
         
@@ -889,7 +889,7 @@ class App:
             # Components are enabled
             logger.log(
                 "Component system is active"
-                f"\n  └──   Prebuilt components may require Bootstrap (+icons) & JQuery to work well",
+                f"\n└──   Prebuilt components may require JQuery & Bootstrap (+icons)",
                 level=logger.DEBUG,
             )
             

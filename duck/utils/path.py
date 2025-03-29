@@ -30,7 +30,7 @@ def normalize_url_path(url_path: str, ignore_chars: Optional[List[str]] = None) 
 
 def joinpaths(path1: str, path2: str, *more):
     """
-    Returns joined paths but makes sure all paths are included in the final path rather than os.path.join
+    Returns joined paths but makes sure all paths are included in the final path rather than `os.path.join`.
     """
     path1 = path1.rstrip("/")
     path2 = path2.lstrip("/")  # clean paths
@@ -72,9 +72,12 @@ def paths_are_same(path1, path2):
 def build_absolute_uri(root_url: str, path: str) -> str:
     """This builds an absolute url from provided root_url and path"""
     url_obj = URL(root_url)
+    
     if not url_obj.scheme:
         raise ValueError("Root URL provided should start with a scheme (e.g 'http' or 'https'): "+ root_url)
-    url_obj.innerjoin(path)
+    
+    url_obj.innerjoin(URL.normalize_url_path(path))
+    
     return url_obj.to_str()
 
 

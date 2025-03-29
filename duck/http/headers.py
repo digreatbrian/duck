@@ -14,7 +14,7 @@ class Headers(dict):
         Returns headers in title format rather than small cased
 
         Example:
-                 - {'Connection': 'close'} rather than {'connection': 'close'}
+        - {'Connection': 'close'} rather than {'connection': 'close'}
         """
         return {h.title(): v for h, v in self.items()}
 
@@ -69,7 +69,10 @@ class Headers(dict):
                 parts = line.split(": ", 1)
                 self.update({parts[0]: parts[1]})
 
-    def __setitem__(self, key: str, value: str):
+    def validate_key_value(self, key: str, value: str):
+        """
+        Validates header key and value pair.
+        """
         if not isinstance(key, str) or not isinstance(value, str):
             if not isinstance(key, str):
                 raise KeyError(
@@ -77,8 +80,19 @@ class Headers(dict):
             raise ValueError(
                 f"Only an instance of string is allowed for value of key '{key}'"
             )
+    
+    def setdefault(self, key: str, value: str):
+        self.validate_key_value(key, value)
+        super().setdefault(key.lower(), value)
+    
+    def update(self, data: dict):
+        for key, value in data.items():
+            self.__setitem__(key, value)
+            
+    def __setitem__(self, key: str, value: str):
+        self.validate_key_value(key, value)
         super().__setitem__(key.lower(), value)
-
+        
     def __delitem__(self, key):
         super().__delitem__(key)
 
