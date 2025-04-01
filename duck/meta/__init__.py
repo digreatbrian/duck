@@ -95,7 +95,7 @@ class Meta:
         if uses_ipv6 is None:
             raise MetaError("Variable DUCK_USES_IPV6 not set.")
 
-        return f"{protocol}://{domain}:{port}"
+        return f"{protocol}://{domain}:{port}" if port else f"{protocol}://{domain}"
 
     @classmethod
     def update_meta(cls, data: dict):

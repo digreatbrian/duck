@@ -46,6 +46,7 @@ class FooterItems(FlexContainer):
     def on_create(self):
         super().on_create()
         self.style["gap"] = "10px"
+        self.style["padding"] = Theme.padding
         
         if "footer_items" in self.kwargs:
              for heading, elements in self.kwargs.get('footer_items', {}).items():
