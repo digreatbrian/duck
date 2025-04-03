@@ -18,6 +18,7 @@ from duck.cli.commands.django import DjangoCommand
 from duck.cli.commands.runserver import RunserverCommand
 from duck.cli.commands.runtests import RuntestsCommand
 from duck.cli.commands.ssl_gen import SSLGenCommand
+from duck.cli.commands.service import ServiceCommand
 
 
 EXAMPLES = f"""
@@ -139,6 +140,19 @@ def runtests():
 def ssl_gen():
     """Generate self-signed SSL certificate."""
     SSLGenCommand.main()
+
+
+@cli.group()
+def service():
+    """
+    Create and manage Duck background service for linux-based systems using systemd.
+    
+    CUSTOMIZE the service in settings.py.
+    """
+
+
+# Register subcommands the duck service command
+ServiceCommand.register_subcommands(main_command=service)
 
 
 if __name__ == "__main__":

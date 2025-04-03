@@ -757,3 +757,44 @@ SERVER_ORGANIZATION: str = ""
 
 # Server Organization Unit. Replace with your legally registered organization unit
 SERVER_ORGANIZATION_UNIT: str = ""
+
+
+# SYSTEMD CONFIGURATION
+# systemd is a system and service manager used in Linux distributions.
+# It controls the starting, stopping, and monitoring of services, making 
+# it ideal for managing background processes like web servers.
+#
+# For the Duck Web Server, using systemd ensures that the server can:
+# - Start automatically on boot
+# - Be managed easily through standard commands (`start`, `stop`, `restart`)
+# - Restart automatically if it crashes or stops unexpectedly
+# - Run in the background as a service, freeing up the terminal
+
+# Systemd Execution Command
+# Specifies the command that will be executed when the systemd service starts.
+# In this case, it runs the Duck web server on port 80, binding it to all available interfaces.
+SYSTEMD_EXEC_COMMAND: str = "python -m duck runserver -p 80 -a 0.0.0.0 -d localhost"
+
+
+# Systemd Service Name
+# Defines the name of the systemd service unit file. 
+# This will be used when managing the service with systemctl (e.g., starting, stopping, enabling).
+SYSTEMD_SERVICE_NAME: str = "duck-service.service"
+
+
+# Systemd Environment
+# Provides the environment variables that should be set for the service.
+# The environment is typically populated with the current system environment variables (os.environ).
+SYSTEMD_ENVIRONMENT: dict = os.environ
+
+
+# Systemd Restart Policy
+# Specifies the restart behavior for the service.
+# "always" ensures that the service will be restarted automatically if it fails or stops unexpectedly.
+SYSTEMD_RESTART: str = "always"
+
+
+# Systemd Service Directory
+# Indicates the directory where the systemd service unit file will be stored.
+# Typically, service unit files are placed in /etc/systemd/system/ for system-wide services.
+SYSTEMD_SERVICE_DIR: str = "/etc/systemd/system/"
