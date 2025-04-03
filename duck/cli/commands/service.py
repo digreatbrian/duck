@@ -152,16 +152,16 @@ class ServiceCommand:
                 check=True,
                 text=True
             )
-            
-            # Print the full status information from the result
+
+            # Print the full status information directly
             console.log(f"Status of `{service_name}` service:", level=console.INFO)
-            console.log(result.stdout, level=console.INFO)  # Full status output
+            console.log_raw(result.stdout, level=console.INFO)  # Directly print the full status output
             
         except subprocess.CalledProcessError as e:
             # If systemctl fails, handle the error gracefully
-            console.log(f"Error checking service `{service_name}`: The error occurred while running: `systemctl status {service_name}`. Error details: {e.stderr}. Please check if systemd is working properly and the service is installed correctly.", level=console.ERROR)
+            console.log(f"Error checking service `{service_name}`: The error occurred while running: `systemctl status {service_name}`. Error details: {e.stderr or 'unavailable'}. Please check if systemd is working properly and the service is installed correctly.", level=console.ERROR)
             return False
-        
+
         except FileNotFoundError:
             console.log("Error: `systemctl` command not found. Please ensure systemd is installed on your system.", level=console.ERROR)
             
