@@ -157,42 +157,6 @@ class ServiceCommand:
             console.log(f"Status of `{service_name}` service:", level=console.INFO)
             console.log(result.stdout, level=console.INFO)  # Full status output
             
-            # Look for relevant status information
-            lines = result.stdout.splitlines()
-    
-            # Initialize placeholders for relevant information
-            state = None
-            pid = None
-            active_since = None
-            active_time = None
-    
-            # Parse the output to extract key details
-            for line in lines:
-                if "Active:" in line:
-                    state = line.split("Active:")[1].strip()
-                    
-                    # Extract time the service has been active since
-                    match = re.search(r"since (.*); (.*) ago", line)
-                    if match:
-                        active_since = match.group(1)  # Date and time of activation
-                        active_time = match.group(2)  # Elapsed time (e.g., 2min ago)
-    
-                if "Main PID:" in line:
-                    pid = line.split("Main PID:")[1].strip()
-    
-            # Display state information
-            if state:
-                console.log(f"Service State: {state}", level=console.INFO)
-            
-            # Display the PID if available
-            if pid:
-                console.log(f"Service Main PID: {pid}", level=console.INFO)
-            
-            # Display the time the service has been running if available
-            if active_since and active_time:
-                console.log(f"Service Active Since: {active_since}", level=console.INFO)
-                console.log(f"Service Running Time: {active_time}", level=console.INFO)
-    
         except subprocess.CalledProcessError as e:
             # If systemctl fails, handle the error gracefully
             console.log(f"Error checking service `{service_name}`: The error occurred while running: `systemctl status {service_name}`. Error details: {e.stderr}. Please check if systemd is working properly and the service is installed correctly.", level=console.ERROR)
