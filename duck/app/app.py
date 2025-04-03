@@ -889,7 +889,7 @@ class App:
             # Components are enabled
             logger.log(
                 "Component system is active"
-                f"\n└──   Prebuilt components may require JQuery & Bootstrap (+icons)",
+                f"\n  └── Prebuilt components may require JQuery & Bootstrap (+icons)",
                 level=logger.DEBUG,
             )
             

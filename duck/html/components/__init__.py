@@ -43,18 +43,19 @@ import re
 from typing import Dict, List, Optional
 
 
-def quote(html: str, element: str = 'span'):
+def quote(html: str, element: str = 'span', no_closing_tag: bool=False):
     """
     Returns an html component quoting the provided html as its body.
     
     Args:
         html (str): The html to quote, to set as the new html component body.
         element (str): Element to quote with, Defaults to span.
+        no_closing_tag (bool): Whether the returned html component does not need a closing tag.
     
     Returns:
-        InnerHtmlComponent: The html component with provided html as its body.
+        InnerHtmlComponent | NoInnerHtmlComponent: The html component with provided html as its body.
     """
-    return InnerHtmlComponent(inner_body=html, element=element)
+    return InnerHtmlComponent(inner_body=html, element=element) if not no_closing_tag else NoInnerHtmlComponent(inner_body=html, element=element) 
 
 
 class PropertiesStore(dict):

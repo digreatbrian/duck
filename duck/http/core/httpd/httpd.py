@@ -162,8 +162,8 @@ class BaseServer:
                 logger.log(f"Started Duck Server on {server_url}", level=logger.DEBUG)
             else:
                 logger.log(
-                    f"Started Duck ProServer on {server_url}\n  └──  PRODUCTION SERVER (domain: {domain or 'Not set'}) \n  "
-                    f"  └── This is a production server, always stay secure! ",
+                    f"Started Duck ProServer on {server_url}\n  ├── PRODUCTION SERVER (domain: {domain or 'Not set'}) \n  "
+                    f"└── This is a production server, always stay secure! ",
                      level=logger.DEBUG)
         
         # Listen and set the server in running state

@@ -74,10 +74,10 @@ class Video(InnerHtmlComponent):
             self.properties["alt"] = self.kwargs.get("alt", '')
         
         if self.kwargs.get("width"):
-            self.properties["width"] = self.kwargs.get("width", '')
+            self.style["width"] = self.kwargs.get("width", '')
             
         if self.kwargs.get("height"):
-            self.properties["height"] = self.kwargs.get("height", '')
+            self.style["height"] = self.kwargs.get("height", '')
         
         if self.kwargs.get("autoplay"):
             self.properties["autoplay"] = "true"

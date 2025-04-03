@@ -27,7 +27,7 @@ class FooterBlock(FlexContainer):
         
         if "heading" in self.kwargs:
             heading = self.kwargs.get('heading', '')
-            self.inner_body += f"<h2 class='footer-heading'>{heading}</h2>"
+            self.inner_body += f"<h2 class='footer-heading' style='font-size:1.2rem'>{heading}</h2>"
        
         if 'elements' in self.kwargs:
            for element in self.kwargs.get('elements', []):
@@ -47,6 +47,7 @@ class FooterItems(FlexContainer):
         super().on_create()
         self.style["gap"] = "10px"
         self.style["padding"] = Theme.padding
+        self.style["justify-content"] = "space-around"
         
         if "footer_items" in self.kwargs:
              for heading, elements in self.kwargs.get('footer_items', {}).items():

@@ -14,5 +14,6 @@ class Hero(FlexContainer):
         self.style["flex-direction"] = "column"
         self.style["width"] = "100%"
         self.style["height"] = "100vh"
-        self.style["padding"] = "15px 15px 30px 15px"
-        self.properties["class"] = "hero display-flex justify-content-center"
+        self.style["justify-content"] = "center"
+        self.style["overflow"] = "hidden"
+        self.properties["class"] = "hero"
