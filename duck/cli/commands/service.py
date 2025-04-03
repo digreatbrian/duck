@@ -149,13 +149,13 @@ class ServiceCommand:
                 ['systemctl', 'status', service_name],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                check=True,
+                check=False,
                 text=True
             )
 
             # Print the full status information directly
             console.log(f"Status of `{service_name}` service:", level=console.INFO)
-            console.log_raw(result.stdout, level=console.INFO)  # Directly print the full status output
+            console.log_raw(result.stdout)  # Directly print the full status output
             
         except subprocess.CalledProcessError as e:
             # If systemctl fails, handle the error gracefully
