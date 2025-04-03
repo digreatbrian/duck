@@ -21,7 +21,7 @@ After=network.target
 [Service]
 User={user}
 ExecStart={exec_start}
-WorkingDirectory={str(base_dir)}
+WorkingDirectory={base_dir}
 Restart={restart}
 Environment={environment}
 
@@ -48,9 +48,9 @@ class ServiceCommand:
         service_content = SERVICE_CONTENT.format(
             exec_start=exec_start,
             user=user,
-            base_dir=base_dir,
+            base_dir=str(base_dir),
             restart=restart,
-            environment=os.pathsep.join([f'{key}={value}' for key, value in environment])
+            environment=os.pathsep.join([f'{key}={value}' for key, value in environment.items()])
         )
         
         # Write the service content to the systemd service file
@@ -207,6 +207,7 @@ class ServiceCommand:
         Register the subcommands for the `duck service` command.
         """
         data = {
+            "create": {"callback": cls.create_service, "help": "Create the Duck service."},
             "start": {"callback": cls.start_service, "help": "Start the Duck service."},
             "stop": {"callback": cls.stop_service, "help": "Stop the Duck service."},
             "enable": {"callback": cls.enable_service, "help": "Enable the Duck service to start on boot."},
