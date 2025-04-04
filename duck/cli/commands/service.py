@@ -23,7 +23,7 @@ User={user}
 ExecStart={exec_start}
 WorkingDirectory={base_dir}
 Restart={restart}
-Environment={environment}
+{environ_data}
 
 [Install]
 WantedBy=multi-user.target
@@ -50,7 +50,7 @@ class ServiceCommand:
             user=user,
             base_dir=str(base_dir),
             restart=restart,
-            environment=os.pathsep.join([f'{key}={value}' for key, value in environment.items()])
+            environ_data='\n'.join([f'Environment="{key}={value}"' for key, value in environment.items()])
         )
         
         # Write the service content to the systemd service file
@@ -155,7 +155,7 @@ class ServiceCommand:
 
             # Print the full status information directly
             console.log(f"Status of `{service_name}` service:", level=console.INFO)
-            console.log_raw(result.stdout)  # Directly print the full status output
+            console.log_raw(result.stdout, use_colors=False)  # Directly print the full status output
             
         except subprocess.CalledProcessError as e:
             # If systemctl fails, handle the error gracefully
