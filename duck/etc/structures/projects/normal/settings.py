@@ -481,19 +481,21 @@ SERVER_ORGANIZATION_UNIT: str = ""
 # Systemd Execution Command
 # Specifies the command that will be executed when the systemd service starts.
 # In this case, it runs the Duck web server on port 80, binding it to all available interfaces.
-SYSTEMD_EXEC_COMMAND: str = "python -m duck runserver -p 80 -a 0.0.0.0 -d localhost"
+SYSTEMD_EXEC_COMMAND: str = "python3 -m duck runserver -p 80 -a 0.0.0.0 -d localhost"
 
 
 # Systemd Service Name
 # Defines the name of the systemd service unit file. 
 # This will be used when managing the service with systemctl (e.g., starting, stopping, enabling).
-SYSTEMD_SERVICE_NAME: str = "duck-service.service"
+SYSTEMD_SERVICE_NAME: str = "duck.service"
 
 
 # Systemd Environment
 # Provides the environment variables that should be set for the service.
 # The environment is typically populated with the current system environment variables (os.environ).
-SYSTEMD_ENVIRONMENT: dict = os.environ
+SYSTEMD_ENVIRONMENT: dict = {
+    "DUCK_SETTINGS_MODULE": os.environ.get('DUCK_SETTINGS_MODULE', "settings")
+}
 
 
 # Systemd Restart Policy
