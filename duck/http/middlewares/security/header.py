@@ -73,7 +73,7 @@ class HostMiddleware(BaseMiddleware):
 
     @classmethod
     def get_error_response(cls, request):
-        host = headers.get("host")
+        host = request.headers.get("host")
 
         if SETTINGS["DEBUG"]:
             body = f"<p>Host Header Invalid according to RFC 1034/1035: '{host}'</p>"
