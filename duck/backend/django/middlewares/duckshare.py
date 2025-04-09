@@ -7,25 +7,27 @@ data is injected into Django's request `META` for consistent handling in Django 
 and middleware.
 
 Key Components:
-    - DuckMiddleware:
-        A middleware class that processes and removes shared headers, restoring 
-        them to Django's request `META`.
-    - DJANGO_MIDDLEWARE:
-        A dynamically imported middleware responsible for restoring HTTP requests 
+- DuckMiddleware:
+      A middleware class that processes and removes shared headers, restoring 
+      them to Django's request `META`.
+      
+- DJANGO_MIDDLEWARE:
+      A dynamically imported middleware responsible for restoring HTTP requests 
         and managing shared data between Duck and Django.
 
 Usage:
-    Add `DuckMiddleware` to the `MIDDLEWARE` list in Django's settings to enable 
-    this functionality. The integration relies on `DJANGO_MIDDLEWARE.restore_django_request`.
+- Add `DuckMiddleware` to the `MIDDLEWARE` list in Django's settings to enable 
+  this functionality. The integration relies on `DJANGO_MIDDLEWARE.restore_django_request`.
 
 Dependencies:
-    - `MiddlewareMixin`: Django's middleware base class for compatibility.
-    - `x_import`: Utility for dynamic imports, used to load `DJANGO_MIDDLEWARE`.
+- `MiddlewareMixin`: Django's middleware base class for compatibility.
+- `x_import`: Utility for dynamic imports, used to load `DJANGO_MIDDLEWARE`.
 
 Example:
 
 ```py
 # settings.py
+
 MIDDLEWARE = [
     ...
     "duck.http.middlewares.DuckMiddleware",

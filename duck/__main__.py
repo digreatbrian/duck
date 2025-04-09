@@ -63,14 +63,14 @@ def cli(ctx, version):
 
 
 @cli.command()
-@click.option('--skip-confirmation', is_flag=True, default=False, help="Skip confirmation prompts")
+@click.option('-y', '--skip-confirmation', is_flag=True, default=False, help="Skip confirmation prompts")
 def collectstatic(skip_confirmation):
     """Collect static files from blueprint directories."""
     CollectStaticCommand.main(skip_confirmation)
 
 
 @cli.command()
-@click.option('--skip-confirmation', is_flag=True, default=False, help="Skip confirmation prompts")
+@click.option('-y', '--skip-confirmation', is_flag=True, default=False, help="Skip confirmation prompts")
 def collectscripts(skip_confirmation):
     """Collect React scripts for the frontend."""
     CollectScriptsCommand.main(skip_confirmation)

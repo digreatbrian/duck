@@ -6,11 +6,16 @@ It includes an `AutomationDispatcher` class for dispatching automations based on
 and a custom exception class for handling dispatcher-related errors.
 
 Classes:
-    - `AutomationDispatcherError`: Custom exception for automation dispatcher-related errors.
-    - `AutomationDispatcher`: Class for dispatching automations based on triggers.
+- `AutomationDispatcherError`: Custom exception for automation dispatcher-related errors.
+- `AutomationDispatcher`: Class for dispatching automations based on triggers.
 
 Usage example:
- 
+
+``` {note}
+The following example is for handling automations manually but this can be done automatically for you if you
+ included your automations in `settings.py`.
+```
+
  ```py
 from duck.automation import Automation
 from duck.automation.trigger import AutomationTrigger
