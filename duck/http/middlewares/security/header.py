@@ -97,7 +97,6 @@ class HostMiddleware(BaseMiddleware):
             return cls.request_bad
             
         for allowed_host in cls.allowed_hosts:
-            print(f"pattern {allowed_host}: {host} = ", process_wildcards(allowed_host, [host]))
             if process_wildcards(allowed_host, [host]):
                 # host is allowed
                 return cls.request_ok

@@ -23,8 +23,12 @@
         --width: 90%;
         --min-height: 20vh;
       }
+      
+      * {
+        font-family: var(--font-family) !important;
+      }
+      
       body {
-        font-family: var(--font-family);
         margin: 0;
         padding: 0;
         background-color: var(--background-color);
@@ -58,7 +62,6 @@
         line-height: 1.5;
         margin: 1rem 0;
         color: var(--text-color);
-        text-align: justify;
       }
       @media (max-width: 600px) {
         p {

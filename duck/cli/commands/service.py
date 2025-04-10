@@ -5,6 +5,7 @@ import os
 import re
 import pwd
 import click
+import time
 import subprocess
 
 from datetime import datetime
@@ -55,8 +56,8 @@ class ServiceCommand:
         if settings:
             # load the settings
             try:
-                for settings in settings.split(','):
-                    key_, value = settings.split('=', 1)
+                for setting in settings.split(','):
+                    key_, value = setting.split('=', 1)
                     key, value = key_.strip().upper(), value.strip().strip('"').strip("'")
                     
                     if key not in SETTINGS:
@@ -77,13 +78,20 @@ class ServiceCommand:
         service_name = SETTINGS["SYSTEMD_SERVICE_NAME"]
         user = pwd.getpwuid(os.getuid()).pw_name
         
+        def escape_value(val):
+            return val.replace('"', '\\"')
+        
+        environ_data = '\n'.join([
+            f'Environment="{key}={escape_value(value)}"'
+            for key, value in environment.items()
+        ])
+        
         service_content = SERVICE_CONTENT.format(
             exec_start=exec_start,
             user=user,
             base_dir=str(base_dir),
             restart=restart,
-            environ_data='\n'.join([f'Environment="{key}={value}"' for key, value in environment.items()])
-        )
+            environ_data = environ_data)
         
         # Write the service content to the systemd service file
         service_path = joinpaths(str(service_dir), service_name)
@@ -132,7 +140,7 @@ class ServiceCommand:
         
         try:
             subprocess.run(['sudo', 'systemctl', 'start', service_name], check=True)
-            console.log(f"`{service_name}` service started.", level=console.INFO)
+            console.log(f"Service `{service_name}` started.", level=console.INFO)
             return True
         except FileNotFoundError:
             console.log("Error: `systemctl` command not found. Please ensure systemd is installed on your system.", level=console.ERROR)
@@ -148,7 +156,7 @@ class ServiceCommand:
         
         try:
             subprocess.run(['sudo', 'systemctl', 'stop', service_name], check=True)
-            console.log(f"`{service_name}` service stopped.", level=console.INFO)
+            console.log(f"Service `{service_name}` stopped.", level=console.INFO)
             return True
         except FileNotFoundError:
             console.log("Error: `systemctl` command not found. Please ensure systemd is installed on your system.", level=console.ERROR)
@@ -219,6 +227,7 @@ class ServiceCommand:
             return
         
         if kill:
+            console.log("Killing existing Duck service (if present)", level=console.WARNING)
             if not cls.stop_service():
                 # Failed to stop service, cannot continue
                 return
@@ -227,13 +236,15 @@ class ServiceCommand:
             if enable:
                 cls.enable_service()
             
-            if enable:
+            if disable:
                 cls.disable_service()
             
             # Reload systemd and prints the status
             cls.reload_systemd()
             
             if show_status:
+                console.log("Sleeping for 1s before status report", level=console.DEBUG)
+                time.sleep(1)
                 cls.check_service()
     
     @classmethod
