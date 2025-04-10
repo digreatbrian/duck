@@ -76,11 +76,11 @@ class HostMiddleware(BaseMiddleware):
         host = request.headers.get("host")
 
         if SETTINGS["DEBUG"]:
-            body = f"<p>Host Header Invalid according to RFC 1034/1035: '{host}'</p>"
+            body = f"<p>Host invalid/unrecognized</p>"
             
             if hasattr(request, "host_error_msg"):
                 if request.host_error_msg:
-                    body = f"<p>Host header invalid according to RFC 1034/1035: '{host}'. {request.host_error_msg}</p>"
+                    body = f"<p>{request.host_error_msg}</p>"
             response = template_response(HttpForbiddenRequestResponse, body=body)
         else:
             body = None
@@ -94,8 +94,10 @@ class HostMiddleware(BaseMiddleware):
         
         if not valid:
             request.host_error_msg = reason
+            return cls.request_bad
             
         for allowed_host in cls.allowed_hosts:
+            print(f"pattern {allowed_host}: {host} = ", process_wildcards(allowed_host, [host]))
             if process_wildcards(allowed_host, [host]):
                 # host is allowed
                 return cls.request_ok
