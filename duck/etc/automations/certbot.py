@@ -40,6 +40,7 @@ class BaseCertbotAutoSSL(Automation):
     def execute(self):
         certbot_root = SETTINGS["CERTBOT_ROOT"]
         certbot_email = SETTINGS["CERTBOT_EMAIL"]
+        certbot_executable = SETTINGS.get("CERTBOT_EXECUTABLE", "certbot")
         app = self.get_running_app()
         domain = app.domain
         
@@ -59,7 +60,7 @@ class BaseCertbotAutoSSL(Automation):
 
         # Construct Certbot command
         certbot_command = [
-            "certbot", "certonly", "--webroot",
+            certbot_executable, "certonly", "--webroot",
             "--webroot-path", certbot_root,
             "--cert-name", "duck_ssl_cert",
             "-d", domain,
@@ -84,6 +85,8 @@ class BaseCertbotAutoSSL(Automation):
 
         except FileNotFoundError:
             logger.log("CertbotAutoSSL: Certbot not found. Make sure it's installed and available in PATH", level=logger.WARNING)
+            logger.log("CertbotAutoSSL: Try setting CERTBOT_EXECUTABLE in settings.py", level=logger.WARNING)
+            
         except Exception as e:
             logger.log(f"CertbotAutoSSL: Unexpected error: {str(e)}", level=logger.WARNING)
 
