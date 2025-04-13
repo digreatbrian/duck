@@ -43,6 +43,9 @@ class BaseCertbotAutoSSL(Automation):
         app = self.get_running_app()
         domain = app.domain
         
+        if not os.path.isdir(certbot_root):
+            os.makedirs(certbot_root, exist_ok=True) # create certbot root if not directory exists
+            
         logger.log("CertbotAutoSSL: Running Certbot for SSL renewal", level=logger.DEBUG)
         
         # Ensure domain is set
