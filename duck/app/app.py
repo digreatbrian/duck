@@ -201,7 +201,8 @@ class App:
         self.force_https = SETTINGS["FORCE_HTTPS"]
         self.use_django = SETTINGS["USE_DJANGO"]
         self.run_automations = SETTINGS["RUN_AUTOMATIONS"]
-
+        self.started = False
+        
         setup()  # setup duck environment and the entire application.
 
         self.run_checks() if not no_checks else None  # run some checks
@@ -690,6 +691,7 @@ class App:
         )
         self.register_signals()  # bind signals to appropriate signal_handler
         self.handle_ipc_messages()
+        self.started = True
 
     def needs_reload(self) -> bool:
         """

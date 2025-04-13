@@ -4,6 +4,7 @@ This ensures your Duck server maintains a valid HTTPS connection
 by automatically handling certificate issuance and renewal.
 """
 import os
+import time
 import subprocess
 
 from duck.exceptions.all import SettingsError
@@ -57,7 +58,10 @@ class BaseCertbotAutoSSL(Automation):
             )
             self.disable_execution = True
             return
-
+        
+        while not app.started:
+            time.sleep(.5) # wait for app to to run
+            
         # Construct Certbot command
         certbot_command = [
             certbot_executable, "certonly", "--webroot",
@@ -81,7 +85,7 @@ class BaseCertbotAutoSSL(Automation):
                 logger.log("CertbotAutoSSL: SSL certificate successfully created or renewed", level=logger.INFO)
             else:
                 logger.log(f"CertbotAutoSSL: Certbot failed with exit code {result.returncode}", level=logger.WARNING)
-                logger.log(f"CertbotAutoSSL: STDERR: {result.stderr.strip()}", level=logger.DEBUG)
+                logger.log(f"CertbotAutoSSL: STDERR: {result.stderr.strip()}", level=logger.WARNING)
 
         except FileNotFoundError:
             logger.log("CertbotAutoSSL: Certbot not found. Make sure it's installed and available in PATH", level=logger.WARNING)
