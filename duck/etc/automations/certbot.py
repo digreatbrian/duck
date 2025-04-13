@@ -60,7 +60,8 @@ class BaseCertbotAutoSSL(Automation):
             return
          
         while not app.started:
-            time.sleep(.5) # wait for app to to run
+            print(app.started)
+            time.sleep(.5) # wait for app to start
             
         logger.log(
             "CertbotAutoSSL: App has been started, executing `certbot`...",
