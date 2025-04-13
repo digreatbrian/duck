@@ -11,7 +11,11 @@ from duck.exceptions.all import SettingsError
 from duck.http.core.httpd.httpd import BaseMicroServer, BaseServer
 from duck.http.core.httpd.http2 import BaseHttp2Server
 from duck.utils.object_mapping import map_data_to_object
-from duck.utils.sockservers import Socket, SSLSocket, xsocket
+from duck.utils.sockservers import (
+    Socket,
+    SSLSocket,
+    xsocket,
+)
 
 
 SUPPORT_HTTP_2 = SETTINGS["SUPPORT_HTTP_2"]

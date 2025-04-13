@@ -1,5 +1,10 @@
 """
 Module containing Request class which represents an http request.
+
+``` {note}
+If you run into errors or unexpected behavior when interacting with a request, be sure to inspect the `Request.error` attribute for diagnostic information.
+```
+
 """
 import json
 import socket
@@ -28,7 +33,9 @@ from duck.utils.urldecode import url_decode
 from duck.utils.urlcrack import URL
 from duck.utils.path import build_absolute_uri
 
+
 SUPPORTED_HTTP_VERSIONS = ["HTTP/1.0", "HTTP/1.1"]
+
 
 if SETTINGS["SUPPORT_HTTP_2"]:
     SUPPORTED_HTTP_VERSIONS.append('HTTP/2')
@@ -36,13 +43,19 @@ if SETTINGS["SUPPORT_HTTP_2"]:
 
 class Request:
     """
-    Http Request object to represent a request
+    An object representing an HTTP request, including method, headers, and body data.
+    
+    Notes:
+    - If you run into errors or unexpected behavior when interacting with a request, be sure to inspect the `Request.error` attribute for diagnostic information.
     """
     
     SUPPORTED_HTTP_VERSIONS: list = SUPPORTED_HTTP_VERSIONS
     """
-    List of all supported http versions e.g HTTP/1.1.
-    WARNING: This is case-sensitive, only caps allowed.
+    List of all supported http versions e.g `HTTP/1.1`.
+    
+    ``` {important}
+    This is case-sensitive, only caps are allowed.
+    ```
     """
 
     def __init__(self, **kwargs):
@@ -921,6 +934,9 @@ class Request:
         """
         Parses request data to the request object
         """
+        if not isinstance(request_data, RequestData):
+            raise TypeError(f"Expected a RequestData instance, but got {type(request_data).__name__}")
+        
         self.request_data = request_data
         
         if isinstance(request_data, RawRequestData):
@@ -964,6 +980,8 @@ class Request:
         Sets:
             self.error (Optional[Exception]): If an error occurs during parsing, it is stored here.
         """
+        assert isinstance(raw_request, bytes), f"Raw request should be in bytes not {type(raw_request)}"
+        
         try:
             self._parse_raw_request(raw_request)
         except Exception as e:
@@ -971,6 +989,7 @@ class Request:
                     e, RequestUnsupportedVersionError):
                 e = RequestError(f"General request parse error: {e}")
             self.error = e
+            raise e
     
     def _parse_raw_headers(self, raw_headers: bytes):
         """
@@ -1220,11 +1239,11 @@ class HttpProxyRequest(Request):
 
     Example:
     
-    ```http
+    ```py
     CONNECT /192.xxx.xxx.xxx HTTP/1.1\r\n\r\nGET / HTTP/2.1\r\n\r\nHost: xxx.com\r\nConnection: Keep-Alive
     ```
     
-    Not Implemented yet
+    Not Implemented yet!
     """
 
 

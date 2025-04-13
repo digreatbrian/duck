@@ -184,4 +184,5 @@ class EditableCode(Code):
         Extends the `on_create` method to add the `contenteditable` attribute to allow code editing.
         """
         super().on_create()
+        self.properties["class"] = "editable-code-block"
         self.properties["contenteditable"] = "true"

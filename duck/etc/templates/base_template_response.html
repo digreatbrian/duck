@@ -5,87 +5,113 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Duck Server - The best server for all your duck needs.">
-  <link rel="icon" href="{{icon_link}}" type="{{icon_type}}">
-  <title>{{title}}</title>
+  <link rel="icon" href="{{ icon_link }}" type="{{ icon_type }}">
+  <title>{{ title }}</title>
   <style>
-      :root {
-        --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-        --primary-color: #FF8C00;
-        --secondary-color: #333;
-        --background-color: #f0f8ff;
-        --container-bg-color: #fff;
-        --text-color: #666;
-        --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        --border-radius: 10px;
-        --margin: 2rem;
-        --padding: 1.5rem;
-        --max-width: 88%;
-        --width: 90%;
-        --min-height: 20vh;
-      }
-      
-      * {
-        font-family: var(--font-family) !important;
-      }
-      
-      body {
-        margin: 0;
-        padding: 0;
-        background-color: var(--background-color);
-        color: var(--secondary-color);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: fit-content;
-      }
-      .container {
-        max-width: var(--max-width);
-        width: fit-content;
-        margin: var(--margin) auto;
-        background: var(--container-bg-color);
-        padding: var(--padding);
-        border-radius: var(--border-radius);
-        box-shadow: var(--box-shadow);
-        min-height: var(--min-height);
-        display: flex;
-        flex-direction: column;
-        flex-wrap: wrap;
-        text-wrap: wrap;
-      }
+    :root {
+      --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      --primary-color: #FF8C00;
+      --secondary-color: #333;
+      --background-color: #f0f8ff;
+      --container-bg-color: #fff;
+      --text-color: #555;
+      --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      --border-radius: 12px;
+      --padding: 2rem;
+      --max-width: 960px;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: var(--font-family);
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--background-color);
+      color: var(--secondary-color);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .container {
+      background-color: var(--container-bg-color);
+      box-shadow: var(--box-shadow);
+      border-radius: var(--border-radius);
+      max-width: var(--max-width);
+      width: 100%;
+      padding: var(--padding);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+      word-break: break-word;
+    }
+
+    p, #body {
+      font-size: 1.125rem;
+      line-height: 1.6;
+      color: var(--text-color);
+      word-wrap: break-word;
+    }
+
+    code {
+      background: #eee;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
       h1 {
-        font-size: 2rem;
-        margin-bottom: 1rem;
-        color: var(--primary-color);
-        text-align: justify;
-      }
-      p {
         font-size: 1.5rem;
-        line-height: 1.5;
-        margin: 1rem 0;
-        color: var(--text-color);
       }
-      @media (max-width: 600px) {
-        p {
-          font-size: 0.9rem;
-        }
-        .container {
-          padding: 1rem;
-        }
+
+      p, #body {
+        font-size: 1rem;
       }
-    </style>
+
+      .container {
+        padding: 1.2rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 1rem;
+      }
+
+      h1 {
+        font-size: 1.25rem;
+      }
+
+      p, #body {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
 </head>
 <body>
   <main class="container">
     {% block main %}
-      <h1 id="heading">{{heading}}</h1>
-      <div id="body">{{body}}</div>
+      <h1 id="heading">{{ heading }}</h1>
+      <div id="body">{{ body }}</div>
       {% if debug %}
-          <p>
-              You are seeing this page because <code>DEBUG=True</code> in your Duck settings.  
-              To see a standard page instead, set <code>DEBUG=False</code>.
-          </p>
+        <p>
+          You are seeing this page because <code>DEBUG=True</code> in your Duck settings.<br>
+          To see a standard page instead, set <code>DEBUG=False</code>.
+        </p>
       {% endif %}
-   {% endblock main %}
+    {% endblock main %}
   </main>
 </body>
 </html>

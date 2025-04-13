@@ -300,12 +300,41 @@ class URL:
         
     def innerjoin(self, head_url: str):
         """
-        Joins the current URL object with new url or urlpath.
+        Join the current URL with the provided `head_url`, and update the current URL object in-place.
+    
+        Args:
+            head_url (str): The relative or absolute URL segment to join with the current URL.
+    
+        Behavior:
+        - Performs a URL join operation similar to urllib.parse.urljoin.
+        - The resulting URL replaces the current URL in this object.
+        - Useful for modifying the current object without creating a new instance.
+    
+        Returns:
+            self: The current URL object with the updated value.
         """
         new_url = URL.urljoin(self.to_str(), head_url)
         self.parse(new_url)
         return self
-        
+    
+    def join(self, head_url: str):
+        """
+        Join the current URL with the provided `head_url`, and return a new URL object.
+    
+        Args:
+            head_url (str): The relative or absolute URL segment to join with the current URL.
+    
+        Behavior:
+        - Performs a URL join operation similar to urllib.parse.urljoin.
+        - Unlike `innerjoin()`, this does not modify the current object.
+        - Returns a new instance with the resulting joined URL.
+    
+        Returns:
+            URL: A new URL object with the combined URL.
+        """
+        new_url = URL.urljoin(self.to_str(), head_url)
+        return URL(new_url)
+    
     def split_scheme_and_authority(self, url: str) -> Tuple[str, str, str]:
         """
         Returns the scheme, authority  (netloc) and leftover (which might be the path most of the time) from a valid URL.

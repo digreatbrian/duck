@@ -54,9 +54,9 @@ class MicroApp:
         self.parent_app = parent_app
         self.domain = domain
         self.uses_ipv6 = uses_ipv6
-
-        PortRecorder.add_new_occupied_port(port,
-                                           f"{self}")  # record port as used
+        
+        # Record port as used
+        PortRecorder.add_new_occupied_port(port, f"{self}")
 
         if enable_https:
             self.server = MicroHttpsServer(
@@ -82,17 +82,25 @@ class MicroApp:
         """
         self.duck_server_thread.start()
 
-    def view(self, request: HttpRequest,
-             processor: RequestProcessor) -> HttpResponse:
+    def view(self, request: HttpRequest, processor: RequestProcessor) -> HttpResponse:
         """
         Entry method to response generation.
 
         Args:
-                request (HttpRequest): The http request object.
-                processor (RequestProcessor): Default request processor which you may use to process request.
+            request (HttpRequest): The http request object.
+            processor (RequestProcessor): Default request processor which you may use to process request.
         """
-        raise NotImplementedError(
-            "Implement this method to return HttpResponse or any data as response.")
+        raise NotImplementedError("Implement this method to return HttpResponse or any data as response.")
+
+    def _view(self, request: HttpRequest, processor: RequestProcessor) -> HttpResponse:
+        """
+        Internal entry method to response generation.
+
+        Args:
+            request (HttpRequest): The http request object.
+            processor (RequestProcessor): Default request processor which may be used to process request.
+        """
+        return self.view(request, processor)
 
     def run(self):
         """
@@ -114,17 +122,15 @@ class HttpsRedirectMicroApp(MicroApp):
 
     def __init__(self, location_root_url: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.location_root_url = location_root_url
-        self.location_url_obj = URL(location_root_url)
-
-    def view(self, request: HttpRequest,
-        request_processor: RequestProcessor) -> HttpResponse:
+        self.location_root_url = URL(location_root_url)
+        
+    def view(self, request: HttpRequest, request_processor: RequestProcessor) -> HttpResponse:
         """
         Returns an http redirect response.
         """
         query = request.META.get("QUERY_STRING", "")
-        self.location_url_obj.innerjoin(request.path)
-        self.location_url_obj.query = query
-        destination = self.location_url_obj.to_str()
-        redirect = HttpRedirectResponse(location=destination, permanent=False)
+        dest_url = self.location_root_url.join(request.path)
+        dest_url.query = query
+        dest_url = dest_url.to_str()
+        redirect = HttpRedirectResponse(location=dest_url, permanent=False)
         return redirect

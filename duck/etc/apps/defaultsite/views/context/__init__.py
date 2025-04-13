@@ -10,7 +10,7 @@ def get_default_context() -> dict:
     """
     Returns the context for the Duck's default site.
     """
-    duck_image = "/duck-static/images/duck-cover.png"
+    duck_image = "/duck-static/images/duck.png"
     about_image = "/duck-static/images/about-us.jpg"
     favicon = "/duck-static/images/duck-favicon.png"
     kofi_donate_img = "/duck-static/images/kofi_donate_img.png"

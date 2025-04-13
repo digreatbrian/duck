@@ -181,7 +181,7 @@ class BaseServer:
                 # Pause before the next request.
                 time.sleep(self.poll) 
             except ssl.SSLError as e:
-                # wrong protocol used, eg https on http or vice versa
+                # Wrong protocol used, e.g. https on http or vice versa
                 if not no_logs and (SETTINGS["VERBOSE_LOGGING"] or SETTINGS["DEBUG"]):
                     if "HTTP_REQUEST" in str(e):
                         logger.log(f"Client may be trying to connect with https on http server or vice-versa: {e}", level=logger.WARNING)
@@ -604,15 +604,15 @@ class BaseMicroServer:
         self,
         sock: socket.socket,
         addr: Tuple[str, int],
-        data: bytes,
+        request_data: RequestData,
     ) -> None:
         """
         Processes and handles the request.
 
         Args:
-                sock (socket.socket): The target client socket.
-                addr (Tuple): The client address and port.
-                data (bytes): The full request in bytes.
+            sock (socket.socket): The target client socket.
+            addr (Tuple): The client address and port.
+            request_data (RequestData): The full request data object.
         """
         from duck.shortcuts import to_response
         
@@ -622,12 +622,12 @@ class BaseMicroServer:
                 client_address=addr,
             ) # create an http request instance.
             
-            # Parse the raw bytes request to create a request object.
-            request.parse_raw_request(data)
+            # Parse request data to create a request object.
+            request.parse(request_data)
             
             # Process the request and obtain the http response by
             # parsing the request and the predefined request processor.
-            response = self.microapp.view(
+            response = self.microapp._view(
                 request,
                 RequestProcessor(request),
             )
