@@ -156,6 +156,7 @@ class Automation:
         self.__running = False
         self.__finished = False
         self.__latest_error = None
+        self.disable_execution = False
         # run some checks
         # threaded checks
         if not isinstance(threaded, bool):
@@ -420,7 +421,8 @@ class Automation:
         """
         if not self.__running_app:
             raise AutomationError("Main running application is not yet set.")
-
+        return self.__running_app
+        
     def set_running_app(self, app):
         """
         Set the main running application
@@ -431,6 +433,7 @@ class Automation:
             raise AutomationError(
                 f"Invalid application type: '{type(app).__name__}'. Expected instance of 'duck.app.App'."
             )
+        self.__running_app = app
 
     def start(self):
         """
@@ -501,13 +504,16 @@ class Automation:
             counter = 0
 
             while True:
-                if self.__force_stop:
+                if self.__force_stop or self.disable_execution:
                     break  # force stop, maybe method join was used.
 
                 if counter == 0:
                     on_start_wrapper(
                     )  # call function on_start_wrapper just once
-
+                
+                if self.disable_execution:
+                    break
+                    
                 # continue with execution
                 self.on_pre_execute()  # do some stuff before execution
                 self.execute()  # execute the automation
@@ -520,13 +526,16 @@ class Automation:
                 time.sleep(self.interval)  # sleep before next execution cycle
         else:
             for i in range(0, self.schedules):
-                if self.__force_stop:
+                if self.__force_stop or self.disable_execution:
                     break  # force stop, maybe method join was used.
 
                 if i == 0:
                     on_start_wrapper(
                     )  # call function on_start_wrapper just once
-
+                
+                if self.disable_execution:
+                    break
+                    
                 # continue with execution
                 self.on_pre_execute()  # do some stuff before execution
                 self.execute()  # execute the automation
@@ -576,7 +585,7 @@ class Automation:
         Method called once the execution has been started.
 
         Notes:
-            - Method "on_start" is called before method "on_pre_execute"
+        - Method "on_start" is called before method "on_pre_execute"
         """
 
     def on_finish(self):

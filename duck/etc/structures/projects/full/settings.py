@@ -720,17 +720,16 @@ RUN_AUTOMATIONS: bool = True
 # SSL CERTIFICATE SETTINGS
 
 # SSL Certificate Location
-SSL_CERTFILE_LOCATION: str = os.path.join(duck_storage, "etc/ssl/server.crt")
+SSL_CERTFILE_LOCATION: str = BASE_DIR / "etc/ssl/server.crt"
 
 
 # The location of the SSL Certificate Signing Request (CSR).
-SSL_CSR_LOCATION: str = os.path.join(duck_storage, "etc/ssl/server.csr")
+SSL_CSR_LOCATION: str = BASE_DIR / "etc/ssl/server.csr"
 
 
 # SSL Private Key Location
 # SECURITY WARNING: Keep this safe to avoid security bridges
-SSL_PRIVATE_KEY_LOCATION: str = os.path.join(duck_storage,
-                                             "etc/ssl/server.key")
+SSL_PRIVATE_KEY_LOCATION: str = BASE_DIR / "etc/ssl/server.key"
 
 
 # SSL CERTIFICATE ACQUISITION

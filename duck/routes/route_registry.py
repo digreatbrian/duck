@@ -123,6 +123,7 @@ class BaseRouteRegistry:
             name (Optional[str]): The name for the route. (optional)
             methods (Optional[List[str]]): The supported methods for the route. Defaults to None to support all methods.
         """
+        re_url = "/" + re_url if not (re_url.startswith('/') or re_url.startswith('\\')) else re_url
         methods = methods or []
         
         assert callable(

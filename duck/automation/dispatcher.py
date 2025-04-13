@@ -74,8 +74,7 @@ class AutomationDispatcher:
         """
         while True:
             if not self.__force_stop:
-                self.listen(
-                )  # listen for triggers and execute corresonding automations
+                self.listen()  # listen for triggers and execute corresonding automations
             else:
                 break
             time.sleep(self.poll)  # sleep before listening to new triggers.
@@ -109,9 +108,10 @@ class AutomationDispatcher:
         Run all provided automations.
         """
         for automation in automations:
-            automation.start()
-            self.__executed_automations.append(automation)
-
+            if not automation.disable_execution:
+                automation.start()
+                self.__executed_automations.append(automation)
+    
     @property
     def executed_automations(self) -> list[Automation]:
         """
@@ -170,9 +170,9 @@ class AutomationDispatcher:
                 f"Automation provided is unknown, should be an instance of Automation not {type(automation).__name__}"
             )
 
-        (automation.set_running_app(self.application)
-         if self.application else None)  # set automation application
-
+        if self.application:
+             automation.set_running_app(self.application)
+        
         if trigger in self.__queue.keys():
             existing_automations: list = self.__queue.get(trigger, [])
             existing_automations.append(
@@ -187,8 +187,7 @@ class DispatcherV1(AutomationDispatcher):
 
     def listen(self):
         for trigger in set(self.queue.keys()):
-            trigger_satisfied = (trigger.check_trigger()
-                                 )  # whether trigger is satisfied or fulfilled
+            trigger_satisfied = trigger.check_trigger() # whether trigger is satisfied or fulfilled
             if trigger_satisfied:
                 self.run_automations(
                     self.queue.pop(trigger)

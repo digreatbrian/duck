@@ -26,9 +26,9 @@
   {% block nav %}
     <nav>
     {% block nav_links %}
-      <a href="{{ home }}" aria-label="Home Page">Home</a>
-      <a href="{{ about }}" aria-label="About Page">About</a>
-      <a href="{{ contact }}" aria-label="Contact Page">Contact</a>
+      <a href="{{ home }}" aria-label="Home">Home</a>
+      <a href="{{ about }}" aria-label="About">About</a>
+      <a href="{{ contact }}" aria-label="Contact">Contact</a>
     {% endblock nav_links %}
     </nav>
   {% endblock nav %}
@@ -37,6 +37,7 @@
     {% block main %}
       <h1>Welcome to Duck Server {{ server_version }}</h1>
       <p>You are seeing this because DEBUG=True in settings.</p>
+      <a href="{{ duck_main_site }}">Visit Duck main website</a>
       <img src="{{ duck_image}}" alt="A beautiful duck illustration">
       <p>Experience the best server for all your duck needs! Ready to startup.</p>
       <button class="button" id="alertButton">Click Me</button>

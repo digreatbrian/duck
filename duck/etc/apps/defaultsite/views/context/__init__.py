@@ -27,6 +27,7 @@ def get_default_context() -> dict:
         "about_image": about_image,
         "kofi_donate_img": kofi_donate_img,
         "favicon": favicon,
+        "duck_main_site": "https://duckframework.xyz",
         "repo_url": "https://github.com/digreatbrian/duck.git",
     }
     return duck_default_context

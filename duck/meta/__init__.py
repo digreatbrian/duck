@@ -52,7 +52,20 @@ class Meta:
     """
 
     meta_keys: list = []
-
+    """
+    A list of keys for metadata that has been set using `set_metadata`.
+    """
+    
+    exceptional_keys: list = [
+        "DUCK_SERVER_DOMAIN",
+        "DUCK_SERVER_ADDR",
+        "DUCK_DJANGO_ADDR",
+    ]
+    """
+    List of keys that are allowed to include `:` or `;` in their values thereby bypassing MetaError when 
+    using `set_metadata`.
+    """
+    
     @classmethod
     def compile(cls) -> dict:
         """
@@ -180,7 +193,9 @@ class Meta:
             raise MetaError(f'Value for "{key}" should not contain "@".')
 
         if ";" in str_value or (":" in str_value and var_type != "dict"):
-            raise MetaError(f"Multiple value separators (';' or ':') are not supported for \"{key}\" except in dict.")
+            if key not in cls.exceptional_keys:
+                # Only raise if key is not DUCK_SERVER_DOMAIN/DUCK_SERVER_ADDR as this may be an ipv6 address
+                raise MetaError(f"Multiple value separators (';' or ':') are not supported for \"{key}\" except in a dictionary.")
 
         os.environ[key] = f"{str_value}@{var_type}"
         if key not in cls.meta_keys:

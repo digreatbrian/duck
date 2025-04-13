@@ -16,49 +16,53 @@ from duck.utils.wildcard import process_wildcards
 
 def is_valid_host(host):
     """
-    Validate a hostname according to RFC 1034/1035 and properly handle IPv4/IPv6 addresses.
+    Validate a hostname or IP address, optionally with a port (e.g., 'example.com:8000').
     Returns a tuple (is_valid, message).
     """
-    # Define the regular expression for a valid hostname label
-    hostname_regex = re.compile(
-        r"^(?!-)[A-Z\d-]{1,63}(?<!-)$",  # Matches individual labels
-        re.IGNORECASE
-    )
-    
-    # Maximum length for a valid hostname (including dots)
-    MAX_HOSTNAME_LENGTH = 253
-    
+
     if not host:
         return False, "Hostname is empty"
-        
-    # Check if the host is an IP address (IPv4 or IPv6)
-    try:
-        ip = ipaddress.ip_address(host.strip("[]"))  # Remove square brackets for IPv6
-        if ip.version == 4:
-            return True, "Valid IPv4 address."
-        elif ip.version == 6:
-            return True, "Valid IPv6 address."
-    except ValueError:
-        pass  # Not an IP address, continue to validate as a hostname
 
-    # Check total hostname length
+    # Split host and optional port
+    if ':' in host and host.count(':') == 1:
+        host, port = host.split(':', 1)
+        if not port.isdigit() or not (0 < int(port) < 65536):
+            return False, f"Invalid port number '{port}'. Port must be an integer between 1 and 65535."
+    elif ':' in host:
+        # Possibly an IPv6 address with port — strip brackets and port
+        if host.startswith('['):
+            try:
+                addr, port = host.rsplit(']:', 1)
+                ip = ipaddress.ip_address(addr.strip('[]'))
+                if not port.isdigit() or not (0 < int(port) < 65536):
+                    return False, f"Invalid port '{port}' on IPv6 address."
+                return True, f"Valid IPv6 address with port."
+            except Exception:
+                return False, "Malformed IPv6 address with port."
+
+    # Now validate pure hostname or IP
+    try:
+        ip = ipaddress.ip_address(host.strip("[]"))
+        return True, f"Valid IP address (IPv{ip.version})."
+    except ValueError:
+        pass  # Not an IP address
+
+    # Validate as hostname
+    hostname_regex = re.compile(r"^(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
+    MAX_HOSTNAME_LENGTH = 253
+
     if len(host) > MAX_HOSTNAME_LENGTH:
         return False, f"Hostname exceeds the maximum length of {MAX_HOSTNAME_LENGTH} characters."
 
-    # Split the hostname into labels
     labels = host.split(".")
-
-    # Ensure no empty labels (e.g., "example..com")
     if any(label == "" for label in labels):
         return False, "Hostname contains empty labels (e.g., consecutive dots)."
 
-    # Validate each label against the regex
     for label in labels:
         if not hostname_regex.match(label):
-            return False, f"Invalid label '{label}' in hostname. Labels must be 1-63 characters and cannot start or end with a hyphen."
+            return False, f"Invalid label '{label}' in hostname."
 
-    # If all checks pass, the hostname is valid
-    return True, "Hostname is valid."
+    return True, "Valid hostname."
 
 
 class HostMiddleware(BaseMiddleware):
@@ -97,7 +101,12 @@ class HostMiddleware(BaseMiddleware):
             return cls.request_bad
             
         for allowed_host in cls.allowed_hosts:
-            if process_wildcards(allowed_host, [host]):
+            if "]:" in host:
+                _host = host.rsplit("]:", 1)[0]
+            else:
+                _host = host.split(':', 1)[0] if host.count(':') == 1 else host
+            
+            if process_wildcards(allowed_host, [_host]):
                 # host is allowed
                 return cls.request_ok
         

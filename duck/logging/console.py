@@ -36,6 +36,7 @@ log_raw("Raw debug message", level=DEBUG, use_colors=True, custom_color=Fore.MAG
 """
 
 import sys
+import threading
 
 from colorama import Fore, Style
 
@@ -45,6 +46,9 @@ ERROR = 40
 WARNING = 30
 INFO = 20
 DEBUG = 10
+
+# Global print lock
+print_lock = threading.Lock()
 
 
 def log_raw(
@@ -81,9 +85,11 @@ def log_raw(
 
     # Print the message with or without color
     if use_colors:
-        print(f"{color}{msg}{Style.RESET_ALL}", file=std, end=end)
+        with print_lock:
+            print(f"{color}{msg}{Style.RESET_ALL}", file=std, end=end)
     else:
-        print(msg, file=std, end=end)
+        with print_lock:
+            print(msg, file=std, end=end)
 
 
 def log(
@@ -123,6 +129,8 @@ def log(
 
     # Print the message with or without color
     if use_colors:
-        print(f"{color}{formatted_msg}{Style.RESET_ALL}", file=std, end=end)
+        with print_lock:
+            print(f"{color}{formatted_msg}{Style.RESET_ALL}", file=std, end=end)
     else:
-        print(formatted_msg, file=std, end=end)
+        with print_lock:
+            print(formatted_msg, file=std, end=end)

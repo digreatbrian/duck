@@ -74,7 +74,7 @@ class SafeCodeSandbox:
 
     def sanitize_code(self, code: str) -> str:
         """ Blocks unauthorized imports and dangerous built-ins """
-        blocked_imports = ["os", "builtins", "sys", "subprocess", "shutil", "socket", "ctypes"]
+        blocked_imports = ["os", "builtins", "sys", "subprocess", "shutil", "socket", "ctypes", "pathlib"]
         blocked_builtins = ["exec", "eval", "compile", "open", "__import__", "__builtins__"]
 
         for banned in blocked_imports:

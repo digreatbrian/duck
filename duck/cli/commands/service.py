@@ -156,6 +156,8 @@ class ServiceCommand:
         
         try:
             subprocess.run(['sudo', 'systemctl', 'stop', service_name], check=True)
+            # Stopping again to make sure the service is stopped
+            subprocess.run(['sudo', 'systemctl', 'stop', service_name], check=True)
             console.log(f"Service `{service_name}` stopped.", level=console.INFO)
             return True
         except FileNotFoundError:
@@ -228,10 +230,13 @@ class ServiceCommand:
         
         if kill:
             console.log("Killing existing Duck service (if present)", level=console.WARNING)
-            if not cls.stop_service():
+            s = cls.stop_service()
+            if not s:
                 # Failed to stop service, cannot continue
                 return
-        
+            else:
+                time.sleep(.5)
+                
         if cls.create_service(settings=settings) and cls.start_service():
             if enable:
                 cls.enable_service()

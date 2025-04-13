@@ -52,6 +52,8 @@ SILENT = SETTINGS["SILENT"] # silence logs
 # Verbose logging, enabled by default if DEBUG=True
 VERBOSE_LOGGING = SETTINGS["VERBOSE_LOGGING"]
 
+# Global print lock
+print_lock = threading.Lock()
 
 globals = import_module_once("duck.globals")
 
@@ -308,9 +310,11 @@ def log_raw(
 
     if use_colors:
         colored_msg = f"{color}{msg}{Style.RESET_ALL}"
-        print(colored_msg, file=std, end=end)
+        with print_lock:
+            print(colored_msg, file=std, end=end)
     else:
-        print(msg, file=std, end=end)
+        with print_lock:
+            print(msg, file=std, end=end)
 
 
 def log(
@@ -359,9 +363,11 @@ def log(
 
     if use_colors:
         colored_msg = f"{color}{formatted_msg}{Style.RESET_ALL}"
-        print(colored_msg, file=std, end=end)
+        with print_lock:
+            print(colored_msg, file=std, end=end)
     else:
-        print(msg, file=std, end=end)
+        with print_lock:
+            print(msg, file=std, end=end)
 
 
 try:

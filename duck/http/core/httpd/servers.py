@@ -91,6 +91,7 @@ class BaseHttpServer(BaseServer):
                     server_side=True,
                     alpn_protocols=alpn_protocols,
                     **self.ssl_params)
+                    
             except Exception:
                 raise SettingsError(
                     "An error occurred whilst creating SSL socket, please make sure certfile and "
@@ -118,8 +119,7 @@ class HttpServer(BaseHttpServer):
     ) -> None:
         super().__init__(
             addr=addr,
-            socket_obj=Socket(
-                family=socket.AF_INET6 if uses_ipv6 else socket.AF_INET),
+            socket_obj=Socket(family=socket.AF_INET6 if uses_ipv6 else socket.AF_INET),
             application=application,
             uses_ipv6=uses_ipv6,
         )
@@ -140,8 +140,7 @@ class HttpsServer(BaseHttpServer):
         default_ssl_params = SSL_DEFAULTS
         super().__init__(
             addr=addr,
-            socket_obj=Socket(
-                family=socket.AF_INET6 if uses_ipv6 else socket.AF_INET),
+            socket_obj=Socket(family=socket.AF_INET6 if uses_ipv6 else socket.AF_INET),
             enable_ssl=True,
             ssl_params=default_ssl_params,
             application=application,

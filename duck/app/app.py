@@ -227,8 +227,7 @@ class App:
         if SETTINGS["RUN_AUTOMATIONS"]:
             self.automations_dispatcher = AUTOMATION_DISPATCHER(self)
             for trigger, automation in AUTOMATIONS:
-                self.automations_dispatcher.register(
-                    trigger, automation)  # register trigger and automation
+                self.automations_dispatcher.register(trigger, automation)  # register trigger and automation
 
         if self.enable_https:
             self.server = HttpsServer(
@@ -881,7 +880,7 @@ class App:
         
         if not self.is_domain_set:
             logger.log(
-                f'WARNING: Domain not set using "{self.domain}" ',
+                f'WARNING: Domain not set, using "{self.domain}" ',
                 level=logger.WARNING,
             )
         
