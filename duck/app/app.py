@@ -690,8 +690,8 @@ class App:
             custom_color=logger.Fore.GREEN,
         )
         self.register_signals()  # bind signals to appropriate signal_handler
-        self.handle_ipc_messages()
         self.started = True
+        self.handle_ipc_messages() # this is a blocking operation
 
     def needs_reload(self) -> bool:
         """
