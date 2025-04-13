@@ -177,14 +177,15 @@ class App:
         if not uses_ipv6 and not is_ipv4(addr) and not str(addr).isalnum():
             raise ApplicationError(
                 "Argument addr is not a valid IPV4 ip address.")
-
+        
+        self.started = False
         self._restart_success = False  # state on whether last restart operation has been successfull
         self.addr = addr
         self.port = port
         self.uses_ipv6 = uses_ipv6
         self.is_domain_set = True if domain else False
         self.no_checks = no_checks
-
+        
         # set appropriate domain
         self.domain = domain or addr if not uses_ipv6 else f"[{addr}]"
 
@@ -201,7 +202,6 @@ class App:
         self.force_https = SETTINGS["FORCE_HTTPS"]
         self.use_django = SETTINGS["USE_DJANGO"]
         self.run_automations = SETTINGS["RUN_AUTOMATIONS"]
-        self.started = False
         
         setup()  # setup duck environment and the entire application.
 
