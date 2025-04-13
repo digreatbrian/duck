@@ -58,10 +58,15 @@ class BaseCertbotAutoSSL(Automation):
             )
             self.disable_execution = True
             return
-        
+         
         while not app.started:
             time.sleep(.5) # wait for app to to run
             
+        logger.log(
+            "CertbotAutoSSL: App has been started, executing `certbot`...",
+            level=logger.DEBUG,
+        )
+        
         # Construct Certbot command
         certbot_command = [
             certbot_executable, "certonly", "--webroot",
