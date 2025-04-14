@@ -34,12 +34,13 @@ class BaseDuckSSLWatch(Automation):
 
     def on_start(self):
         if not self.logged_automation_start:
-            logger.log("DuckSSLWatch: Watching SSL file changes", level=logger.DEBUG)
             
             if not SETTINGS["ENABLE_HTTPS"]:
                 logger.log("DuckSSLWatch: ENABLE_HTTPS is disabled, automation is not going to be run", level=logger.WARNING)
                 self.disable_execution = True
-                
+            else:
+                logger.log("DuckSSLWatch: Watching SSL file changes", level=logger.DEBUG)
+            
             self.logged_automation_start = True
                 
     def reload_server_certfile(self):

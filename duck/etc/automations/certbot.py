@@ -42,6 +42,8 @@ class BaseCertbotAutoSSL(Automation):
         certbot_root = SETTINGS["CERTBOT_ROOT"]
         certbot_email = SETTINGS["CERTBOT_EMAIL"]
         certbot_executable = SETTINGS.get("CERTBOT_EXECUTABLE", "certbot")
+        certbot_extra_args = SETTINGS.get("CERTBOT_EXTRA_ARGS", [])
+        
         app = self.get_running_app()
         domain = app.domain
         
@@ -75,9 +77,11 @@ class BaseCertbotAutoSSL(Automation):
             "-d", domain,
             "--fullchain-path", SSL_CERT_PATH,
             "--key-path", SSL_CERT_KEY_PATH,
-            "--agree-tos", "--non-interactive",
-            "--email", certbot_email
+            "--agree-tos", #"--non-interactive",
+            "--email", certbot_email,
         ]
+        certbot_command.extend(certbot_extra_args) if certbot_extra_args else None
+        
         try:
             result = subprocess.run(
                 certbot_command,
