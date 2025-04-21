@@ -100,7 +100,11 @@ class MicroApp:
             request (HttpRequest): The http request object.
             processor (RequestProcessor): Default request processor which may be used to process request.
         """
-        return self.view(request, processor)
+        from duck.settings.loaded import WSGI
+        
+        response = self.view(request, processor)
+        WSGI.finalize_response(response, request)  # finalize response
+        return response
 
     def run(self):
         """

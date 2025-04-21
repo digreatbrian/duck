@@ -38,10 +38,6 @@ DEBUG: bool = True
 SUPPORT_HTTP_2: bool = True
 
 
-#  HTTP/2 Receive timeout
-HTTP_2_RECEIVE_TIMEOUT: float | int = 0.5 # Fast response time
-
-
 # Enable or disable autoreload for the server on file changes.
 # Autoreload is disabled on devices such as phones to optimize performance.
 AUTO_RELOAD: bool = True
@@ -152,8 +148,8 @@ ASYNC_HANDLING: bool = True
 # Server Buffer
 # Size of the buffer used to receive data chunks per request.
 # Defines the maximum size (in bytes) of each chunk of data received by the server.
-# Default value is set to 1024 bytes (1 KB). Adjust based on expected request sizes.
-SERVER_BUFFER: int = 1024
+# Default value is set to 65535 bytes (64KB). Adjust based on expected request sizes.
+SERVER_BUFFER: int = 65535
 
 
 # Server Polling Interval
@@ -449,7 +445,6 @@ FRONTEND: dict[str, dict] = {
 #     request (optional):
 #         The corresponding request, can be None if the response was generated at a lower level before
 #          the request data was processed.
-# **Note:** This is only effective in PRODUCTION (not in DEBUG mode).
 CUSTOM_TEMPLATES: dict = {}
 
 

@@ -201,7 +201,7 @@ class BaseResponse:
         Returns the content type for the response.
         
         Notes:
-            - This is not retrieved from headers but directly from the content object.
+        - This is not retrieved from headers but directly from the content object.
 
         """
         return self.content_obj.content_type
@@ -484,7 +484,7 @@ class StreamingHttpResponse(HttpResponse):
                 The MIME type of the content (e.g., 'application/octet-stream').
                 
             chunk_size (int):
-                The size of chunks in bytes used for reading from the file-like object. This argument is only relevant when the `content` is an IO object.
+                The size of chunks in bytes used for reading from the file-like object. This argument is only relevant when the `stream` is an IO object.
                 A larger chunk size generally improves performance by reducing the number of I/O operations but consumes more memory during the process.
                 The default value is 2MB (2 048 000 bytes).
                 Common sizes are between 1 MB (1048576 bytes) and 4 MB (4194304 bytes), but it should be adjusted based on the specific use case and server capabilities.
@@ -495,17 +495,25 @@ class StreamingHttpResponse(HttpResponse):
             status_code=status_code,
             headers=headers,
             content_type=content_type,
-        )      
+        )
+        default_chunk_size = 2 * 1024 * 1024
         self.chunk_size = chunk_size
         self.stream = stream
         
         # Store the content (which can be a callable or file-like object)
         if callable(stream):
             self.content_provider = stream
+            if chunk_size and chunk_size != default_chunk_size and not isinstance(stream, io.IOBase):
+                raise ValueError(f"Chunk size has been provided yet, the supplied `stream` is not an IO/file-like object. Got {type(stream)} instance.")
+                
         elif isinstance(stream, Iterable):
             self.content_provider = lambda: stream
+            if chunk_size and chunk_size != default_chunk_size and not isinstance(stream, io.IOBase):
+                raise ValueError(f"Chunk size has been provided yet, the supplied `stream` is not an IO/file-like object. Got {type(stream)} instance.")
+                
         elif isinstance(stream, io.IOBase):
             self.content_provider = lambda: self._read_from_file(stream, chunk_size)
+        
         else:
             raise ValueError("Stream must be either a callable, iterable or a file-like object.")
         
@@ -524,7 +532,7 @@ class StreamingHttpResponse(HttpResponse):
             chunk_size (int, optional): The size of each chunk in bytes. Defaults to 1024 bytes.
             
         Yields:
-            bytes: A chunk of the file content as a byte string. The size of each chunk will 
+         - bytes: A chunk of the file content as a byte string. The size of each chunk will 
                    be `chunk_size`, except possibly the last chunk which may be smaller.
         
         Example:
@@ -558,13 +566,15 @@ class StreamingHttpResponse(HttpResponse):
             FileIOStream: A custom stream object that behaves like io.IOBase.
 
         Example:
-            # Example usage:
-            stream = StreamingHttpResponse.file_io_stream('large_file.txt')
-            response = StreamingHttpResponse(stream)
+        
+        ```py
+        stream = StreamingHttpResponse.file_io_stream('large_file.txt')
+        response = StreamingHttpResponse(stream)
+        ```
             
         Notes:
-            - The file is opened lazily when the stream is accessed.
-            - The `seek` and `tell` methods allow for random access to the file.
+        - The file is opened lazily when the stream is accessed.
+        - The `seek` and `tell` methods allow for random access to the file.
         """
         return FileIOStream(filepath, chunk_size)
 
@@ -600,12 +610,15 @@ class StreamingRangeHttpResponse(StreamingHttpResponse):
     and enabling features like resuming downloads or streaming media.
 
     Example:
-        response = StreamingRangeHttpResponse(
-            stream=my_file,
-            start_pos=-1000,  # Last 1000 bytes
-            chunk_size=1024,
-        )
-        return response
+    
+    ```py
+    response = StreamingRangeHttpResponse(
+        stream=my_file,
+        start_pos=-1000,  # Last 1000 bytes
+        chunk_size=1024,
+    )
+    return response
+    ```
     """
     
     def __init__(
@@ -643,7 +656,7 @@ class StreamingRangeHttpResponse(StreamingHttpResponse):
         
         # Initialize the base StreamingHttpResponse
         super().__init__(
-            stream=self._get_stream(),
+            stream=stream,
             status_code=status_code,
             headers=headers,
             content_type=content_type,
@@ -651,37 +664,48 @@ class StreamingRangeHttpResponse(StreamingHttpResponse):
         )
         self.parse_range(start_pos, end_pos)
         
-    def parse_range(self, start_pos: int, end_pos: int):
+    def parse_range(self, start_pos: int, end_pos: int) -> int:
         """
-        Parse response range.
+        Parses content range and sets the respective content range headers.
+        
+        Returns:
+            int: The stream size or length.
         """
+        if not hasattr(self._stream, 'seek') or not hasattr(self._stream, 'tell'):
+            raise ValueError("Stream must support seeking to determine start and end position. Must have `seek` and `tell` methods.")
+        
+        default_offset = self._stream.tell() # get current offset
+        self._stream.seek(0, io.SEEK_END) # seek to EOF
+        stream_length = self._stream.tell()
+        
         # If end_pos is -1, calculate it based on the stream length
         if end_pos == -1:
-            if hasattr(self._stream, 'seek') and hasattr(self._stream, 'tell'):
-                self._stream.seek(0, io.SEEK_END)
-                end_pos = self._stream.tell()
-            else:
-                raise ValueError("Stream must support seeking to determine end position.")
-        
+            end_pos = stream_length
+            
         # Handle negative start_pos (e.g., -n means starting from the last n bytes)
         if start_pos < 0:
-            if hasattr(self._stream, 'seek') and hasattr(self._stream, 'tell'):
-                self._stream.seek(0, io.SEEK_END)
-                start_pos = self._stream.tell() + start_pos  # Calculate offset from the end of the stream
-            else:
-                raise ValueError("Stream must support seeking to handle negative start_pos.")
+            # Calculate offset from the end of the stream
+            # Avoid negative numbers using the max function
+            start_pos = max(0, stream_length + start_pos)
+        
+        # Reset stream to beginning
+        self._stream.seek(default_offset)
         
         self.start_pos = start_pos
         self.end_pos = end_pos
         
-        # Set content headers
+        # Set content range headers
         self.set_content_range_headers()
         
+        self.content_provider = lambda: self._get_stream()
+        
+        return stream_length        
+    
     def set_content_range_headers(self):
         """
         Sets the content range headers based on current content range.
         """
-        self.set_header('Content-Range', f"bytes {self.start_pos}-{self.end_pos-1}/*")
+        self.set_header('Content-Range', f"bytes {self.start_pos}-{self.end_pos}/*")
         self.set_header('Accept-Ranges', 'bytes')
     
     def clear_content_range_headers(self):
@@ -757,20 +781,26 @@ class StreamingRangeHttpResponse(StreamingHttpResponse):
         Generator that yields chunks of the stream, starting from start_pos and ending at end_pos.
         The stream will be read in chunks defined by `chunk_size`.
         """
-        
         # Ensure the stream is seekable before seeking to the start position
-        if hasattr(self._stream, 'seek') and hasattr(self._stream, 'tell'):
-            self._stream.seek(self.start_pos)
-        else:
+        if not hasattr(self._stream, 'seek') or not hasattr(self._stream, 'tell'):
             raise ValueError("Stream must support seeking to handle partial content.")
-
-        # Yield data in chunks of chunk_size
-        while self._stream.tell() < self.end_pos:
-            chunk = self._stream.read(self.chunk_size)
+    
+        self._stream.seek(self.start_pos)
+        
+        # If start_pos == end_pos, this mean last byte is required. This is represented by `or 1` statement.
+        remaining = (self.end_pos - self.start_pos) or 1
+        
+        while remaining > 0:
+            chunk_size = min(self.chunk_size, remaining)
+            chunk = self._stream.read(chunk_size)
+            
             if not chunk:
                 break  # No more data to read
+            
             yield chunk
-
+            
+            remaining -= len(chunk)
+    
     def __repr__(self):
         return f"<{self.__class__.__name__} (" f"'{self.status_code}'" f") {repr(self._stream).replace('<', '[').replace('>', ']')}>"
 
@@ -816,7 +846,7 @@ class FileResponse(StreamingRangeHttpResponse):
             - For files smaller than 5 MB, the file will be streamed as a single response by overriding the `chunk_size`.
     
         Example:
-            ```python
+            ```py
             response = CustomFileStreamer(
                 filepath="/path/to/file.txt",
                 headers={"Content-Disposition": "attachment; filename=file.txt"},
@@ -825,12 +855,8 @@ class FileResponse(StreamingRangeHttpResponse):
             )
             ```
         """
-        # For smaller files sizes < 5MB, the file will be streamed once.
-        file_size = os.path.getsize(filepath)
+        self.file_size = os.path.getsize(filepath)
         
-        if file_size <= 5 * 1024 * 1024:  # 5 MB
-            chunk_size = file_size
-            
         super().__init__(
             stream=StreamingHttpResponse.file_io_stream(filepath),
             status_code=status_code,
@@ -840,6 +866,7 @@ class FileResponse(StreamingRangeHttpResponse):
             start_pos=start_pos,
             end_pos=end_pos,
         )
+        
         if not content_type:  # content type was not provided
             self.content_obj.filepath = filepath  # sets the content filepath
             self.content_obj.parse_type(None)  # recalculate the content_type using the set filepath

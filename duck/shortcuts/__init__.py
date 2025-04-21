@@ -9,7 +9,7 @@ and manipulating HTTP responses.
 The module also defines `URLResolveError`, an exception raised when 
 URL resolution fails.
 """
-
+import io
 from typing import Optional, Any, Union
 
 from duck import template as _template
@@ -22,6 +22,7 @@ from duck.http.response import (
     HttpResponse,
     TemplateResponse,
     JsonResponse,
+    StreamingHttpResponse,
 )
 from duck.utils.path import (
     build_absolute_uri,
@@ -298,6 +299,7 @@ def content_replace(
         new_content_filepath (str): Filepath to the content, Defaults to "use_existing" to use the already set filepath.
 
     """
+    assert not isinstance(response, StreamingHttpResponse), "Streaming http response not supported."
     assert isinstance(new_data, str) or isinstance(
         new_data, bytes
     ), "Only string or bytes allowed for new_data"
@@ -330,11 +332,26 @@ def replace_response(old_response, new_response) -> HttpResponse:
     Replaces/transforms the old response into a new response object but with some old
     fields except for headers, status and content.
     
+    Args:
+        old_response (HttpResponse): The response you want to apply modifications to.
+        new_response (HttpResponse): The base response you want to get values or reference data from.
+        
     Returns:
-        HttpResponse: The old response but transformed to a new response
+        HttpResponse: The old response but transformed or combined with new response
     """
     old_response.payload_obj = new_response.payload_obj
-    old_response.content_obj = new_response.content_obj
+    
+    if isinstance(old_response, StreamingHttpResponse):
+        if isinstance(new_response, StreamingHttpResponse):
+            # New and old response are both streaming http responses
+            old_response.content_provider = new_response.content_provider
+        else:
+            # New response is not a streaming http response
+            old_response.content_provider = lambda: io.BytesIO(new_response.content)
+    else:
+        if isinstance(new_response, StreamingHttpResponse):
+            raise ValueError("Old response is not compatible with new response, i.e. StreamingHttpResponse")
+        old_response.content_obj = new_response.content_obj
     return old_response
 
 

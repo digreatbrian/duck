@@ -6,7 +6,15 @@ This module will define the WSGI callable that the server will use to serve requ
 """
 
 import socket
-from typing import Any, Dict, Optional, Tuple, Union
+import asyncio
+
+from typing import (
+    Any,
+    Dict,
+    Optional,
+    Tuple,
+    Union,
+)
 
 from duck.exceptions.all import (
     SettingsError,
@@ -378,7 +386,6 @@ class WSGI:
         """
         Sends response to client.
         """
-        self.finalize_response(response, request)  # finalize response
         self.response_handler.send_response(
             response,
             client_socket,
@@ -414,146 +421,58 @@ class WSGI:
             # this means all middlewares were successful.
             self.apply_middlewares_to_response(response, request)
     
-    def start_response(self, request: HttpRequest):
+    def get_response(self, request: HttpRequest) -> Tuple[HttpResponse, bool]:
         """
-        Start the response to the client. This method should be called for handling and sending the response to client.
-
-        Args:
-                request (HttpRequest): The request object.
-        """
-        from duck.http.core.processor import RequestProcessor
+        Returns the full response for a request, with all middlewares and other configurations applied.
         
-        processor = None # initialize request processor
-        
-        try:
-            processor = RequestProcessor(request)
-            
-            # Obtain the http response for the request
-            response = processor.process_request()
-            
-            # Apply middlewares in reverse order
-            self.apply_middlewares_to_response(response, request)
-            
-            self.send_response(
-                response,
-                request.client_socket,
-                request,
-            )  # send response to client
-        
-        except RouteNotFoundError:
-            # The request url cannot match any registered routes.
-            response = get_404_error_response(request)
-            
-            self.send_response(
-                response,
-                request.client_socket,
-                request,
-            )  # send response to client
-        
-        except MethodNotAllowedError:
-            # The requested method not allowed for the current route.
-            route_info = None
-            try:
-                if processor:
-                    # Obtain the request route info
-                    route_info = processor.route_info
-            except:
-                pass
-            
-            # Retrieve the method not allowed error response.
-            response = get_method_not_allowed_error_response(request, route_info=route_info)
-            
-            self.send_response(
-                response,
-                request.client_socket,
-                request,
-            )  # send response to client
-        
-        except RequestError as e:
-            # The request has some errors
-            # Retrieve the bad request error response.
-            response = get_bad_request_error_response(e, request)
-            self.send_response(
-                response,
-                request.client_socket,
-                request,
-            )  # send response to client
-        
-        except Exception as e:
-            # internal server error
-            response = get_server_error_response(e, request)
-            
-            self.send_response(
-                response,
-                request.client_socket,
-                request,
-            )  # send response to client
-            raise e  # reraise error so that it will be logged.
-
-    def start_django_response(self, request: HttpRequest):
-        """
-        Start the response to the client. This method should be called for handling and sending the response to client.
-        This proxy request to Django server and send the response to client.
+        Returns:
+            Tuple[HttpResponse, bool]: Http response and a boolean whether to log the response to the console.
         """
         from duck.http.core.processor import RequestProcessor
         
         processor = None # initialize request processor
+        response = None
+        disable_logging = False
         
         try:
             processor = RequestProcessor(request)
             
-            # Obtain the http response for the request
-            streaming_proxy_response: HttpProxyResponse = (processor.process_django_request())
-            
-            # Apply middlewares in reverse order
-            self.django_apply_middlewares_to_response(streaming_proxy_response, request)
-            
-            self.send_response(
-                streaming_proxy_response,
-                request.client_socket,
-                request,
-             )  # send streaming proxy response to client
-        
-        except RouteNotFoundError:
-            # The request url cannot match any registered routes.
-            response = get_404_error_response(request)
-            
-            self.send_response(
-                response,
-                request.client_socket,
-                request,
-            )  # send response to client
-        
-        except MethodNotAllowedError:
-            # The requested method not allowed for the current route.
-            route_info = None
-            try:
-                if processor:
-                    # Obtain the request route info
-                    route_info = processor.route_info
-            except:
-                pass
-            
-            # Retrieve the method not allowed error response.
-            response = get_method_not_allowed_error_response(request, route_info=route_info)
-            
-            self.send_response(
-                response,
-                request.client_socket,
-                request,
-            )  # send response to client
+            if SETTINGS["USE_DJANGO"]:
+                # Obtain the http response for the request
+                response: HttpProxyResponse = processor.process_django_request()
                 
+                # Apply middlewares in reverse order
+                self.django_apply_middlewares_to_response(response, request)
+            
+            else:
+                # Obtain the http response for the request
+                response = processor.process_request()
+                
+                # Apply middlewares in reverse order
+                self.apply_middlewares_to_response(response, request)
+                
+        except RouteNotFoundError:
+            # The request url cannot match any registered routes.
+            response = get_404_error_response(request)
+            
+        except MethodNotAllowedError:
+            # The requested method not allowed for the current route.
+            route_info = None
+            try:
+                if processor:
+                    # Obtain the request route info
+                    route_info = processor.route_info
+            except:
+                pass
+            
+            # Retrieve the method not allowed error response.
+            response = get_method_not_allowed_error_response(request, route_info=route_info)
+            
         except RequestError as e:
             # The request has some errors
             # Retrieve the bad request error response.
             response = get_bad_request_error_response(e, request)
             
-            self.send_response(
-                response,
-                request.client_socket,
-                request,
-            )  # send response to client
-        
         except Exception as e:
             if isinstance(e, BadGatewayError):
                 # Retrieve the bad gateway error response
@@ -562,16 +481,32 @@ class WSGI:
             else:
                 # Retrieve ther server error response
                 response = get_server_error_response(e, request)
+                logger.log_exception(e)
             
-            # send response with logging disabled as django already logged the response.
-            self.send_response(
-                response,
-                request.client_socket,
-                request,
-                disable_logging=True,
-             )  # send response to client
-            raise e  # reraise error so that it will be logged 
-    
+            # Disable logging as django already logged the response.
+            if SETTINGS["USE_DJANGO"]:
+                disable_logging = True
+        
+        # Finalize and return response
+        self.finalize_response(response, request)
+        
+        return (response, disable_logging)
+        
+    def start_response(self, request: HttpRequest):
+        """
+        Start the response to the client. This method should be called for handling and sending the response to client.
+
+        Args:
+                request (HttpRequest): The request object.
+        """
+        response, disable_logging = self.get_response(request)
+        self.send_response(
+            response,
+            request.client_socket,
+            request,
+            disable_logging=disable_logging,
+        )  # send response to client
+        
     def __call__(
         self,
         application,
@@ -624,16 +559,11 @@ class WSGI:
                 request=None,
             )  # send response to client
             raise e  # reraise error so that it will be logged
-
+            
         request.application = application
         request.wsgi = self
         application.last_request = request
         
-        def _start_response():
-            # start the response
-            if SETTINGS["USE_DJANGO"]:
-                self.start_django_response(request)
-            else:
-                self.start_response(request)
-        _start_response()
+        # Start sending response
+        self.start_response(request)
         return request

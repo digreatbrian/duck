@@ -1,9 +1,15 @@
 """
 Module containing RequestProcessor class for processing requests.
 """
-
 import re
-from typing import Optional, Dict, Any, Optional
+
+from typing import (
+    Optional,
+    Dict,
+    Any,
+    Optional,
+    Tuple,
+)
 
 from duck.settings import SETTINGS
 from duck.settings.loaded import (
@@ -203,7 +209,7 @@ class RequestProcessor:
         
         except Exception as e:
             logger.log_raw(
-                f'\nError invocking response view for URL "{url}" ',
+                f'\nError invoking response view for URL "{url}" ',
                 level=logger.ERROR,
                 custom_color=logger.Fore.YELLOW,
             )
@@ -272,6 +278,18 @@ class RequestProcessor:
         """
         return middleware.get_error_response(self.request)
 
+    def get_response(self, request: HttpRequest) -> HttpResponse:
+        """
+        Returns the full response for a request, with all middlewares and other configurations applied.
+        
+        Returns:
+            HttpResponse: Http response
+        """
+        from duck.settings.loaded import WSGI
+        
+        response, disable_logging = WSGI.get_response(request)
+        return response
+        
     def process_request(self) -> HttpResponse:
         """
         Processes the http request and returns the appropriate http response.

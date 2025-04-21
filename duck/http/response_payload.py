@@ -205,7 +205,7 @@ class SimpleHttpResponsePayload(BaseResponsePayload):
         Initializes a SimpleHttpResponsePayload instance.
 
         Args:
-            topheader (str): The HTTP response status line (e.g., "200 OK"). Defaults to an empty string.
+            topheader (str): The HTTP response status line (e.g., "HTTP/1.1 200 OK"). Defaults to an empty string.
             headers (Optional[Dict]): A dictionary representing the HTTP response headers. Defaults to `None`.
         """
         if not topheader or not isinstance(topheader, str):
@@ -314,7 +314,7 @@ class HttpResponsePayload(BaseResponsePayload):
     Example payload:
     
     ```
-    200 OK\r\n
+    HTTP/1.1 200 OK\r\n
     Connection: close\r\n
     Content-Type: text/html\r\n
     ```

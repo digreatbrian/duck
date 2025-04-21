@@ -7,10 +7,12 @@ The final touches include:
 - Content encoding determination and insertion.
 - etc.
 """
+from typing import Dict, Optional, Callable
 
 from duck.http.request import HttpRequest
 from duck.http.response import (
     HttpResponse,
+    FileResponse,
     StreamingHttpResponse,
     StreamingRangeHttpResponse,
     HttpRangeNotSatisfiableResponse,
@@ -24,8 +26,13 @@ from duck.shortcuts import (
     replace_response,
     template_response,
     simple_response,
+    to_response,
 )
 
+
+# Custom templates for predefined responses
+# This is a mapping of status codes to a response generating callable
+CUSTOM_TEMPLATES: Dict[int, Callable] = SETTINGS["CUSTOM_TEMPLATES"] or {}
 
 if SETTINGS["ENABLE_HTTPS"]:
     SECURITY_HEADERS = SETTINGS["SSL_SECURITY_HEADERS"]
@@ -146,6 +153,9 @@ class ResponseFinalizer:
             # Don't set content length header if set or if it is a streaming http response.
             response.set_header("Content-Length", response.content_length)
         
+        if not response.get_header("content-length") and isinstance(response, FileResponse):
+            response.set_header("Content-Length", response.file_size)
+            
         if not response.get_header("content-type"):
             content_type = response.content_type
             
@@ -182,10 +192,12 @@ class ResponseFinalizer:
         Raises:
             ValueError: If the 'Range' header is malformed or invalid.
         """
-        
         if not request:
             return  # If no request is provided, exit early.
-    
+         
+        if not isinstance(response, StreamingRangeHttpResponse):
+            return
+        
         range_header = request.get_header('Range')
         
         if not range_header:
@@ -193,30 +205,27 @@ class ResponseFinalizer:
                 if response.status_code == 206:
                     response.payload_obj.parse_status(200) # modify the response to correct status
                     response.clear_content_range_headers() # clear range headers
-            return  # If no Range header exists, no need to set streaming range.
-        
-        if not isinstance(response, StreamingRangeHttpResponse):
-            return
-        
+            return  # If no Range header exists, no need to set content range headers.
+        else:
+            if response.status_code == 200:
+                # Invalid status (200 OK) instead of (206 Partial Content)
+                response.payload_obj.parse_status(206) # modify the response to correct status
         try:
             # Extract start and end positions from the Range header
+            # Note: Use response.start_pos & end_pos rather than start, end as they are the most recent offsets.
             start, end = StreamingRangeHttpResponse.extract_range(range_header)
             
             # Set the start and end positions on the response object
-            response.parse_range(start, end)
-            stream_size = response._stream.tell()
+            stream_size = response.parse_range(start, end) # set content range headers (if applicable)
             
-            if stream_size == (end-start):
-                # This means full response
-                if response.status_code == 206:
-                    # Change response
-                    response.parse_status(200)
-                    response.clear_content_range_headers() # clear content range headers
-                    return
+            # Set content length
+            content_length = response.end_pos - response.start_pos
             
-            if end - start > 0:
-                # Only set content length if result is greater than 1
-                response.headers.setdefault("Content-Length", str(end-start))
+            if response.start_pos == response.end_pos:
+                # If start_pos == end_pos, this mean that last byte will be required
+                content_length = 1
+                
+            response.set_header("content-length", content_length)
             
         except ValueError:
             # replace response data
@@ -231,7 +240,53 @@ class ResponseFinalizer:
             
             # Replace response with new data
             replace_response(response, new_response)
+            
+            # Finalize response again as it has new values
+            response.do_set_streaming_range = False # avoid max recursion error
+            self.finalize_response(response, request)
 
+    @log_failsafe
+    def do_request_response_transformation(self, response: HttpResponse, request: HttpRequest):
+        """
+        Transforms the response object by applying request- and response-based modifications.
+        
+        This includes, but is not limited to, header changes and body alterations.
+    
+        Behavior Examples:
+        - If the request method is `HEAD`, the response body is replaced with empty bytes.
+        - If a matching template is found in the `CUSTOM_TEMPLATES` configuration, the entire response may be replaced.
+    
+        Args:
+            response (HttpResponse): The original response to be transformed.
+            request (HttpRequest): The incoming HTTP request associated with the response.
+        """
+        # Check if a custom template is configured for this response
+        
+        # Return the http response object.
+        if request and str(request.method).upper() == "HEAD":
+            # Reset content
+            request.set_content(b"", auto_add_content_headers=True)
+        
+        if response:
+            if response.status_code in CUSTOM_TEMPLATES:
+                response_callable = CUSTOM_TEMPLATES[response.status_code]
+                if not callable(response_callable):
+                    raise TypeError(f"Callable required for custom template corresponding to status code of '{response.status_code}' ")
+                
+                # Parse parameters and obtain the custom template response.
+                new_response = response_callable(
+                    current_response=response,
+                    request=request,
+                )
+                try:
+                    new_response = to_response(new_response) # convert or check the validity of the custom response.
+                except TypeError:
+                    # The value returned by response_generating_callable is not valid
+                    raise TypeError(f"Invalid data returned by the custom template callable corresponding to status code '{response.status_code}' ")
+                
+                # Replace response with new data
+                replace_response(response, new_response)
+        
     def finalize_response(self, response: HttpResponse, request: HttpRequest):
         """
         Puts the final touches to the response.
@@ -245,4 +300,9 @@ class ResponseFinalizer:
         self.do_content_compression(response, request)
         self.do_set_content_headers(response, request)
         self.do_set_extra_headers(response, request)
+        self.do_request_response_transformation(response, request) 
+        
+        if hasattr(response, "do_set_streaming_range") and not response.do_set_streaming_range:
+            return
+            
         self.do_set_streaming_range(response, request)

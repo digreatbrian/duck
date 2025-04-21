@@ -47,6 +47,7 @@ class Request:
     
     Notes:
     - If you run into errors or unexpected behavior when interacting with a request, be sure to inspect the `Request.error` attribute for diagnostic information.
+    - The recommended method for parsing raw request data is to use `parse`.
     """
     
     SUPPORTED_HTTP_VERSIONS: list = SUPPORTED_HTTP_VERSIONS
@@ -81,27 +82,40 @@ class Request:
             - These two keys contains both content queries and url queries respectively
         """
         from duck.settings.loaded import SESSION_STORE
-
+        
+        # The `request_store` is a dictionary originating from the RequestData object.
+        # It allows you to attach custom metadata to the request during early parsing,
+        # and access or modify that data later in the request lifecycle (e.g., middleware, views).
+        # This is useful for carrying values derived during initial request handling without
+        # modifying core request attributes.
+        # 
+        # Example:
+        # request_data = RequestData(headers={"topheader": "GET / HTTP/1.1"}, data=b'')
+        # request_data.request_store["something"] = "anything"
+        # request = Request()
+        # request.parse(request_data)
+        # print(request.request_store["something"]) # Outputs 'anything'
+        
         self.__meta = {}  # meta for the request
         self.__session = SESSION_STORE(None)  # session for the request
-        self.client_socket: socket.socket = (
-            None  # client socket which made this request
-        )
-        self.__remote_addr: tuple[str, int] = (
-            None  # client remote address and port
-        )
+        self.__remote_addr: tuple[str, int] = None  # client remote address and port
         self.__headers: Headers = Headers()  # request headers
         self.__fullpath: str = None  # full path for the request
         self.__path: str = None  # path stripped of queries if so
         self.__id: str = None  # request unique identifier
+        
+        self.client_socket: socket.socket = None # client socket which made this request
         self.application = None
         self.method: str = ""
         self.path: str = ""
         self.http_version: str = ""
         self.error: Exception = None
+        self.request_store = {}
         self.content_obj: Content = Content(b"", suppress_errors=True)
         self.topheader: str = ""  # topheader .e.g GET / HTTP/1.1
         self.request_data: RequestData = None # Will be set when Request.parse is used
+        self.uses_ipv6 = Meta.get_metadata("DUCK_USES_IPV6")
+        
         self.AUTH: dict = dict()
         self.META: dict = self.__meta
         self.FILES: dict = dict()
@@ -109,18 +123,18 @@ class Request:
         self.GET: QueryDict = QueryDict()
         self.POST: QueryDict = QueryDict()
         self.QUERY: FixedQueryDict[str, QueryDict] = FixedQueryDict({
-            "CONTENT_QUERY":
-            QueryDict(),
-            "URL_QUERY":
-            QueryDict()
+            "CONTENT_QUERY": QueryDict(),
+            "URL_QUERY": QueryDict(),
         })
-        self.uses_ipv6 = Meta.get_metadata("DUCK_USES_IPV6")
+        
         if kwargs.get("content_obj", None) and kwargs.get("content", None):
             raise RequestError(
                 "Please provide one of these arguments ['content', 'content_obj'] not both"
             )
-        # setting all key, value pairs in kwargs as attributes and attribute values
+        
+        # Setting all key, value pairs in kwargs as attributes and attribute values
         map_data_to_object(self, kwargs)
+        
         if kwargs.get("content", None):
             self.set_content(kwargs.get("content"))
 
@@ -348,7 +362,7 @@ class Request:
 
     @property
     def uses_https(self):
-        """Whether the request is on HTTP or HTTPS protocol, this is determined by checking if application is started with https enabled or not"""
+        """Whether the request is on `HTTP` or `HTTPS` protocol, this is determined by checking if application is started with https enabled or not"""
         if self.application:
             if self.application.enable_https:
                 return True
@@ -494,7 +508,7 @@ class Request:
             dict: A dictionary containing the metadata of the request.
     
         Notes:
-            - The `build_meta` method is called each time this property is accessed 
+        - The `build_meta` method is called each time this property is accessed 
               to ensure the metadata is fresh.
         """
         self.build_meta()
@@ -520,7 +534,9 @@ class Request:
     
     @property
     def raw(self) -> bytes:
-        """Construct raw request from this Request object"""
+        """
+        Construct raw request from this `Request` object.
+        """
         # Add Authorization headers if not already set
         self._set_auth_headers()
         
@@ -768,8 +784,7 @@ class Request:
         if not isinstance(queries, dict):
             raise RequestError(
                 f"Argument `queries` should be a dict not {type(queries)}")
-        url = (url.strip("?") + "?" if queries else url.strip("?")
-               )  # remove existing if so and add new (?)
+        url = (url.strip("?") + "?" if queries else url.strip("?"))  # remove existing if so and add new (?)
         counter = 0
         for key in queries.keys():
             url += "&" if counter >= 1 else ""
@@ -938,6 +953,7 @@ class Request:
             raise TypeError(f"Expected a RequestData instance, but got {type(request_data).__name__}")
         
         self.request_data = request_data
+        self.request_store.update(request_data.request_store)
         
         if isinstance(request_data, RawRequestData):
             self.parse_raw_request(request_data.data)
@@ -989,7 +1005,6 @@ class Request:
                     e, RequestUnsupportedVersionError):
                 e = RequestError(f"General request parse error: {e}")
             self.error = e
-            raise e
     
     def _parse_raw_headers(self, raw_headers: bytes):
         """
@@ -1018,7 +1033,7 @@ class Request:
         headers = headers_part[1:]
         
         # Setting some attributes
-        topheader = topheader.decode("utf-8").strip()
+        self.topheader = topheader = topheader.decode("utf-8").strip()
         
         # Extract method, path, http_version
         if topheader:
@@ -1098,7 +1113,7 @@ class Request:
             - self.method.upper(): A QueryDict containing the combined URL and content queries.
         """
         # Setting some attributes
-        topheader = topheader.strip()
+        self.topheader = topheader = topheader.strip()
         
         # Extract method, path, http_version
         max_splits = 3

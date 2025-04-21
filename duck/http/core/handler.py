@@ -2,30 +2,32 @@
 Handles the response further after they have been processed.
 This includes sending response to client and logging the response.
 """
-
+import ssl
+import time
 import socket
 
-from typing import Optional, Union, Callable, Dict
+from typing import (
+    Optional,
+    Union,
+    Callable,
+    Dict,
+    Type,
+    List,
+)
 
 from duck.http.request import HttpRequest
+from duck.etc.statuscodes import responses
 from duck.http.response import (
     BaseResponse,
     HttpResponse,
     StreamingHttpResponse,
 )
-from duck.logging import logger
 from duck.settings import SETTINGS
+from duck.logging import logger
 from duck.utils.dateutils import (
     django_short_local_date,
     short_local_date,
 )
-from duck.etc.statuscodes import responses
-from duck.shortcuts import to_response
-
-
-# Custom templates for predefined responses
-# This is a mapping of status codes to a response generating callable
-CUSTOM_TEMPLATES: Dict[int, Callable] = SETTINGS["CUSTOM_TEMPLATES"] or {}
 
 
 def get_status_code_debug_color(status_code: int) -> str:
@@ -217,6 +219,7 @@ class ResponseHandler:
         data: bytes,
         client_socket: socket.socket,
         suppress_errors: bool = False,
+        ignore_error_list: List[Type[Exception]] = [ssl.SSLError, BrokenPipeError, OSError],
     ) -> None:
         """
         Sends raw data directly to a client socket.
@@ -224,7 +227,8 @@ class ResponseHandler:
         Args:
             data (bytes): The data to be sent in bytes.
             client_socket (socket.socket): The client socket object that will receive the data.
-            suppress_errors (bool): If True, suppresses any errors that occur during the sending process. Defaults to False.
+            suppress_errors (bool): If True, suppresses any errors (errors not in `ignore_error_list`) that occur during the sending process. Defaults to False.
+            ignore_error_list (List[Type[Exception]]): List of error classes to ignore when raised during data transfer.
         
         Returns:
             bool: Whether the data has been sent or None otherwise (usefull if suppress_errors=True)
@@ -236,9 +240,151 @@ class ResponseHandler:
         try:
             client_socket.sendall(data)
             return True
-        except (BrokenPipeError, Exception) as e:
+        
+        except Exception as e:
+            if any([isinstance(e, exc) for exc in ignore_error_list]):
+                return
+                    
             if not suppress_errors:
                 raise e  # Re-raises the error if suppression is not enabled.
+                
+    def send_http2_response(
+        self,
+        response: Union[BaseResponse, HttpResponse],
+        stream_id: int,
+        client_socket: socket.socket,
+        request: Optional[HttpRequest] = None,
+        disable_logging: bool = False,
+        suppress_errors: bool = False,
+    ) -> None:
+        """
+        Sends an HTTP/2 response to the H2Connection.
+        
+        Args:
+            response (Union[BaseResponse, HttpResponse]): The HTTP response object containing the response data.
+            stream_id (int): The target H2 stream ID.
+            client_socket (socket.socket): The client socket object to which the response will be sent.
+            request (Optional[HttpRequest]): The request object associated with the response. Used for logging and debugging purposes.
+            disable_logging (bool): If True, disables logging of the response. Defaults to False.
+            suppress_errors (bool): If True, suppresses any errors that occur during the sending process (only sending data). Defaults to False.
+
+        Raises:
+            Exception: If there is an error during the data sending process (e.g., socket errors), unless suppressed.
+        
+        This method calls `send_data` to transmit the raw response data to the client and 
+        performs logging if `disable_logging` is False. If the request object contains 
+        debug information or failed middleware details, they are included in the logs.
+        """
+        if not hasattr(client_socket, 'h2_protocol'):
+            raise AttributeError("The provided socket seem to have no associated HTTP/2 connection, socket should have attribute `h2_protocol` set.")
+        
+        if request and request.request_store.get("h2_handling") == False:
+            raise ValueError("The provided socket seem to have HTTP/2 connection, but the key `h2_handling` in `request.request_store` is False.")
+        
+        protocol = client_socket.h2_protocol
+        
+        # Send response according to H2 Protocol
+        protocol.send_response(
+            response,
+            stream_id,
+            request,
+            disable_logging,
+            suppress_errors,
+        )
+        
+    def send_response(
+        self,
+        response: Union[BaseResponse, HttpResponse],
+        client_socket: socket.socket,
+        request: Optional[HttpRequest] = None,
+        disable_logging: bool = False,
+        suppress_errors: bool = False,
+        strictly_http1: bool = False,
+    ) -> None:
+        """
+        Sends an HTTP response to the client socket, optionally logging the response.
+
+        Args:
+            response (Union[BaseResponse, HttpResponse]): The HTTP response object containing the response data.
+            client_socket (socket.socket): The client socket object to which the response will be sent.
+            request (Optional[HttpRequest]): The request object associated with the response. Used for logging and debugging purposes.
+            disable_logging (bool): If True, disables logging of the response. Defaults to False.
+            suppress_errors (bool): If True, suppresses any errors that occur during the sending process (only sending data). Defaults to False.
+            strictly_http1 (bool): Strictly send response using `HTTP/2`, even if `HTTP/2` is enabled.
+            
+        Raises:
+            Exception: If there is an error during the data sending process (e.g., socket errors), unless suppressed.
+        
+        This method calls `send_data` to transmit the raw response data to the client and 
+        performs logging if `disable_logging` is False. If the request object contains 
+        debug information or failed middleware details, they are included in the logs.
+        """
+        h2_handling = False
+        
+        if not strictly_http1 and hasattr(client_socket, 'h2_protocol'):
+            if request and request.request_store.get('h2_handling') == False:
+                pass
+            else:
+                # Set H2 handling to True
+                h2_handling = True
+        
+        if h2_handling:
+            stream_id = request.request_store.get("stream_id") if request else None
+        
+            if not stream_id:
+                raise TypeError(
+                    "HTTP/2 appears to be enabled on the provided socket, "
+                    "but no 'stream_id' was found in `request.request_store`. "
+                    "Use the `send_http2_response` method directly if you're managing the stream manually."
+                )
+        
+            self.send_http2_response(
+                response=response,
+                stream_id=stream_id,
+                client_socket=client_socket,
+                request=request,
+                disable_logging=disable_logging,
+                suppress_errors=suppress_errors,
+            )
+            
+            return # No further processing
+        
+        # Explicitly send response
+        try:
+            self._send_response(response, client_socket, suppress_errors=suppress_errors)
+        except (BrokenPipeError, ConnectionResetError):
+             # Client disconnected
+             return
+        
+        if not disable_logging:
+            # Log response (if applicable)
+            type(self).auto_log_response(response, request)
+
+    @classmethod
+    def auto_log_response(cls, response, request):
+        """
+        Logs a response to the console, considering middleware errors and any other issues. This
+        automatically creates debug messages (if applicable).
+        
+        Notes:
+        - Nothing will be logged if response is `None`.
+        """
+        if response:
+            debug_message = ""
+            if request and hasattr(request, "META"):
+                failed_middleware = request.META.get("FAILED_MIDDLEWARE")
+                if failed_middleware and response.status_code != 500:
+                    # Do not log debug message for internal server errors (status code 500).
+                    debug_message = failed_middleware.debug_message
+                else:
+                    debug_message = request.META.get("DEBUG_MESSAGE", "")
+            
+            # Log the response, including debug messages if available
+            log_response(
+                response,
+                request=request,
+                debug_message=debug_message,
+            )
     
     def _send_response(
         self,
@@ -292,195 +438,3 @@ class ResponseHandler:
        except Exception as e:
             if not suppress_errors:
                 raise e  # Re-raises the error if suppression is not enabled.
-    
-    def send_h2_data(self, h2_connection, stream_id, data):
-        """Sends data in chunks according to the max frame size of HTTP/2."""
-        # Max frame size allowed (default is 16KB)
-        max_frame_size = h2_connection.max_outbound_frame_size
-    
-        # Send data in chunks based on the max frame size
-        for i in range(0, len(data), max_frame_size):
-            chunk = data[i: i + max_frame_size]
-            h2_connection.send_data(stream_id=stream_id, data=chunk)
-    
-    def _send_http2_response(
-        self,
-        response: Union[BaseResponse, HttpResponse],
-        client_socket: socket.socket,
-        stream_id: int,
-        suppress_errors: bool = False,
-    ) -> Optional[bool]:
-        """Explicitly sends an HTTP/2 response to the H2Connection.
-        
-        Args:
-            response (Union[BaseResponse, HttpResponse]): The HTTP response object containing the response data.
-            client_socket (socket.socket): The client socket object to which the response will be sent.
-            stream_id (int): Integer for representing stream (according to HTTP/2)
-            suppress_errors (bool): If True, suppresses any errors that occur during the sending process. Defaults to False.
-         
-        Returns:
-            bool: Whether the response has been sent or None otherwise
-            
-        Raises:
-            Exception: If there is an error during the data sending process (e.g., socket errors), unless suppressed.
-        """
-        from h2.connection import ConnectionState
-        
-        try:
-            h2_connection = client_socket.h2_connection
-            
-            if h2_connection.state_machine.state == ConnectionState.CLOSED:
-                return
-            
-            # Send headers first according HTTP/2
-            headers = [
-                (header.lower(), value) for header, value in response.headers.items()
-            ]
-            
-            # Add cookies to headers
-            for key, morsel in response.cookies.items():
-                output = morsel.output(header="").strip()
-                headers.append(("set-cookie", output))
-            
-            # Add status line/topheader to headers
-            headers.insert(0, (":status", str(response.status_code)))
-           
-            # Send headers alongside with stream ID according to HTTP/2
-            h2_connection.send_headers(stream_id=stream_id, headers=headers)
-            
-            # Now send Content/Body
-            if not isinstance(response, StreamingHttpResponse):
-                # Send body
-                self.send_h2_data(client_socket.h2_connection, stream_id, response.content)
-            else:
-                content_length = 0
-                
-                for chunk in response.iter_content():
-                     chunk_len = len(chunk)
-                     content_length += chunk_len
-                     
-                     if isinstance(chunk, str):
-                         chunk = bytes(chunk, "utf-8")
-                     
-                     # Send chunk
-                     self.send_h2_data(client_socket.h2_connection, stream_id, chunk)
-                
-                # Set a custom content size for streaming responses, which may not match the actual size 
-                # of the current content. This size represents the correct total size of the content 
-                # after being fully sent to the client. Setting this enables accurate logging of 
-                # the content size.
-                response.content_obj.set_fake_size(content_length)
-            
-            # Mark response as complete
-            h2_connection.end_stream(stream_id)
-
-        except Exception as e:
-            if not suppress_errors:
-                raise e  # Re-raises the error if suppression is not enabled.
-        
-        return True
-        
-    def send_response(
-        self,
-        response: Union[BaseResponse, HttpResponse],
-        client_socket: socket.socket,
-        request: Optional[HttpRequest] = None,
-        disable_logging: bool = False,
-        suppress_errors: bool = False,
-    ) -> None:
-        """
-        Sends an HTTP response to the client socket, optionally logging the response.
-
-        Args:
-            response (Union[BaseResponse, HttpResponse]): The HTTP response object containing the response data.
-            client_socket (socket.socket): The client socket object to which the response will be sent.
-            request (Optional[HttpRequest]): The request object associated with the response. Used for logging and debugging purposes.
-            disable_logging (bool): If True, disables logging of the response. Defaults to False.
-            suppress_errors (bool): If True, suppresses any errors that occur during the sending process (only sending data). Defaults to False.
-
-        Raises:
-            Exception: If there is an error during the data sending process (e.g., socket errors), unless suppressed.
-        
-        This method calls `send_data` to transmit the raw response data to the client and 
-        performs logging if `disable_logging` is False. If the request object contains 
-        debug information or failed middleware details, they are included in the logs.
-        """
-        # Check if a custom template is configured for this response
-        
-        # Return the http response object.
-        if request and str(request.method).upper() == "HEAD":
-            # Reset content
-            request.set_content(b"", auto_add_content_headers=True)
-            
-        if not SETTINGS["DEBUG"]:
-            # Only enable custom t9emplates in production
-            if response.status_code in CUSTOM_TEMPLATES:
-                response_callable = CUSTOM_TEMPLATES[response.status_code]
-                if not callable(response_callable):
-                    raise TypeError(f"Callable required for custom template corresponding to status code of '{response.status_code}' ")
-                
-                # Parse parameters and obtain the custom template response.
-                new_response = response_callable(
-                    current_response=response,
-                    request=request,
-                )
-                try:
-                    new_response = to_response(new_response) # convert or check the validity of the custom response.
-                except TypeError:
-                    # The value returned by response_generating_callable is not valid
-                    raise TypeError(f"Invalid data returned by the custom template callable corresponding to status code '{response.status_code}' ")
-                response = new_response # set new response
-        
-        # Explicitly send response
-        if hasattr(client_socket, "h2_handling") and client_socket.h2_handling:
-            stream_id = request.request_data.stream_id
-            cancel_streams = client_socket.h2_cancel_streams
-            
-            for cancel_stream_id in cancel_streams:
-                if stream_id == cancel_stream_id:
-                    # Stream has been cancelled/doesn't need a response at the moment
-                    cancel_streams.discard(stream_id) # remove stream id to cancel because we are doing it now by statement 'return'
-                    return
-            
-            if not client_socket.h2_keep_connection:
-                # Keeping connection to client has been stopped/cancel, not necessary to continue
-                cancel_streams.clear()
-                return
-           
-            # Check if we are still connected
-            h2_connection = client_socket.h2_connection
-            
-            # Send response
-            if not self._send_http2_response(
-               response,
-               client_socket,
-               stream_id=stream_id,
-               suppress_errors=suppress_errors,
-               ):
-               # Response not send, connection is closed perhaps
-               return
-               
-        else:
-            try:
-                self._send_response(response, client_socket, suppress_errors=suppress_errors)
-            except (BrokenPipeError, ConnectionResetError):
-                # Client disconnected
-                return
-                
-        # Log response (if applicable)
-        if not disable_logging:
-            debug_message = ""
-            if request and hasattr(request, "META"):
-                failed_middleware = request.META.get("FAILED_MIDDLEWARE")
-                if failed_middleware and response.status_code != 500:
-                    # Do not log debug message for internal server errors (status code 500).
-                    debug_message = failed_middleware.debug_message
-                else:
-                    debug_message = request.META.get("DEBUG_MESSAGE", "")
-            
-            # Log the response, including debug messages if available
-            log_response(
-                response,
-                request=request,
-                debug_message=debug_message,
-            )

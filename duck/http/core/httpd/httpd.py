@@ -121,13 +121,22 @@ class BaseServer:
     def running(self, state: bool):
         self.__running = state
 
-    @staticmethod
-    def close_socket(sock):
-        """Shuts down a socket and finally closes it."""
+    def close_socket(self, sock):
+        """
+        Shuts down a socket and finally closes it.
+        
+        Args:
+            sock (socket.socket): The socket object.
+        """
         try:
-            sock.shutdown()
+            if not self.sock == sock:
+                # This is a client socket
+                sock.shutdown(socket.SHUT_RDWR)
+            else:
+                # Skip shutting down server socket, it may cause OSError: [Errno 22] Invalid argument
+                pass
         except Exception:
-            # ignore any exception
+            # Ignore any exception
             pass
         try:
             sock.close()
@@ -180,14 +189,13 @@ class BaseServer:
                     self.accept_and_handle_ipv4()
                 # Pause before the next request.
                 time.sleep(self.poll) 
+            
             except ssl.SSLError as e:
                 # Wrong protocol used, e.g. https on http or vice versa
                 if not no_logs and (SETTINGS["VERBOSE_LOGGING"] or SETTINGS["DEBUG"]):
                     if "HTTP_REQUEST" in str(e):
                         logger.log(f"Client may be trying to connect with https on http server or vice-versa: {e}", level=logger.WARNING)
-                    else:
-                        # logger.log(f"SSL error: {e}", level=logger.WARNING)
-                        pass
+                    
             except Exception as e:
                 if not no_logs:
                     logger.log_exception(e)
@@ -258,6 +266,7 @@ class BaseServer:
             flowinfo (Optional): Flow info if IPv6.
             scopeid (Optional): Scope id if IPv6.
         """
+        sock.addr = addr
         try:
             # Receive the full request (in bytes)
             data = self.receive_full_request(sock, self.request_timeout)
@@ -272,21 +281,24 @@ class BaseServer:
             return
         
         # Process data/request 
-        self.process_data(sock, addr, data)
+        self.process_data(sock, addr, RawRequestData(data))
     
-    def process_data(self, sock, addr, data: bytes):
+    def process_data(self, sock, addr, request_data: RawRequestData):
         """
         Process and handle the request dynamically
         """
+        data = request_data.data if isinstance(request_data, RawRequestData) else request_data.content
+        
         if is_ssl_data(data):
             logger.log(
                 "Data should be decoded at this point but it seems like its ssl data",
-                level=logger.WARNING)
+                level=logger.WARNING,
+            )
             logger.log(f"Client may be trying to connect with https on http server or vice-versa\n", level=logger.WARNING)
             return
             
         try:
-            self.process_and_handle_request(sock, addr, RawRequestData(data))
+            self.process_and_handle_request(sock, addr, request_data)
         except Exception as e:
             # processing and handling error resulted in an error
             # log the error message
@@ -310,7 +322,9 @@ class BaseServer:
         sock: socket.socket,
         addr: Tuple[str, int],
     ) -> None:
-        """Processes and handles keep alive connection."""
+        """
+        Processes and handles keep alive connection.
+        """
         
         # Assume the client wants keep alive to run forever until explicitly stated to end it.
         while True:
@@ -369,10 +383,11 @@ class BaseServer:
         timeout_response = get_timeout_error_response(timeout=self.request_timeout)
         
         # Send timeout response
-        ResponseHandler.send_response(
+        response_handler.send_response(
             timeout_response,
             sock,
             disable_logging=no_logs)
+        
         self.close_socket(sock)  # close client socket immediately
         
     def process_and_handle_request(
@@ -615,6 +630,7 @@ class BaseMicroServer:
             request_data (RequestData): The full request data object.
         """
         from duck.shortcuts import to_response
+        from duck.settings.loaded import WSGI
         
         try:
             request = HttpRequest(
@@ -627,6 +643,7 @@ class BaseMicroServer:
             
             # Process the request and obtain the http response by
             # parsing the request and the predefined request processor.
+            # This method also finalizes response by default.
             response = self.microapp._view(
                 request,
                 RequestProcessor(request),
@@ -649,6 +666,9 @@ class BaseMicroServer:
             
             # Send an http server error response to client.
             response = get_server_error_response(e, request)
+           
+            # Finalize server error response
+            WSGI.finalize_response(response, request)
             
             response_handler.send_response(
                 response,
