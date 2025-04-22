@@ -13,6 +13,7 @@ from duck.http.core.handler import ResponseHandler
 from duck.automation import Automation
 from duck.settings import SETTINGS
 from duck.logging import logger
+from duck.utils.path import joinpaths
 
 
 # Fetch SSL certificate and key paths from the settings.
@@ -111,14 +112,18 @@ class BaseCertbotAutoSSL(Automation):
         
         # Construct Certbot command
         certbot_command = [
-            certbot_executable, "certonly", "--webroot",
-            "--webroot-path", certbot_root,
+            certbot_executable, "certonly",
+            "--webroot", "--webroot-path", certbot_root,
+            "--config-dir", CERTBOT_ROOT,
+            "--work-dir", joinpaths(str(CERTBOT_ROOT), "work"),
+            "--logs-dir", joinpaths(str(CERTBOT_ROOT), "logs"),
             "--cert-name", "duck_ssl_cert",
             "-d", domain,
             "--fullchain-path", SSL_CERT_PATH,
             "--key-path", SSL_CERT_KEY_PATH,
             "--agree-tos", "--non-interactive",
             "--email", certbot_email,
+            "--staging"
         ]
         certbot_command.extend(certbot_extra_args) if certbot_extra_args else None
         
@@ -131,7 +136,7 @@ class BaseCertbotAutoSSL(Automation):
             )
 
             if result.returncode == 0:
-                logger.log("CertbotAutoSSL: SSL certificate successfully created or renewed\n", level=logger.INFO)
+                logger.log("CertbotAutoSSL: SSL certificate successfully created or renewed\n", level=logger.DEGUG)
             else:
                 logger.log(f"CertbotAutoSSL: Certbot failed with exit code {result.returncode}", level=logger.WARNING)
                 logger.log(f"CertbotAutoSSL: STDERR: \n{result.stderr.strip()}\n", level=logger.WARNING)
