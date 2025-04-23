@@ -225,6 +225,7 @@ class BaseCertbotAutoSSL(Automation):
             "--logs-dir", joinpaths(str(certbot_root), "logs"),
             "--cert-name", self.certname,
             "-d", domain,
+            "-d", f"www.{domain}",
             "--fullchain-path", SSL_CERT_PATH,
             "--key-path", SSL_CERT_KEY_PATH,
             "--agree-tos", "--non-interactive",

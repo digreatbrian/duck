@@ -7,7 +7,13 @@ The final touches include:
 - Content encoding determination and insertion.
 - etc.
 """
-from typing import Dict, Optional, Callable
+import re
+
+from typing import (
+    Dict,
+    Optional,
+    Callable,
+)
 
 from duck.http.request import HttpRequest
 from duck.http.response import (
@@ -28,6 +34,7 @@ from duck.shortcuts import (
     simple_response,
     to_response,
 )
+from duck.meta import Meta
 
 
 # Custom templates for predefined responses
@@ -56,7 +63,39 @@ class ResponseFinalizer:
 
         for h, v in {**extra, **cors, **security}.items():
             response.headers.setdefault(h, v)
-
+        
+        content_security_policy = response.get_header("content-security-policy")
+        
+        if content_security_policy and request:
+            domain = Meta.get_metadata("DUCK_SERVER_DOMAIN")
+            
+            if domain and domain != "localhost":
+                scheme = request.scheme
+                new_sources = f"{domain} www.{domain}"
+        
+                # Split CSP into directives
+                directives = content_security_policy.strip().split(';')
+                updated_directives = []
+        
+                default_updated = False
+                for directive in directives:
+                    directive = directive.strip()
+                    if directive:
+                        # Append new sources to existing default-src
+                        updated = directive + " " + new_sources
+                        updated_directives.append(updated)
+                        default_updated = True
+                    else:
+                        updated_directives.append(directive)
+        
+                if not default_updated:
+                    # If no default-src, add one
+                    updated_directives.insert(0, f"default-src {new_sources}")
+        
+                # Rebuild CSP header
+                final_policy = "; ".join(d.strip() for d in updated_directives if d) + ";"
+                response.set_header("content-security-policy", final_policy)
+        
     @log_failsafe
     def do_set_connection_mode(self, response, request) -> None:
         """
@@ -306,3 +345,4 @@ class ResponseFinalizer:
             return
             
         self.do_set_streaming_range(response, request)
+
