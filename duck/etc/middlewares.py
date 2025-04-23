@@ -3,6 +3,7 @@
 # ordinary middlewares
 middlewares = [
     "duck.http.middlewares.security.RequestsLimitMiddleware",  # Protects against Denial of Service (DOS) attacks.
+    "duck.http.middlewares.contrib.WWWRedirectMiddleware", # Redirect www urls to non-www urls
     "duck.http.middlewares.security.URLSecurityMiddleware",  # Protects against URL-based attacks.
     "duck.http.middlewares.security.SQLInjectionMiddleware",  # Protects against SQL injection attacks.
     "duck.http.middlewares.security.XSSMiddleware",  # Protects against Cross-Site Scripting (XSS) attacks.
