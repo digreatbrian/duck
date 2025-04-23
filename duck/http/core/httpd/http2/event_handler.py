@@ -109,7 +109,7 @@ class EventHandler:
         topheader = "{method} {path} {http_version}".format(
             method=headers.pop(':method'),
             path=headers.pop(':path'),
-            http_version='HTTP/2'
+            http_version='HTTP/1.1'
         )
         
         if ":authority" in headers:
@@ -123,8 +123,9 @@ class EventHandler:
         # Set the request data topheader in headers
         request_data.headers["topheader"] = topheader
         
-        # Set request data stream ID
+        # Set request data stream ID and h2_handling
         request_data.request_store["stream_id"] = stream_id
+        request_data.request_store["h2_handling"] = True
         
         self.protocol.server.failsafe_process_and_handle_request(
             self.protocol.sock,

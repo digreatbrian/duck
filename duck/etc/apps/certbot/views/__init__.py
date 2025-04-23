@@ -50,5 +50,5 @@ def webroot_view(request):
     
     if not os.path.isfile(file_path):
         return not_found404(body=f"<p>Nothing matches the provided URI: {request.path}</p>")
-
-    return FileResponse(file_path)
+    fr = FileResponse(file_path)
+    return fr

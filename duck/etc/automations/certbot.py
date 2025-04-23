@@ -7,6 +7,7 @@ import os
 import re
 import time
 import subprocess
+import configparser
 
 from duck.exceptions.all import SettingsError
 from duck.http.core.handler import ResponseHandler
@@ -14,6 +15,10 @@ from duck.automation import Automation
 from duck.settings import SETTINGS
 from duck.logging import logger
 from duck.utils.path import joinpaths
+from duck.utils.filelock import (
+    unlock_file,
+    open_and_lock,
+)
 
 
 # Fetch SSL certificate and key paths from the settings.
@@ -40,6 +45,12 @@ class BaseCertbotAutoSSL(Automation):
     Automation class to handle automatic SSL generation and renewal
     using the Certbot CLI with the webroot plugin.
     """
+    
+    certname: str = "duckcert"
+    """
+    The certificate name.
+    """
+    
     def patch_microapp(self, microapp):
         """
         Applies patches to microapp view method so that route `certbot`acme challenge files
@@ -73,6 +84,101 @@ class BaseCertbotAutoSSL(Automation):
             logger.log("CertbotAutoSSL: FORCE_HTTPS is disabled, this is strictly required", level=logger.WARNING)
             self.disable_execution = True
             
+    def extract_config_values(self, config_path: str, *args):
+        """
+        Extracts specified key-value pairs from a Certbot `.conf` configuration file.
+        
+        Args:
+            config_path (str): 
+                Path to the Certbot configuration file. This is typically in the form 
+                `{certbot_root}/renewal/{certname}.conf`.
+            
+            *args (str): 
+                One or more configuration keys to extract (e.g., "fullchain", "privkey").
+        
+        Returns:
+            dict: A dictionary containing the requested keys and their corresponding values.
+                  If a key is not found, its value will be None.
+        
+        Example:
+            extract_config_values("/etc/letsencrypt/renewal/example.com.conf", "fullchain", "privkey")
+            => { "fullchain": "/etc/letsencrypt/live/example.com/fullchain.pem",
+                 "privkey": "/etc/letsencrypt/live/example.com/privkey.pem" }
+        """
+        values = {key: None for key in args}
+    
+        with open(config_path, "r") as f:
+            for line in f:
+                line = line.strip()
+                for key in args:
+                    if line.startswith(key):
+                        _, value = line.split("=", 1)
+                        values[key] = value.strip()
+                        break  # Avoid rechecking other keys for this line
+    
+                if all(values[k] is not None for k in args):
+                    break  # Stop early if all values found
+    
+        return values
+    
+    @logger.handle_exception
+    def on_cert_success(self):
+        """
+        Event called on successful certbot command, i.e. successful certificate generation or renewal.
+        """
+        certbot_root = SETTINGS["CERTBOT_ROOT"]
+        config_path = joinpaths(str(certbot_root), f"renewal/{self.certname}.conf")
+        config = self.extract_config_values(config_path, "fullchain", "privkey")
+        
+        if SETTINGS["DEBUG"]:
+            # Only log in Debug mode
+            logger.log("CertbotAutoSSL: Copying Certificate Credentials", level=logger.DEBUG)
+        
+        fullchain_path = config.get("fullchain")
+        key_path = config.get("privkey")
+        
+        cert_data = None
+        key_data = None
+        
+        if SETTINGS["DEBUG"]:
+            # Only log in Debug mode
+            logger.log("CertbotAutoSSL: Reading Fullchain and Private key credentials", level=logger.DEBUG)
+        
+        with (
+            open_and_lock(fullchain_path, "r") as cert_file,
+            open_and_lock(key_path, "r") as key_file
+        ):
+            cert_data = cert_file.read()
+            key_data = key_file.read()
+            
+            # Unlock file descriptors
+            unlock_file(cert_file)
+            unlock_file(key_file)
+        
+        if SETTINGS["DEBUG"]:
+            # Only log in Debug mode
+            logger.log(f"CertbotAutoSSL: Writing SSL credentials to {certbot_root}", level=logger.DEBUG)
+        
+        with (
+            open_and_lock(SSL_CERT_PATH, "w") as cert_file,
+            open_and_lock(SSL_CERT_KEY_PATH, "w") as key_file
+        ):
+            cert_file.write(cert_data)
+            
+            if SETTINGS["DEBUG"]:
+                logger.log(f"CertbotAutoSSL: Wrote SSL fullchain credential to {SSL_CERT_PATH}", level=logger.DEBUG)
+            
+            key_file.write(key_data)
+            
+            # Unlock all files immediately after writing to last file
+            unlock_file(cert_file)
+            unlock_file(key_file)
+            
+            if SETTINGS["DEBUG"]:
+                logger.log(f"CertbotAutoSSL: Wrote SSL private key credential to {SSL_CERT_KEY_PATH}", level=logger.DEBUG)
+                
+        logger.log(f"CertbotAutoSSL: Wrote SSL credentials successfully", level=logger.DEBUG)
+
     def execute(self):
         certbot_root = SETTINGS["CERTBOT_ROOT"]
         certbot_email = SETTINGS["CERTBOT_EMAIL"]
@@ -114,16 +220,15 @@ class BaseCertbotAutoSSL(Automation):
         certbot_command = [
             certbot_executable, "certonly",
             "--webroot", "--webroot-path", certbot_root,
-            "--config-dir", CERTBOT_ROOT,
-            "--work-dir", joinpaths(str(CERTBOT_ROOT), "work"),
-            "--logs-dir", joinpaths(str(CERTBOT_ROOT), "logs"),
-            "--cert-name", "duck_ssl_cert",
+            "--config-dir", certbot_root,
+            "--work-dir", joinpaths(str(certbot_root), "work"),
+            "--logs-dir", joinpaths(str(certbot_root), "logs"),
+            "--cert-name", self.certname,
             "-d", domain,
             "--fullchain-path", SSL_CERT_PATH,
             "--key-path", SSL_CERT_KEY_PATH,
             "--agree-tos", "--non-interactive",
             "--email", certbot_email,
-            "--staging"
         ]
         certbot_command.extend(certbot_extra_args) if certbot_extra_args else None
         
@@ -136,7 +241,8 @@ class BaseCertbotAutoSSL(Automation):
             )
 
             if result.returncode == 0:
-                logger.log("CertbotAutoSSL: SSL certificate successfully created or renewed\n", level=logger.DEGUG)
+                logger.log("CertbotAutoSSL: SSL certificate successfully created or renewed\n", level=logger.DEBUG)
+                self.on_cert_success()
             else:
                 logger.log(f"CertbotAutoSSL: Certbot failed with exit code {result.returncode}", level=logger.WARNING)
                 logger.log(f"CertbotAutoSSL: STDERR: \n{result.stderr.strip()}\n", level=logger.WARNING)
@@ -157,3 +263,4 @@ CertbotAutoSSL = BaseCertbotAutoSSL(
     schedules=-1,
     interval=12 * 3600  # every 12 hours
 )
+

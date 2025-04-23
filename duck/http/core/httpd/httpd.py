@@ -195,7 +195,10 @@ class BaseServer:
                 if not no_logs and (SETTINGS["VERBOSE_LOGGING"] or SETTINGS["DEBUG"]):
                     if "HTTP_REQUEST" in str(e):
                         logger.log(f"Client may be trying to connect with https on http server or vice-versa: {e}", level=logger.WARNING)
-                    
+            
+            except ConnectionResetError:
+                pass
+        
             except Exception as e:
                 if not no_logs:
                     logger.log_exception(e)

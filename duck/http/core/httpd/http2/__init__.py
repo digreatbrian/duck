@@ -174,13 +174,13 @@ class BaseHttp2Server(BaseServer):
                 
                 # Handle connection as HTTP/2 compatible connection
                 # Process and handle the initial request
-                self.failsafe_process_and_handle_request(sock, self.addr, request_data)
+                self.failsafe_process_and_handle_request(sock, addr, request_data)
                 self.start_http2_loop(sock, addr, h2_connection)
              else:
                 # No HTTP/2 Upgrade, strictly HTTP/1.1
                 request_data = RawRequestData(data)
                 request_data.request_store["h2_handling"] = False
-                self.process_data(sock, self.addr, request_data)
+                self.process_data(sock, addr, request_data)
              return 
         
         # Initiate and Send HTTP/2 Preamble

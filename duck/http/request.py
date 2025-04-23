@@ -37,10 +37,6 @@ from duck.utils.path import build_absolute_uri
 SUPPORTED_HTTP_VERSIONS = ["HTTP/1.0", "HTTP/1.1"]
 
 
-if SETTINGS["SUPPORT_HTTP_2"]:
-    SUPPORTED_HTTP_VERSIONS.append('HTTP/2')
-
-
 class Request:
     """
     An object representing an HTTP request, including method, headers, and body data.

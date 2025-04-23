@@ -132,9 +132,16 @@ class HttpsRedirectMicroApp(MicroApp):
         """
         Returns an http redirect response.
         """
+        from duck.settings.loaded import WSGI
+        
         query = request.META.get("QUERY_STRING", "")
         dest_url = self.location_root_url.join(request.path)
         dest_url.query = query
         dest_url = dest_url.to_str()
         redirect = HttpRedirectResponse(location=dest_url, permanent=False)
+        
+        # Apply middlewares in reverse order
+        WSGI.apply_middlewares_to_response(redirect, request)
+        WSGI.finalize_response(response, request)
         return redirect
+

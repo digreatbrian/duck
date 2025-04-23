@@ -75,24 +75,26 @@ def get_status_debug_msg(response: HttpResponse, request: HttpRequest) -> Option
         str: A debug message that provides context or explanation for the given status code.
     """
     # exceptional status code that doesnt require debug messages
+    final_debug_msg = ""
+    
     if response.status_code == 101:
-        return f"Upgrade: {response.get_header('upgrade', 'unknown')}"
+        final_debug_msg += f"Upgrade: {response.get_header('upgrade', 'unknown')}"
+        return final_debug_msg
     
     if response.status_code < 300:
-        return 
+        return final_debug_msg
         
     if response.status_code in responses.keys():
         debug_msg, reason = responses[response.status_code]
         
         if request:
             if response.status_code in {301, 302, 307}:
-                final_debug_msg = f"{debug_msg}: {request.path} -> {response.get_header('location', 'unknown')}"
+                final_debug_msg += f"{debug_msg}: {request.path} -> {response.get_header('location', 'unknown')}"
             else:
-                final_debug_msg = f"{debug_msg}: {request.path}"
+                final_debug_msg += f"{debug_msg}: {request.path}"
         else:
-            final_debug_msg = f'{debug_msg}: unknown'
-        return final_debug_msg
-    return "" # empty string to show no debug msg
+            final_debug_msg += f'{debug_msg}: unknown'
+    return final_debug_msg
 
 
 def get_django_formatted_log(
@@ -123,6 +125,10 @@ def get_django_formatted_log(
     color = get_status_code_debug_color(response.status_code)
     bold_start = "\033[1m"
     bold_end = "\033[0m"
+    h2_handling = False
+    
+    if request and request.request_store.get("h2_handling") == True:
+        h2_handling = True
     
     # Add optional debug message if available
     if debug_message:
@@ -137,6 +143,7 @@ def get_django_formatted_log(
         f"[{django_short_local_date()}] {color}"
         f'"{request.topheader if request else ""}" {response.status_code} '
         f"{response.content_obj.size}"
+        + (f" h2" if h2_handling else "")
     )
     return info + reset  # Restore default color
 
@@ -158,13 +165,19 @@ def get_duck_formatted_log(
     reset = logger.Style.RESET_ALL
     color = get_status_code_debug_color(response.status_code)
     addr = ("unknown", "unknown")
+    h2_handling = False
+    
+    if request and request.request_store.get("h2_handling") == True:
+        h2_handling = True
     
     if request and request.client_address:
         addr = request.client_address 
     
     info = (
         f'[{short_local_date()}] {color}"{request.topheader if request else ""}" '
-        f"{response.content_obj.size}{reset}")
+        f"{response.content_obj.size}"
+        + (f" h2" if h2_handling else "")
+    )
     
     info += f"\n  {reset}├── ADDR {list(addr)} "
     
@@ -438,3 +451,4 @@ class ResponseHandler:
        except Exception as e:
             if not suppress_errors:
                 raise e  # Re-raises the error if suppression is not enabled.
+

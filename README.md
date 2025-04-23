@@ -296,10 +296,10 @@ Once you open your browser at the specified URL, you should see something simila
 After executing the `duck runserver` command, your terminal should display output like the examples below:
 
 **For Smaller Terminals:**
-![Duck local website terminal](./images/duck-local-site-small-terminal.jpg)
+![Duck local website terminal](./images/duck-small-terminal.jpg)
 
 **For Larger Terminals:**
-![Duck local website terminal](./images/duck-local-site-large-terminal.jpg)
+![Duck local website terminal](./images/duck-large-terminal.jpg)
 
 ## Don’t just clone or scroll—show your support by leaving a star! ⭐
 
