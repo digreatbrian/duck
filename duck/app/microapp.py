@@ -142,6 +142,6 @@ class HttpsRedirectMicroApp(MicroApp):
         
         # Apply middlewares in reverse order
         WSGI.apply_middlewares_to_response(redirect, request)
-        WSGI.finalize_response(response, request)
+        WSGI.finalize_response(redirect, request)
         return redirect
 
