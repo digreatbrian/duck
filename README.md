@@ -28,3 +28,6 @@ pip install git+https://github.com/digreatbrian/duck.git
 You can visit **Duck's** official website for more information at [Duck official site](https://duckframework.xyz).
 
 Jump straight to [Documentation](https://duckframework.xyz/documentation).
+
+
+#### **Duck** is updated and improved frequently, check out this repo more oftenly for bug fixes & improvements.
