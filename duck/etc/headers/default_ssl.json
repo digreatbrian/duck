@@ -5,7 +5,7 @@
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "strict-origin-when-cross-origin",
   "Permissions-Policy": "",
-  "Cache-Control": "no-store, no-cache",
+  "Cache-Control": "public, max-age=86400",
   "Cross-Origin-Embedder-Policy": "require-corp",
   "Cross-Origin-Opener-Policy": "same-origin",
   "Cross-Origin-Resource-Policy": "same-origin",
