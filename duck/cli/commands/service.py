@@ -159,6 +159,10 @@ class ServiceCommand:
             # Stopping again to make sure the service is stopped
             subprocess.run(['sudo', 'systemctl', 'stop', service_name], check=True)
             console.log(f"Service `{service_name}` stopped.", level=console.INFO)
+            try:
+                cls.check_service()
+            except Exception as e:
+                console.log("Error: Failed to print Duck service status", level=console.WARNING)
             return True
         except FileNotFoundError:
             console.log("Error: `systemctl` command not found. Please ensure systemd is installed on your system.", level=console.ERROR)
