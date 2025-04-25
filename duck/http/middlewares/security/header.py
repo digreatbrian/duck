@@ -98,6 +98,7 @@ class HostMiddleware(BaseMiddleware):
         
         if not valid:
             request.host_error_msg = reason
+            cls.debug_message = "HostMiddleware: Host invalid: %s"%(host)
             return cls.request_bad
             
         for allowed_host in cls.allowed_hosts:
@@ -111,6 +112,7 @@ class HostMiddleware(BaseMiddleware):
                 return cls.request_ok
         
         request.host_error_msg = f"Disallowed host, you may need to add {host} in ALLOWED_HOSTS"
+        cls.debug_message = "HostMiddleware: Host invalid/unrecognized: %s"%(host)
         return cls.request_bad
 
 

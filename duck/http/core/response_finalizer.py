@@ -136,9 +136,7 @@ class ResponseFinalizer:
             # Thus, we skip compression for streaming responses or when the client cannot accept compressed content.
             return
 
-        if (not response.get_header("content-encoding", "identity") == "identity"
-                or not response.content_obj.data.isascii()
-                or response.content_obj.correct_encoding() != "identity"):
+        if response.content_obj.correct_encoding() != "identity":
             # no need to compress content, might already be compressed
             return
 
