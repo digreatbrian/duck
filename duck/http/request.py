@@ -374,6 +374,13 @@ class Request:
         return URL(self.host).host
     
     @property
+    def domain(self) -> str:
+        """
+        Returns the hostname within the Host header.
+        """
+        return self.hostname
+    
+    @property
     def port(self) -> Optional[int]:
         """
         Returns the port as integer within the Host header.

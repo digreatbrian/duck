@@ -412,7 +412,7 @@ class Content:
                         f"Could not set content from file {filepath}: {e}"
                     ) from e
         self.filepath = filepath
-        self.data = data
+        self.data = bytes(data, "utf-8") if not isinstance(data, bytes) else data
         self.parse_type(content_type=content_type)
         
     def __repr__(self):

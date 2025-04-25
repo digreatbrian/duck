@@ -31,7 +31,7 @@ from duck.logging import logger
 
 class EventHandler:
     """
-    HTTP/2 Event handler.
+    HTTP/2 Event handler (synchronous version).
     """
     def __init__(self, protocol):
         self.protocol = protocol
