@@ -136,9 +136,11 @@ def redirect_console_output():
 
     # Redirect stdout and stderr to a file
     file_fd = get_current_log_file_fd()
+    
     # Record default write methods
     default_stdout_write = sys.stdout.write
     default_stderr_write = sys.stderr.write
+    
     # Create a lock for synchronized writing
     write_lock = threading.Lock()
 

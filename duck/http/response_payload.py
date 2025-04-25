@@ -3,18 +3,25 @@ Module representing response payload classes.
 """
 import importlib
 
-from datetime import timedelta, datetime
-from typing import Optional, Dict, Any, Union
+from datetime import (
+    timedelta,
+    datetime,
+)
+from typing import (
+    Optional,
+    Dict,
+    Any,
+    Union,
+)
 
 from duck.etc.statuscodes import responses
 from duck.http.headers import Headers
 from duck.utils.object_mapping import map_data_to_object
-
+from duck.utils.importer import import_module_once
 
 # Dynamically load the standard library module `http.cookies`
 # This is done to avoid using the duck.http module.
-cookies_module = importlib.import_module("http.cookies")
-
+cookies_module = import_module_once("http.cookies")
 
 # Use the module as usual
 SimpleCookie = cookies_module.SimpleCookie
@@ -116,6 +123,7 @@ class BaseResponsePayload:
         """
         # Validate SameSite value
         valid_samesite_values = {"Lax", "Strict", "None", None}
+        
         if samesite is not None:
             samesite = str(samesite).capitalize()  # Normalize capitalization
             if samesite not in valid_samesite_values:
@@ -128,22 +136,29 @@ class BaseResponsePayload:
         # Optional attributes
         if domain:
             cookie["domain"] = domain
+        
         cookie["path"] = path
+        
         if max_age is not None:
             # Convert timedelta to seconds if necessary
             max_age_seconds = max_age.total_seconds() if isinstance(max_age, timedelta) else max_age
             cookie["max-age"] = int(max_age_seconds)
+            
             # Calculate expires if not explicitly provided
             if expires is None:
                 expires = datetime.utcnow() + timedelta(seconds=max_age_seconds)
+        
         if expires is not None:
             if isinstance(expires, datetime):
                 expires = expires.strftime('%a, %d %b %Y %H:%M:%S GMT')
             cookie["expires"] = expires
+        
         if secure:
             cookie["secure"] = True
+        
         if httponly:
             cookie["httponly"] = True
+        
         if samesite:
             cookie["samesite"] = samesite
     
@@ -210,6 +225,7 @@ class SimpleHttpResponsePayload(BaseResponsePayload):
         """
         if not topheader or not isinstance(topheader, str):
             raise ValueError("The 'topheader' argument must be a non-empty string.")
+        
         self.topheader = topheader
         self.headers = Headers(headers or {})
 
@@ -226,8 +242,10 @@ class SimpleHttpResponsePayload(BaseResponsePayload):
             bytes: The raw HTTP response as bytes.
         """
         data = f"{self.topheader}"
+        
         for header, value in self.headers.titled_headers().items():
             data += f"\r\n{header}: {value}"
+        
         cookies = self.cookies.output()
         data += "\r\n" + cookies
         return data.encode("utf-8").strip()
@@ -342,15 +360,20 @@ class HttpResponsePayload(BaseResponsePayload):
 
     @property
     def raw(self) -> bytes:
-        """Returns the raw bytes representing the payload"""
+        """
+        Returns the raw bytes representing the payload (header section).
+        """
         topheader = "%s %d %s" % (
             self.http_version,
             self.status_code,
             self.status_message,
         )
+        
         data = f"{topheader}"
+        
         for header, value in self.headers.titled_headers().items():
             data += f"\r\n{header}: {value}"
+        
         cookies = self.cookies.output()
         data += "\r\n" + cookies
         return data.encode("utf-8").strip()

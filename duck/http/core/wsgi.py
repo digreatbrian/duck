@@ -89,15 +89,18 @@ def get_debug_error_as_html(exception: Exception, request: Optional = None):
         Returns escaped html content.
         """
         return content.replace("<", "&lt;").replace(">", "&gt;")
+    
     if not SETTINGS["DEBUG"]:
         # return None immediately
         return
+    
     # Expand exception  
     exception = logger.expand_exception(exception)
     
     # Make html from exception
     exception = escape(exception).replace("^\n", "^\n\n").replace("\n", "\n<br>")
     host = None # intialize host
+    
     if not request:
        body = f"""
        <div class="request-info">
@@ -107,13 +110,16 @@ def get_debug_error_as_html(exception: Exception, request: Optional = None):
        """
        body = body + debug_error_style
        return body # return the body and style
+    
     else:
       # Retrieve the original host
       if SETTINGS["USE_DJANGO"]:
           # If not real https host set, fallback to http host because this request might have been included inDUCK_EXPLICIT_URLS
           host = request.META.get("REAL_HTTP_HOST") or request.META.get("HTTP_HOST")
+      
       else:
           host = request.META.get("HTTP_HOST")
+      
       body = f"""
       <div class="request-info">
         <h4 class="subheading" >Request</h4>
@@ -126,6 +132,7 @@ def get_debug_error_as_html(exception: Exception, request: Optional = None):
         </ul>
       </div><br><div class="exception">{exception}</div>
       """
+      
       return body + debug_error_style
 
 
@@ -224,6 +231,7 @@ def get_404_error_response(request: HttpRequest):
         </style>
         """
         body += style
+        
         # Create an http template response
         response = template_response(
             HttpNotFoundResponse,
@@ -274,12 +282,15 @@ def get_bad_request_error_response(exception: Exception, request: Optional[HttpR
     
     response_cls = HttpBadRequestResponse
     body = (
-        "<p>Bad request, there is an error in request.</p><p>You might need to reconstruct request in right format</p>")
+        "<p>Bad request, there is an error in request.</p><p>"
+        "You might need to reconstruct request in right format</p>"
+    )
     ref = f"<p>Ref: {exception}</p>"
     
     if isinstance(exception, RequestSyntaxError):
         response_cls = HttpBadRequestSyntaxResponse
         body = "<p>Bad request syntax.</p><p>You might need to reconstruct request in right format</p>"
+        
         if request:
             request.META["DEBUG_MESSAGE"] = f"Bad Request Syntax: {request.path}"
 

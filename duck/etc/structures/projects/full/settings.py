@@ -142,7 +142,7 @@ REQUEST_HANDLING_TASK_EXECUTOR_KWARGS: dict = {
 # Determines whether to use asynchronous request handling.
 # If set to False, the framework defaults to multithreaded request handling.
 # Example: ASYNC_HANDLING=True enables async handling; False uses threads.
-ASYNC_HANDLING: bool = True
+ASYNC_HANDLING: bool = False
 
 
 # Server Buffer
@@ -157,7 +157,7 @@ SERVER_BUFFER: int = 65535
 # A smaller value (e.g., 0.1) will make the server check for requests more frequently,
 # while a larger value (e.g., 2) reduces the frequency of checks, saving CPU resources.
 # Can be specified as either an integer or a floating-point number.
-SERVER_POLL: int | float = .05 # Fast responses
+SERVER_POLL: int | float = .01 # Fast responses
 
 
 # Keep-Alive Timeout
@@ -190,7 +190,7 @@ CONNECTION_MODE: str = "close"
 CONTENT_COMPRESSION: dict[str] = {
     "encoding": "gzip",
     "min_size": 1024,  # files more than 1KB
-    "max_size": 2048,  # files not more than 2KB
+    "max_size": 512 * 1024,  # files not more than 512KB
     "level": 5,
     "vary_on": True,  # Whether to include Vary header in response
     "mimetypes": [

@@ -168,33 +168,28 @@ class App:
         uses_ipv6: bool = False,
         no_checks: bool = False,
     ):
-
         if uses_ipv6 and not is_ipv6(addr) and not str(addr).isalnum():
-            raise ApplicationError(
-                "Argument uses_ipv6=True yet addr provided is not a valid IPV6 ip address."
-            )
+            raise ApplicationError("Argument uses_ipv6=True yet addr provided is not a valid IPV6 address.")
 
         if not uses_ipv6 and not is_ipv4(addr) and not str(addr).isalnum():
-            raise ApplicationError(
-                "Argument addr is not a valid IPV4 ip address.")
+            raise ApplicationError("Argument `addr` is not a valid IPV4 address.")
         
-        self.started = False
-        self._restart_success = False  # state on whether last restart operation has been successfull
+        
         self.addr = addr
         self.port = port
         self.uses_ipv6 = uses_ipv6
-        self.is_domain_set = True if domain else False
         self.no_checks = no_checks
+        self.is_domain_set = True if domain else False
+        self.started = False
+        self._restart_success = False  # state on whether last restart operation has been successfull
         
-        # set appropriate domain
+        # Set appropriate domain
         self.domain = domain or addr if not uses_ipv6 else f"[{addr}]"
 
-        if is_ipv4(self.domain) and self.domain.startswith(
-                "0"
-        ):  # ip "0.x.x.x" not allowed as domain because most browsers cannot resolve this.
+        if is_ipv4(self.domain) and self.domain.startswith("0"):
+            # IP "0.x.x.x" not allowed as domain because most browsers cannot resolve this.
             self.domain = "localhost"
-
-        # continue
+            
         self.enable_https: bool = SETTINGS["ENABLE_HTTPS"]
         self.DOMAIN = self.domain
         self.SETTINGS = SETTINGS
@@ -203,14 +198,17 @@ class App:
         self.use_django = SETTINGS["USE_DJANGO"]
         self.run_automations = SETTINGS["RUN_AUTOMATIONS"]
         
-        setup()  # setup duck environment and the entire application.
+        # Setup Duck environment and the entire application.
+        setup()
+        
+        if not no_checks:
+            # run some checks
+            self.run_checks()
 
-        self.run_checks() if not no_checks else None  # run some checks
-
-        # add app port to used ports
+        # Add application port to used ports
         PortRecorder.add_new_occupied_port(port, f"{self}")
 
-        # vital objects creation
+        # Vital objects creation
         if SETTINGS["FORCE_HTTPS"]:
             force_https_addr = addr
             force_https_port = SETTINGS["FORCE_HTTPS_BIND_PORT"]
@@ -227,8 +225,10 @@ class App:
 
         if SETTINGS["RUN_AUTOMATIONS"]:
             self.automations_dispatcher = AUTOMATION_DISPATCHER(self)
+            
             for trigger, automation in AUTOMATIONS:
-                self.automations_dispatcher.register(trigger, automation)  # register trigger and automation
+                # Register trigger and automation
+                self.automations_dispatcher.register(trigger, automation)
 
         if self.enable_https:
             self.server = HttpsServer(
@@ -244,44 +244,48 @@ class App:
             )
 
         def start_server():
-            """Starts Duck application main server."""
+            """
+            Starts Duck application main server.
+            """
             no_logs = False
             domain = self.domain
             self.server.start_server(no_logs, domain)
 
         def start_django_server():
-            """Starts django app server"""
+            """
+            Starts Django application server
+            """
             host = self.DJANGO_ADDR
-            self._django_server_process = bridge.start_django_app(
-                *host, uses_ipv6=uses_ipv6)
+            self._django_server_process = bridge.start_django_app(*host, uses_ipv6=uses_ipv6)
 
         def start_force_https():
-            """Starts app for redirecting non encrypted traffic to main app using https"""
+            """
+            Starts app for redirecting non encrypted traffic to main app using https.
+            """
             if self.force_https:
                 self.force_https_app.run()
 
         def start_automations_dispatcher():
-            """Starts automations dispatcher for running and managing automations on runtime"""
+            """
+            Starts automations dispatcher for running and managing automations on runtime.
+            """
             if self.run_automations:
                 self.automations_dispatcher.start()
 
-        # essential vital threads
+        # Creation of essential threads
         self.duck_server_thread = threading.Thread(target=start_server)
-        self.django_server_thread = threading.Thread(
-            target=start_django_server)
-
-        # other essentials
+        self.django_server_thread = threading.Thread(target=start_django_server)
         self.force_https_thread = threading.Thread(target=start_force_https)
-        self.automations_dispatcher_thread = threading.Thread(
-            target=start_automations_dispatcher)
-
+        self.automations_dispatcher_thread = threading.Thread(target=start_automations_dispatcher)
+        
         # set app instances count
         if type(self).__instances__ == 0:
             type(self).__instances__ += 1
         else:
             raise ApplicationError(
                 "Cannot create more apps, Only single main application is allowed. "
-                "Consider using a MicroApp instead")
+                "Consider using a MicroApp instead"
+             )
 
     @classmethod
     def instances(cls):
@@ -316,6 +320,7 @@ class App:
         """
         certfile_path = SETTINGS["SSL_CERTFILE_LOCATION"]
         private_key_path = SETTINGS["SSL_PRIVATE_KEY_LOCATION"]
+        
         if not os.path.isfile(certfile_path):
             raise SSLError(
                 "SSL certfile provided in settings.py not found. You may use command `python3 -m duck ssl-gen` to "
@@ -333,7 +338,7 @@ class App:
         if SETTINGS["ENABLE_HTTPS"]:
             self.check_ssl_credentials()
 
-        # https checks
+        # HTTPS checks
         if SETTINGS["FORCE_HTTPS"]:
             if not SETTINGS["ENABLE_HTTPS"]:
                 raise SettingsError(
@@ -343,18 +348,22 @@ class App:
     @property
     def absolute_uri(self) -> str:
         """
-        Returns app absolute URL.
+        Returns application server absolute `URL`.
         """
         scheme = "http"
+        
         if self.enable_https:
             scheme = "https"
+        
         uri = f"{scheme}://{self.domain}"
         uri = uri.strip("/").strip("\\")
+        
         if not (self.port == 80 or self.port == 443):
             uri += f":{self.port}"
+        
         return uri
 
-    def build_absolute_uri(self, path: str) -> str | None:
+    def build_absolute_uri(self, path: str) -> str:
         """
         Builds and returns absolute URL from provided path.
         """
@@ -382,22 +391,29 @@ class App:
 
         try:
             host_addr, port = self.DJANGO_ADDR
+            
             if host_addr.startswith("0") and not self.uses_ipv6:
                 # Host 0.0.0.0 not allowed on windows
                 host_addr = "127.0.0.1"
-            url = (f"http://{host_addr}:{port}/"
-                   if not self.uses_ipv6 else f"http://[{host_addr}]:{port}/")
+            
+            if not self.uses_ipv6:
+                url = f"http://{host_addr}:{port}/"
+                
+            else:
+                url = f"http://[{host_addr}]:{port}/"
+            
             response = requests.get(
                 url=url,
                 headers={"Host": SETTINGS["DJANGO_SHARED_SECRET_DOMAIN"]},
                 timeout=1,
             )
-            # good_statuses = [200, 404, 500]
+            
+            # Good Statuses = [200, 404, 500]
             if not response:
-                # response status is not expected here
+                # Response status is not expected here.
                 return False
             return True
-        except:
+        except Exception:
             pass
         return False
 
@@ -452,11 +468,12 @@ class App:
         - `DEBUG = True`
         - `ducksight_reloader_process_alive = False`
         """
+        
         # Note: Production server should not be restarted at any point only start duck sight reloader on DEBUG
+        
         if SETTINGS["DEBUG"]:
-            self.ducksight_reloader_process = (
-                reloader.start_ducksight_reloader_process()
-            )  # start ducksight reloader
+             # Start ducksight reloader
+            self.ducksight_reloader_process = reloader.start_ducksight_reloader_process()
 
     def start_automations_dispatcher(self):
         """
@@ -482,15 +499,17 @@ class App:
         self.server.stop_server(log_to_console=log_to_console)
         
         if hasattr(self, "force_https_app"):
-            (self.force_https_app.stop()
-             if self.force_https_app_up and stop_force_https_server else None)
+            if self.force_https_app_up and stop_force_https_server:
+                self.force_https_app.stop()
 
         if hasattr(self, "_django_server_process"):
-            # django server has been started
+            # Django server has been started
             self._django_server_process.kill()
             
     def on_pre_stop(self):
-        """Event called before final app termination."""
+        """
+        Event called before final application termination.
+        """
         if SETTINGS['RUN_AUTOMATIONS']:
             self.automations_dispatcher.prepare_stop()
 
@@ -525,7 +544,9 @@ class App:
         # Essential threads
         essentials = [
             self.automations_dispatcher_thread,
-        ]  # Essential Duck app threads
+            self.django_server_thread,
+            self.force_https_thread, 
+        ]
 
         def stop_thread(thread):
             """
@@ -597,8 +618,7 @@ class App:
                 "DUCK_SERVER_NAME": "webserver",
                 "DUCK_SERVER_PORT": self.port,
                 "DUCK_SERVER_DOMAIN": self.domain,
-                "DUCK_SERVER_PROTOCOL":
-                    ("https" if self.enable_https else "http"),
+                "DUCK_SERVER_PROTOCOL": ("https" if self.enable_https else "http"),
                 "DUCK_DJANGO_ADDR": self.DJANGO_ADDR,
                 "DUCK_USES_IPV6": self.uses_ipv6,
                 "DUCK_SERVER_BUFFER": SETTINGS["SERVER_BUFFER"],
@@ -614,20 +634,23 @@ class App:
         - `SIGINT` (Ctrl-C), `SIGTERM` (Terminate): Quits the server/application.
         """
         try:
-            reloader.stop_ducksight_reloader_process(
-            )  # me thod 1 to stop ducksight reloader process if running
+            # First method to stop ducksight reloader process (if running)
+            reloader.stop_ducksight_reloader_process()
         except OSError:
-            # filelock errors when changing state using `processes.set_state`
+            # Filelock errors when changing state using `processes.set_state`
             pass
+        
         if hasattr(self, "ducksight_reloader_process"):
             try:
-                # Method 2 to stop ducksight reloader process if running
+                # Method 2 to stop ducksight reloader process (if still running)
                 self.ducksight_reloader_process.kill()
             except Exception:
                 pass
-        # check if Duck hasn't printed Duck server stopped meassage
+        
+        # Check if Duck hasn't printed `Duck server stopped` meassage
         if "--reload" in sys.argv:
             self.stop(log_to_console=False)
+        
         else:
             self.stop()
 
@@ -642,7 +665,12 @@ class App:
         """
         Event called when application has successfully been started.
         """
-        # record main process data
+        # Record main process data
+        log_file = None
+        
+        if SETTINGS["LOG_TO_FILE"]:
+            log_file = logger.get_current_log_file()
+        
         try:
             processes.set_process_data(
                 name="main",
@@ -650,8 +678,7 @@ class App:
                     "pid": self.process_id,
                     "start_time": time.time(),
                     "sys_argv": sys.argv,
-                    "log_file": (logger.get_current_log_file()
-                                 if SETTINGS["LOG_TO_FILE"] else None),
+                    "log_file": log_file,
                 },
                 clear_existing_data=True,
             )
@@ -666,24 +693,23 @@ class App:
         )
 
         if SETTINGS["AUTO_RELOAD"] and SETTINGS["DEBUG"]:
-            self.start_ducksight_reloader(
-            )  # start ducksight reloader if not running
-
+            # Start ducksight reloader (if not running)
+            self.start_ducksight_reloader()
             reloader_pid = None
 
             try:
-                reloader_pid = processes.get_process_data(
-                    "ducksight-reloader").get("pid")
+                reloader_pid = processes.get_process_data("ducksight-reloader").get("pid")
             except KeyError:
-                # failed ducksight reloader pid
+                # Dailed to retrieve DuckSight reloader pid
                 pass
+            
             logger.log(
                 f"DuckSight Reloader watching file changes [PID: {reloader_pid}]",
                 level=logger.DEBUG,
                 custom_color=logger.Fore.GREEN,
             )
-
-        # continue
+        
+        # Continue logging
         logger.log(
             "Waiting for incoming requests :-) \n",
             level=logger.DEBUG,
@@ -832,18 +858,20 @@ class App:
                 host, port = self.server.addr
 
                 if host.startswith("0") and not self.uses_ipv6:
-                    host = (
-                        "127.0.0.1"  # convert host to browser's recognizeable
-                    )
+                    host = "127.0.0.1"  # convert host to browser's recognizeable
+                    
                 else:
                     if self.uses_ipv6:
                         host = f"[{host}]"
+                
                 host_url += f"{host}:{port}"
+                
                 logger.log(
                     "Django restarted successfully!",
                     level=logger.DEBUG,
                     custom_color=logger.Fore.GREEN,
                 )
+                
                 logger.log(
                     f"Duck server restarted on {host_url}",
                     level=logger.DEBUG,

@@ -105,7 +105,7 @@ REQUEST_HANDLING_TASK_EXECUTOR_KWARGS: dict = {
 # Determines whether to use asynchronous request handling.
 # If set to False, the framework defaults to multithreaded request handling.
 # Example: ASYNC_HANDLING=True enables async handling; False uses threads.
-ASYNC_HANDLING: bool = True
+ASYNC_HANDLING: bool = False
 
 
 # Mode for connection
@@ -119,7 +119,7 @@ CONNECTION_MODE: str = "close"
 CONTENT_COMPRESSION: dict[str] = {
     "encoding": "gzip",
     "min_size": 1024,  # files more than 1KB
-    "max_size": 2048,  # files not more than 2KB
+    "max_size": 512 * 1024,  # files not more than 512KB
     "level": 5,
     "vary_on": True,  # Whether to include Vary header in response
     "mimetypes": [

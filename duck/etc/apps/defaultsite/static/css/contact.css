@@ -8,7 +8,7 @@
     max-width: 600px;
     margin: 2rem auto;
     width: 85%;
-    color: var(--text-color);
+    color: var(--text-color) !important;
     transition: background-color 0.3s, color 0.3s;
 }
 

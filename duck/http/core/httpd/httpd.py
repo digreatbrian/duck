@@ -41,7 +41,7 @@ from duck.utils.sockservers import xsocket
 from duck.settings import SETTINGS
 from duck.logging import logger
 from duck.meta import Meta
-
+import cProfile
 
 # Using raw bytes string for the regex
 KEEP_ALIVE_REGEX = rb"(?i)\bConnection\s*:\s*keep\s*-?\s*alive\b"
@@ -155,7 +155,7 @@ class BaseServer:
         host, port = self.addr
         self.sock.bind(self.addr)  # bind socket to (address, port)
         
-        # Server setup
+        # Prepare server setup
         duck_host = domain or Meta.get_metadata("DUCK_SERVER_HOST")
         duck_host = (list(duck_host)[0] if isinstance(duck_host, tuple) else
                      duck_host or "localhost")
@@ -187,6 +187,7 @@ class BaseServer:
                     self.accept_and_handle_ipv6()
                 else:
                     self.accept_and_handle_ipv4()
+                
                 # Pause before the next request.
                 time.sleep(self.poll) 
             
@@ -270,6 +271,7 @@ class BaseServer:
             scopeid (Optional): Scope id if IPv6.
         """
         sock.addr = addr
+        
         try:
             # Receive the full request (in bytes)
             data = self.receive_full_request(sock, self.request_timeout)
@@ -298,7 +300,7 @@ class BaseServer:
                 level=logger.WARNING,
             )
             logger.log(f"Client may be trying to connect with https on http server or vice-versa\n", level=logger.WARNING)
-            return
+            return None
             
         try:
             self.process_and_handle_request(sock, addr, request_data)
@@ -333,8 +335,7 @@ class BaseServer:
         while True:
             try:
                 # Receive client request with a timeout.
-                data = self.receive_full_request(
-                    sock, KEEP_ALIVE_TIMEOUT)
+                data = self.receive_full_request(sock, KEEP_ALIVE_TIMEOUT)
                 
                 if not data:
                     # Client sent nothing or closed connection
@@ -389,9 +390,11 @@ class BaseServer:
         response_handler.send_response(
             timeout_response,
             sock,
-            disable_logging=no_logs)
+            disable_logging=no_logs,
+         )
         
-        self.close_socket(sock)  # close client socket immediately
+        # Close client socket immediately
+        self.close_socket(sock)
         
     def process_and_handle_request(
         self,
@@ -404,11 +407,17 @@ class BaseServer:
 
         Args:
                 sock (socket.socket): Client Socket object
-                addr (Tuple): Tuple for ip and port from where this request is coming from, ie Client addr
+                addr (Tuple[str, int]): Tuple for ip and port from where this request is coming from, ie Client addr
                 request_data (RequestData): The request data object
         """
         from duck.settings.loaded import WSGI as handle_wsgi_request
-        handle_wsgi_request(self.application, sock, addr, request_data)
+        
+        handle_wsgi_request(
+            self.application,
+            sock,
+            addr,
+            request_data,
+        )
 
     def receive_data(
         self,

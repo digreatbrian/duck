@@ -145,7 +145,7 @@ class ResponseFinalizer:
         # check if content encoding is correctly set
         accept_encoding = request.get_header("accept-encoding", "").lower()
         supported_encodings = ["gzip", "deflate", "br", "identity"]
-
+        
         if SETTINGS["ENABLE_CONTENT_COMPRESSION"]:
             if (COMPRESSION_ENCODING in accept_encoding
                     and COMPRESSION_ENCODING in supported_encodings):
@@ -173,8 +173,9 @@ class ResponseFinalizer:
            )
 
         if CONTENT_COMPRESSION.get("vary_on", False):
-            # patch vary headers
+            # Patch vary headers
             existing_vary_headers = response.get_header("Vary") or ""
+            
             if existing_vary_headers:
                 existing_vary_headers += ", "
             

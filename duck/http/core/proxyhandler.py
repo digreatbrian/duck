@@ -21,40 +21,34 @@ from duck.http.response_payload import (
 from duck.meta import Meta
 from duck.utils.importer import x_import
 from duck.utils.headers import parse_headers_from_bytes
-
+from duck.utils.importer import import_module_once
 
 # Dynamically load the standard library module `http.cookies`
 # This is done to avoid using the duck.http module.
-cookies_module = importlib.import_module("http.cookies")
-
+cookies_module = import_module_once("http.cookies")
 
 # Use the module as usual
 SimpleCookie = cookies_module.SimpleCookie
-
 
 # Buffer size to use when receiving payload from the remote server.
 # Ensure that the buffer is large enough to hold most typical payloads
 # but not too large to cause inefficient memory usage.
 PAYLOAD_BUFFER_SIZE = SETTINGS["SERVER_BUFFER"]
 
-
 # Timeout to establish a connection with the remote proxy server (e.g., Django).
 # A value of 1 second is typically used for fast responses. 
 # Consider increasing if connection time to the server is high.
 CONNECT_TIMEOUT = SETTINGS["PROXY_CONNECT_TIMEOUT"]  # Timeout in seconds for establishing the connection
-
 
 # Timeout to wait for data from the remote proxy server.
 # This value should balance between waiting for data and not blocking indefinitely.
 # Increase if network latency or server load is high.
 READ_TIMEOUT = SETTINGS["PROXY_READ_TIMEOUT"]  # Timeout in seconds for reading data
 
-
 # The amount of data to stream at once from the remote proxy server.
 # 4096 bytes (4 KB) is a reasonable default chunk size for streaming,
 # but can be adjusted based on specific requirements.
 STREAM_CHUNK_SIZE = SETTINGS["PROXY_STREAM_CHUNK_SIZE"]  # Streaming chunk size in bytes
-
 
 # Import DjangoMiddleware for data sharing between Duck (presumably the server framework) and Django.
 # Ensure that this import is done conditionally or lazily if Django is optional.
@@ -158,7 +152,7 @@ class HttpProxyResponse(StreamingHttpResponse):
             Generate additional content by receiving data from the target socket.
 
             Yields:
-                bytes: The additional data received.
+             - bytes: The additional data received.
             """
             while True:
                 data = self.recv_more(self.chunk_size)
@@ -229,22 +223,24 @@ class HttpProxyHandler:
         Args:
             uses_ipv6 (bool): Boolean indicating whether to use IPv6. Defaults to False.
         """
-        assert isinstance(
-            target_host, str
-        ), "Target host should be a string representing hostname or host ip address."
-        assert isinstance(
-            target_port,
-            int), "Target port should be an integer for host port."
+        assert isinstance(target_host, str), (
+            "Target host should be a string representing hostname or host ip address."
+        )
+        
+        assert isinstance(target_port, int), (
+            "Target port should be an integer for host port."
+        )
+        
         self.uses_ipv6 = uses_ipv6
         self.target_host = target_host
         self.target_port = target_port
         self.uses_ssl = uses_ssl
 
     def get_response(
-            self,
-            request: HttpRequest,
-            client_socket: socket.socket,
-    ) -> HttpProxyResponse:
+        self,
+        request: HttpRequest,
+        client_socket: socket.socket,
+     ) -> HttpProxyResponse:
         """
         Handles the client connection and forwards the request to the target server and returns partial response.
         To receive more response, use method HttpPartialResponse.recvmore, this method may raise
@@ -328,8 +324,9 @@ class HttpProxyHandler:
         target_socket.sendall(raw_request)
 
     def fetch_response_payload(
-        self, target_socket: socket.socket
-    ) -> Tuple[SimpleHttpResponsePayload, bytes]:
+        self,
+        target_socket: socket.socket
+     ) -> Tuple[SimpleHttpResponsePayload, bytes]:
         """
         Returns received Response Payload and leftover data from target server.
 
@@ -344,6 +341,7 @@ class HttpProxyHandler:
         while True:
             part = target_socket.recv(PAYLOAD_BUFFER_SIZE)
             data += part
+            
             if b"\r\n\r\n" in data or not data:
                 # content separator
                 break

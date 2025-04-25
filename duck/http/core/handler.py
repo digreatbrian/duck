@@ -398,7 +398,7 @@ class ResponseHandler:
                 request=request,
                 debug_message=debug_message,
             )
-    
+            
     def _send_response(
         self,
         response: Union[BaseResponse, HttpResponse],

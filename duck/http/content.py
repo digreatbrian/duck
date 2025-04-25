@@ -7,19 +7,30 @@ import zlib
 from typing import Tuple
 
 from duck.exceptions.all import ContentError
-from duck.http.mimes import guess_data_mimetype, guess_file_mimetype
+from duck.http.mimes import (
+    guess_data_mimetype,
+    guess_file_mimetype,
+)
 from duck.settings import SETTINGS
 
 CONTENT_COMPRESSION = SETTINGS["CONTENT_COMPRESSION"]
 
-COMPRESSION_ENCODING = CONTENT_COMPRESSION.get("encoding",
-                                               "identity")  # defaults to gzip
+COMPRESSION_ENCODING = CONTENT_COMPRESSION.get(
+    "encoding", "identity",
+)  # defaults to gzip
+    
 COMPRESSION_MIN_SIZE = CONTENT_COMPRESSION.get(
-    "min_size", 1024)  # defaults to files more than 1KB
+    "min_size", 1024,
+)  # defaults to files more than 1KB
+
 COMPRESSION_MAX_SIZE = CONTENT_COMPRESSION.get(
-    "max_size", 2048)  # defaults to files not more than 2KB
+    "max_size", 512 * 1024,
+)  # defaults to files not more than 512KB
+    
 COMPRESSION_LEVEL = CONTENT_COMPRESSION.get(
-    "level", 5)  # defaults to 5, optimum in most cases
+    "level", 5,
+)  # defaults to 5, optimum in most cases
+
 COMPRESSION_MIMETYPES = CONTENT_COMPRESSION.get(
     "mimetypes",
     [
@@ -83,7 +94,7 @@ class Content:
         self.set_content(data or b'', filepath, content_type)
         self.encoding = encoding
 
-    def _compress(self, data, encoding: str, **kwargs) -> Tuple[bytes, bool]:
+    def _compress(self, data: bytes, encoding: str, **kwargs) -> Tuple[bytes, bool]:
         """
         Compress data for the provided encoding.
 
@@ -96,31 +107,34 @@ class Content:
             (data, success) (Tuple[bytes, bool]): The data and bool whether compression was successful.
 
         Conditions:
-            - `enable_content_compression` = True.
-            - `size` <= compression_max_size.
-            - `content_type` set.
-            - `encoding` is recognized.
-
+         - `enable_content_compression` = True.
+         - `size` <= compression_max_size.
+         - `content_type` set.
+         - `encoding` is recognized.
+         - `data` is in bytes.
         """
         success = False
+        
+        mimetype_supported = any([
+            self.content_type.startswith(i)
+            for i in self.compression_mimetypes
+        ])
+        
         if (data and len(data) <= self.compression_max_size
-                and isinstance(self.content_type, str) and any([
-                    self.content_type.startswith(i)
-                    for i in self.compression_mimetypes
-                ])):
+                and isinstance(data, bytes) and mimetype_supported):
+            
             if not encoding:
                 raise ContentError(
                     "Please set encoding first to compress data")
 
             if encoding == "gzip":
-                data = gzip.compress(data,
-                                     compresslevel=self.compression_level)
+                data = gzip.compress(data, compresslevel=self.compression_level)
                 success = True
+            
             elif encoding == "deflate":
-                data = zlib.compress(data,
-                                     level=self.compression_level,
-                                     **kwargs)
+                data = zlib.compress(data, level=self.compression_level, **kwargs)
                 success = True
+            
             elif encoding == "br":
                 try:
                     import brotli
@@ -128,15 +142,14 @@ class Content:
                     raise ContentError(
                         "Brotli compression requires brotli library, please install it first using `pip install brotli`"
                     ) from e
-                data = brotli.compress(data,
-                                       quality=self.compression_level,
-                                       **kwargs)
+                data = brotli.compress(data, quality=self.compression_level, **kwargs)
                 success = True
+            
             elif encoding == "identity":
                 success = True
         return data, success
 
-    def _decompress(self, data) -> Tuple[bytes, bool]:
+    def _decompress(self, data: bytes) -> Tuple[bytes, bool]:
         """
         Decompress data for the provided encoding.
 
@@ -144,16 +157,21 @@ class Content:
             (data, success) (Tuple[bytes, bool]): The data and bool whether decompression was successful.
 
         Conditions:
-            - `enable_content_compression` = True.
-            - `content_type` set.
-            - `encoding` is recognized.
-
+        - `enable_content_compression` = True.
+        - `content_type` set.
+        - `encoding` is recognized.
+        - `data` is in bytes.
         """
         success = False
-        if (data and isinstance(self.content_type, str) and any([
-                self.content_type.startswith(i)
-                for i in self.compression_mimetypes
-        ])):
+        
+        mimetype_supported = any([
+            self.content_type.startswith(i)
+            for i in self.compression_mimetypes
+        ])
+        
+        if (data and len(data) <= self.compression_max_size
+                and isinstance(data, bytes) and mimetype_supported):
+            
             if not self.encoding:
                 raise ContentError(
                     "Please set encoding first to decompress data")
@@ -161,9 +179,11 @@ class Content:
             if self.encoding == "gzip":
                 data = gzip.decompress(data)
                 success = True
+            
             elif str(self.encoding).lower() == "deflate":
                 data = zlib.decompress(data)
                 success = True
+            
             elif self.encoding == "br":
                 try:
                     import brotli
@@ -173,6 +193,7 @@ class Content:
                     ) from e
                 data = brotli.decompress(data)
                 success = True
+            
             elif self.encoding == "identity":
                 success = True
         return data, success

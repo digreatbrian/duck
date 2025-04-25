@@ -981,7 +981,8 @@ class Request:
             self.error = e
     
     def parse_raw_request(self, raw_request: bytes):
-        """Parse raw request in bytes. If error occurs during parsing, it will be recorded.
+        """
+        Parse raw request in bytes. If error occurs during parsing, it will be recorded.
     
         This method attempts to parse a raw HTTP request in byte format. If any error
         occurs during the parsing process, the error is captured and stored in the `error` attribute.
@@ -990,7 +991,7 @@ class Request:
             raw_request (bytes): The raw HTTP request in byte format.
     
         Sets:
-            self.error (Optional[Exception]): If an error occurs during parsing, it is stored here.
+        - self.error (Optional[Exception]): If an error occurs during parsing, it is stored here.
         """
         assert isinstance(raw_request, bytes), f"Raw request should be in bytes not {type(raw_request)}"
         
@@ -1043,7 +1044,7 @@ class Request:
                 self.http_version = http_version
                 
             else:
-                raise RequestSyntaxError("Bad topheader or payload")
+                raise RequestSyntaxError("Bad topheader section")
         
         if headers:
             for header in headers:
@@ -1117,14 +1118,14 @@ class Request:
         if len(topheader.split(" ", max_splits)) == 3:
             self.method, self.fullpath, self.http_version = topheader.split(" ")
         else:
-             raise RequestSyntaxError("Bad topheader or payload")
+             raise RequestSyntaxError("Bad topheader section")
         
         # Update Headers
         self.headers.update(headers)
         
         # Validate HTTP version
         if self.http_version.upper() not in self.SUPPORTED_HTTP_VERSIONS:
-            raise RequestUnsupportedVersionError("Http version not supported")
+            raise RequestUnsupportedVersionError("HTTP version not supported")
     
         # Parse Content
         self._parse_content(content)
@@ -1209,7 +1210,9 @@ class Request:
         setattr(self, self.method.upper(), QueryDict(combined_query))
         
     def _set_auth_headers(self):
-        """Sets 'Authorization' and 'Proxy-Authorization' headers if not already present"""
+        """
+        Sets `Authorization` and `Proxy-Authorization` headers if not already present.
+        """
         auth = self.AUTH.get("auth")
         proxy_auth = self.AUTH.get("proxy_auth")
     
@@ -1220,11 +1223,15 @@ class Request:
             self.set_header("Proxy-Authorization", proxy_auth)
     
     def _build_request_line(self) -> bytes:
-        """Construct the request line (method, path, HTTP version)"""
+        """
+        Construct the request line (method, path, HTTP version)
+        """
         return f"{self.method.upper()} {self.fullpath} {self.http_version}\r\n".encode("utf-8")
     
     def _build_headers(self) -> bytes:
-        """Construct headers for the request"""
+        """
+        Construct headers for the request
+        """
         headers = b""
         for header, value in self.headers.items():
             headers += f"{header.title()}: {value.strip()}\r\n".encode("utf-8")
@@ -1242,20 +1249,5 @@ class Request:
                 )[:]
 
 
-class HttpProxyRequest(Request):
-    """
-    This is the basic HttpProxyRequest.
-
-    This kind of request may contain 2 http requests in single http request.
-
-    Example:
-    
-    ```py
-    CONNECT /192.xxx.xxx.xxx HTTP/1.1\r\n\r\nGET / HTTP/2.1\r\n\r\nHost: xxx.com\r\nConnection: Keep-Alive
-    ```
-    
-    Not Implemented yet!
-    """
-
-
-HttpRequest = Request  # alias for Request
+# Sets http request
+HttpRequest = Request
