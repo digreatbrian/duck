@@ -320,7 +320,7 @@ TEMPLATE_DIRS: list[str | pathlib.Path] = [pathlib.Path("templates/").resolve()]
 # Set to '' to disable custom tags or filters
 # Example:
 # # templatetags.py
-# from duck.template.templatetags import TemplateTag, TemplateFilter
+# from duck.template.templatetags import TemplateTag, TemplateFilter, BlockTemplateTag
 #
 # def mytag(arg1):
 # 	# do some stuff here

@@ -262,6 +262,6 @@ CertbotAutoSSL = BaseCertbotAutoSSL(
     description="Automatically creates or renews Let's Encrypt SSL certificates using Certbot",
     start_time="immediate",
     schedules=-1,
-    interval=12 * 3600  # every 12 hours
+    interval= 30 * 24 * 3600  # every 30 days
 )
 
