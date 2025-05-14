@@ -5,8 +5,8 @@ import socket
 
 from typing import Dict, Optional, Tuple
 
-from duck.etc.ssl_defaults import SSL_DEFAULTS
 from duck.settings import SETTINGS
+from duck.etc.ssl_defaults import SSL_DEFAULTS
 from duck.exceptions.all import SettingsError
 from duck.http.core.httpd.httpd import BaseMicroServer, BaseServer
 from duck.http.core.httpd.http2 import BaseHttp2Server
@@ -17,11 +17,9 @@ from duck.utils.sockservers import (
     xsocket,
 )
 
-
 SUPPORT_HTTP_2 = SETTINGS["SUPPORT_HTTP_2"]
 
 BaseServer = BaseHttp2Server if SUPPORT_HTTP_2 else BaseServer
-
 
 class BaseHttpServer(BaseServer):
     """
@@ -39,7 +37,7 @@ class BaseHttpServer(BaseServer):
         application=None,
         uses_ipv6: bool = False,
         **kwargs,
-    ) -> None:
+    ):
         """
         Initialise the server
 
@@ -59,30 +57,19 @@ class BaseHttpServer(BaseServer):
         self.application = application
         self.uses_ipv6 = uses_ipv6
 
-        assert isinstance(
-            addr, tuple), "Argument addr should be an instance of tuple"
+        assert isinstance(addr, tuple), "Argument addr should be an instance of tuple"
         assert len(addr) == 2, "Argument addr should be a tuple of length 2"
-        assert isinstance(addr[0],
-                          str), "Argument addr[0] should be an instance of str"
-        assert isinstance(addr[1],
-                          int), "Argument addr[1] should be an instance of int"
-        assert enable_ssl in (
-            True,
-            False,
-        ), "Argument enable_ssl should be a boolean"
-        assert isinstance(
-            self.ssl_params, dict
-        ), f"Argument ssl_params should be an instance of dictionary, not {type(ssl_params)}"
-        assert isinstance(
-            application, (App, MicroApp)
-        ), f"Argument application should be an instance of App or MicroApp, not {type(application)}"
-
+        assert isinstance(addr[0], str), "Argument addr[0] should be an instance of str"
+        assert isinstance(addr[1], int), "Argument addr[1] should be an instance of int"
+        assert isinstance(self.ssl_params, dict), f"Argument ssl_params should be an instance of dictionary, not {type(ssl_params)}"
+        assert isinstance(application, (App, MicroApp)), f"Argument application should be an instance of App or MicroApp, not {type(application)}"
+        
         if not isinstance(socket_obj, (socket.socket, xsocket)):
             raise TypeError(
                 f"Argument socket_obj should be an instance socket.socket, not {type(socket_obj)}"
             )
 
-        # creating socket
+        # Creating socket object
         if enable_ssl:
             try:
                 alpn_protocols = ["http/1.1", "http/1.0"]
@@ -94,7 +81,8 @@ class BaseHttpServer(BaseServer):
                     socket_obj=socket_obj,
                     server_side=True,
                     alpn_protocols=alpn_protocols,
-                    **self.ssl_params)
+                    **self.ssl_params
+                 )
                     
             except Exception:
                 raise SettingsError(
@@ -120,7 +108,7 @@ class HttpServer(BaseHttpServer):
         application,
         uses_ipv6: bool = False,
         **kwargs,
-    ) -> None:
+    ):
         super().__init__(
             addr=addr,
             socket_obj=Socket(family=socket.AF_INET6 if uses_ipv6 else socket.AF_INET),
@@ -140,8 +128,9 @@ class HttpsServer(BaseHttpServer):
         application,
         uses_ipv6: bool = False,
         **kwargs,
-    ) -> None:
+    ):
         default_ssl_params = SSL_DEFAULTS
+        
         super().__init__(
             addr=addr,
             socket_obj=Socket(family=socket.AF_INET6 if uses_ipv6 else socket.AF_INET),

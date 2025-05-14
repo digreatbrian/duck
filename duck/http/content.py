@@ -1,9 +1,9 @@
 """
 Module to represent a request/response Content class.
 """
-
 import gzip
 import zlib
+import fnmatch
 from typing import Tuple
 
 from duck.exceptions.all import ContentError
@@ -12,6 +12,7 @@ from duck.http.mimes import (
     guess_file_mimetype,
 )
 from duck.settings import SETTINGS
+
 
 CONTENT_COMPRESSION = SETTINGS["CONTENT_COMPRESSION"]
 
@@ -31,11 +32,14 @@ COMPRESSION_LEVEL = CONTENT_COMPRESSION.get(
     "level", 5,
 )  # defaults to 5, optimum in most cases
 
+COMPRESS_STREAMING_RESPONSES = CONTENT_COMPRESSION.get(
+    "compress_streaming_responses", True,
+)  # defaults to True
+
 COMPRESSION_MIMETYPES = CONTENT_COMPRESSION.get(
     "mimetypes",
     [
-        "text/html",
-        "text/css",
+        "text/*",
         "application/javascript",
         "application/json",
         "application/xml",
@@ -115,10 +119,7 @@ class Content:
         """
         success = False
         
-        mimetype_supported = any([
-            self.content_type.startswith(i)
-            for i in self.compression_mimetypes
-        ])
+        mimetype_supported = any([fnmatch.fnmatch(self.content_type, pattern) for pattern in self.compression_mimetypes])
         
         if (data and len(data) <= self.compression_max_size
                 and isinstance(data, bytes) and mimetype_supported):
@@ -164,10 +165,7 @@ class Content:
         """
         success = False
         
-        mimetype_supported = any([
-            self.content_type.startswith(i)
-            for i in self.compression_mimetypes
-        ])
+        mimetype_supported = any([fnmatch.fnmatch(self.content_type, pattern) for pattern in self.compression_mimetypes])
         
         if (data and len(data) <= self.compression_max_size
                 and isinstance(data, bytes) and mimetype_supported):

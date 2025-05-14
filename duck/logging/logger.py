@@ -15,11 +15,12 @@ import traceback
 from typing import Callable
 from colorama import Fore, Style
 
-import duck.processes as processes
+from duck import processes
+from duck.settings import SETTINGS
 from duck.utils.importer import import_module_once
 from duck.utils.path import paths_are_same
 from duck.ansi import remove_ansi_escape_codes
-from duck.settings import SETTINGS
+
 
 # Info Logging Level
 INFO = logging.INFO
@@ -76,8 +77,8 @@ def get_current_log_file() -> str:
             # failed to retrieve last log file used by the main app.
             pass
 
-    log_file_format = LOG_FILE_FORMAT
     logging_dir = LOGGING_DIR
+    log_file_format = LOG_FILE_FORMAT
     current_log_file = os.environ.get("DUCK_CURRENT_LOG_FILE")
     
     if not os.path.isdir(logging_dir):
@@ -111,8 +112,7 @@ def get_current_log_file_fd():
     """
     Get the opened file descriptor for the current log file in bytes append mode.
     """
-    filepath = (get_current_log_file()
-                )  # refetches the current log file, maybe it has changed.
+    filepath = get_current_log_file()  # refetches the current log file, maybe it has changed.
 
     if hasattr(globals, "current_log_file_fd"):
         file_fd = globals.current_log_file_fd
@@ -151,8 +151,8 @@ def redirect_console_output():
         Args:
             data (str): The data to be written.
         """
-        cleaned_data = remove_ansi_escape_codes(
-            [data])[0]  # remove ansi escape codes if present
+        cleaned_data = remove_ansi_escape_codes([data])[0]  # remove ansi escape codes if present
+        
         with write_lock:
             file_fd.write(bytes(cleaned_data, "utf-8"))
             file_fd.flush()  # Ensure data is written to the file immediately
@@ -165,8 +165,8 @@ def redirect_console_output():
         Args:
             data (str): The data to be written.
         """
-        cleaned_data = remove_ansi_escape_codes(
-            [data])[0]  # remove ansi escape codes if present
+        cleaned_data = remove_ansi_escape_codes([data])[0]  # remove ansi escape codes if present
+        
         with write_lock:
             file_fd.write(bytes(cleaned_data, "utf-8"))
             file_fd.flush()  # Ensure data is written to the file immediately
@@ -182,6 +182,7 @@ def get_latest_log_file():
     Returns the latest created file in LOGGING_DIR.
     """
     logging_dir = LOGGING_DIR
+    
     if os.path.isdir(logging_dir):
         scan = {i.stat().st_ctime: i for i in os.scandir(logging_dir)}
         return scan.get(sorted(scan)[-1]) if scan else None
@@ -292,18 +293,20 @@ def log_raw(
 
     if SILENT:
         if LOG_TO_FILE:
-            cleaned_data = remove_ansi_escape_codes(
-                [msg])[0]  # remove ansi escape codes if present
+            cleaned_data = remove_ansi_escape_codes([msg])[0]  # remove ansi escape codes if present
             log_to_file(cleaned_data, end=end)
         return
 
     if log_level == ERROR or log_level == CRITICAL:
         std = sys.stderr
         color = Fore.RED
+    
     elif log_level == WARNING:
         color = Fore.YELLOW
+    
     elif log_level == INFO:
         color = Style.RESET_ALL  # default
+    
     elif log_level == DEBUG:
         color = Fore.CYAN
 
@@ -314,6 +317,7 @@ def log_raw(
         colored_msg = f"{color}{msg}{Style.RESET_ALL}"
         with print_lock:
             print(colored_msg, file=std, end=end)
+    
     else:
         with print_lock:
             print(msg, file=std, end=end)
@@ -353,10 +357,13 @@ def log(
     if log_level == ERROR or log_level == CRITICAL:
         std = sys.stderr
         color = Fore.RED
+    
     elif log_level == WARNING:
         color = Fore.YELLOW
+    
     elif log_level == INFO:
         color = Style.RESET_ALL  # default
+    
     elif log_level == DEBUG:
         color = Fore.CYAN
 
@@ -367,6 +374,7 @@ def log(
         colored_msg = f"{color}{formatted_msg}{Style.RESET_ALL}"
         with print_lock:
             print(colored_msg, file=std, end=end)
+    
     else:
         with print_lock:
             print(msg, file=std, end=end)

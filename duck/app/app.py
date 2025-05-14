@@ -611,7 +611,7 @@ class App:
     def record_metadata(self):
         """
         Sets or updates the metadata for the app, these changes will
-        be globally available to meta.Meta c
+        be globally available in `duck.meta.Meta` class.
         """
         # security reasons not mentioning real servername but 'webserver'
         data = {

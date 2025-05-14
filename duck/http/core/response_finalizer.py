@@ -14,7 +14,7 @@ from typing import (
     Optional,
     Callable,
 )
-
+from duck.http.content import COMPRESS_STREAMING_RESPONSES
 from duck.http.request import HttpRequest
 from duck.http.response import (
     HttpResponse,
@@ -62,7 +62,11 @@ class ResponseFinalizer:
         security = SECURITY_HEADERS or {}
 
         for h, v in {**extra, **cors, **security}.items():
-            response.headers.setdefault(h, v)
+            if h.lower() != 'server':
+                response.headers.setdefault(h, v)
+            else:
+                # Force set Server header
+                response.headers[h] = v
         
         content_security_policy = response.get_header("content-security-policy")
         
@@ -128,48 +132,9 @@ class ResponseFinalizer:
             CONTENT_COMPRESSION,
             COMPRESSION_MIMETYPES,
         )
-
-        if not request or isinstance(response, StreamingHttpResponse):
-            # We cannot compress content if we don't know whether the client supports it (via the 'Accept-Encoding' header).
-            # Additionally, compression is not feasible for streaming HTTP responses because they are sent in chunks,
-            # which makes it impossible to apply compression effectively beforehand.
-            # Thus, we skip compression for streaming responses or when the client cannot accept compressed content.
-            return
-
-        if response.content_obj.correct_encoding() != "identity":
-            # no need to compress content, might already be compressed
-            return
-
-        # check if content encoding is correctly set
-        accept_encoding = request.get_header("accept-encoding", "").lower()
+        accept_encoding = request.get_header("accept-encoding", "").lower() if request else ""
         supported_encodings = ["gzip", "deflate", "br", "identity"]
         
-        if SETTINGS["ENABLE_CONTENT_COMPRESSION"]:
-            if (COMPRESSION_ENCODING in accept_encoding
-                    and COMPRESSION_ENCODING in supported_encodings):
-                response.content_obj.compression_level = COMPRESSION_LEVEL
-                response.content_obj.compression_min_size = (
-                    COMPRESSION_MIN_SIZE)
-                response.content_obj.compression_max_size = (
-                    COMPRESSION_MAX_SIZE)
-                response.content_obj.compression_mimetypes = (
-                    COMPRESSION_MIMETYPES)
-                compressed = response.content_obj.compress(
-                    COMPRESSION_ENCODING)
-
-                if compressed:
-                    response.set_header("Content-Encoding", response.content_obj.encoding)
-                else:
-                    response.set_header(
-                        "Content-Encoding",
-                        response.content_obj.correct_encoding(),
-                    )
-        else:
-            response.set_header(
-                "Content-Encoding",
-                response.content_obj.correct_encoding(),
-           )
-
         if CONTENT_COMPRESSION.get("vary_on", False):
             # Patch vary headers
             existing_vary_headers = response.get_header("Vary") or ""
@@ -181,18 +146,78 @@ class ResponseFinalizer:
                 "Vary",
                 existing_vary_headers + "Accept-Encoding",
             )
+            
+        if (not request or not SETTINGS["ENABLE_CONTENT_COMPRESSION"]
+            or COMPRESSION_ENCODING not in accept_encoding
+            or COMPRESSION_ENCODING not in supported_encodings
+            or response.content_obj.correct_encoding() != "identity"
+            ):
+            # No need to compress content if correct_encoding is not identity (might already be compressed)
+            response.set_header(
+                "Content-Encoding",
+                response.content_obj.correct_encoding(),
+            )
+            return
 
+        if not isinstance(response, StreamingHttpResponse):
+            response.content_obj.compression_level = COMPRESSION_LEVEL
+            response.content_obj.compression_min_size = COMPRESSION_MIN_SIZE
+            response.content_obj.compression_max_size = COMPRESSION_MAX_SIZE
+            response.content_obj.compression_mimetypes = COMPRESSION_MIMETYPES
+            compressed = response.content_obj.compress(COMPRESSION_ENCODING)
+            
+            if compressed:
+                response.set_header("Content-Encoding", response.content_obj.encoding)
+        else:
+            # This is a streaming http response
+            
+            if not COMPRESS_STREAMING_RESPONSES:
+                # Compressing streaming responses disallowed
+                return
+                
+            response.super_iter_content = response.iter_content
+            
+            def iter_and_compress():
+                """
+                Compress content as we iterate torwards it.
+                """
+                for chunk in response.super_iter_content():
+                    response.content_obj.set_content(chunk, content_type="text/plain") # use fake content type to force compression
+                    response.content_obj.compression_level = COMPRESSION_LEVEL
+                    response.content_obj.compression_min_size = 0
+                    response.content_obj.compression_max_size = len(chunk) + 1
+                    response.content_obj.compression_mimetypes = COMPRESSION_MIMETYPES
+                    response.content_obj.compress(COMPRESSION_ENCODING)
+                    
+                    yield response.content_obj.data
+            
+            if response.get_header("content-encoding", "identity") == "identity":
+                # Assume compression will not fail, this is is a bit dangerous if compression fails as response might include 
+                # unmatching invalid content content encoding
+                response.set_header("Content-Encoding", COMPRESSION_ENCODING)
+                response.iter_content = iter_and_compress
+             
     @log_failsafe
     def do_set_content_headers(self, response, request) -> None:
         """
         Sets the appropriate content headers like Content encoding, type, etc.
-        """ 
+        """
+        from duck.http.content import COMPRESSION_ENCODING
+            
+        accept_encoding = request.get_header("accept-encoding", "").lower() if request else ""
+        supported_encodings = ["gzip", "deflate", "br", "identity"]
+        
         if not response.get_header("content-length") and not isinstance(response, StreamingHttpResponse):
             # Don't set content length header if set or if it is a streaming http response.
             response.set_header("Content-Length", response.content_length)
         
         if not response.get_header("content-length") and isinstance(response, FileResponse):
-            response.set_header("Content-Length", response.file_size)
+            # Only set content length if content will not be compressed as it is being sent
+            if not (SETTINGS["ENABLE_CONTENT_COMPRESSION"]
+                and COMPRESSION_ENCODING in accept_encoding
+                and COMPRESSION_ENCODING in supported_encodings
+                ):
+                response.set_header("Content-Length", response.file_size)
             
         if not response.get_header("content-type"):
             content_type = response.content_type

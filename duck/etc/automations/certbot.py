@@ -3,8 +3,8 @@ Automation to obtain or renew an SSL certificate using Certbot.
 This ensures your Duck server maintains a valid HTTPS connection
 by automatically handling certificate issuance and renewal.
 """
-import os
 import re
+import os
 import time
 import subprocess
 import configparser
@@ -15,10 +15,7 @@ from duck.automation import Automation
 from duck.settings import SETTINGS
 from duck.logging import logger
 from duck.utils.path import joinpaths
-from duck.utils.filelock import (
-    unlock_file,
-    open_and_lock,
-)
+from duck.utils.filelock import (unlock_file, open_and_lock)
 
 
 # Fetch SSL certificate and key paths from the settings.
