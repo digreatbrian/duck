@@ -235,7 +235,7 @@ class BaseResponse:
     def title_headers(self) -> dict:
         """
         Response headers in title format rather than small cased
-        e.g. {'Connection': 'close'} rather than {'connection': 'close'}
+        e.g. `{'Connection': 'close'}` rather than `{'connection': 'close'}`.
         """
         return self.payload_obj.headers.titled_headers()
 
@@ -855,8 +855,6 @@ class FileResponse(StreamingRangeHttpResponse):
             )
             ```
         """
-        self.file_size = os.path.getsize(filepath)
-        
         super().__init__(
             stream=StreamingHttpResponse.file_io_stream(filepath),
             status_code=status_code,
@@ -866,6 +864,8 @@ class FileResponse(StreamingRangeHttpResponse):
             start_pos=start_pos,
             end_pos=end_pos,
         )
+        
+        self.file_size = self.stream._file_size
         
         if not content_type:  # content type was not provided
             self.content_obj.filepath = filepath  # sets the content filepath

@@ -22,6 +22,9 @@ from duck.http.core.handler import (
     ResponseHandler,
     log_response,
 )
+from duck.settings import SETTINGS
+from duck.logging import logger
+from duck.meta import Meta
 from duck.http.core.processor import RequestProcessor
 from duck.http.request import HttpRequest
 from duck.http.request_data import (
@@ -38,10 +41,7 @@ from duck.utils.dateutils import (
 )
 from duck.utils.ssl import is_ssl_data
 from duck.utils.sockservers import xsocket
-from duck.settings import SETTINGS
-from duck.logging import logger
-from duck.meta import Meta
-import cProfile
+
 
 # Using raw bytes string for the regex
 KEEP_ALIVE_REGEX = rb"(?i)\bConnection\s*:\s*keep\s*-?\s*alive\b"
@@ -157,11 +157,10 @@ class BaseServer:
         
         # Prepare server setup
         duck_host = domain or Meta.get_metadata("DUCK_SERVER_HOST")
-        duck_host = (list(duck_host)[0] if isinstance(duck_host, tuple) else
-                     duck_host or "localhost")
+        duck_host = (list(duck_host)[0] if isinstance(duck_host, tuple) else duck_host or "localhost")
         server_url = "https" if self.enable_ssl else "http"
         server_url += f"://{duck_host}:{port}"
-
+        
         if SETTINGS["DEBUG"]:
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
@@ -179,7 +178,7 @@ class BaseServer:
         self.sock.listen(SETTINGS["REQUESTS_BACKLOG"]) # 200 by default
         self.running = True
         
-        # listen and accept incoming connections
+        # Listen and accept incoming connections
         while self.running:
             try:
                 # Accept incoming connections
@@ -193,7 +192,7 @@ class BaseServer:
             
             except ssl.SSLError as e:
                 # Wrong protocol used, e.g. https on http or vice versa
-                if not no_logs and (SETTINGS["VERBOSE_LOGGING"] or SETTINGS["DEBUG"]):
+                if not no_logs and SETTINGS["VERBOSE_LOGGING"] and SETTINGS["DEBUG"]:
                     if "HTTP_REQUEST" in str(e):
                         logger.log(f"Client may be trying to connect with https on http server or vice-versa: {e}", level=logger.WARNING)
             
@@ -221,8 +220,8 @@ class BaseServer:
             logger.log(
                 f"{bold_start}Duck server stopped!{bold_end}",
                 level=logger.INFO,
-                custom_color=logger.Fore.MAGENTA,)
-            
+                custom_color=logger.Fore.MAGENTA,
+            )
             # redo socket close to ensure server stopped.
             self.running = False
             self.close_socket(self.sock)
@@ -266,7 +265,7 @@ class BaseServer:
 
         Args:
             sock (socket.socket): The client socket object.
-            addr (Tuple[str, int]): Client ip and port.
+            addr (Tuple[str, int]): Client ip address and port.
             flowinfo (Optional): Flow info if IPv6.
             scopeid (Optional): Scope id if IPv6.
         """
@@ -295,11 +294,12 @@ class BaseServer:
         data = request_data.data if isinstance(request_data, RawRequestData) else request_data.content
         
         if is_ssl_data(data):
-            logger.log(
-                "Data should be decoded at this point but it seems like its ssl data",
-                level=logger.WARNING,
-            )
-            logger.log(f"Client may be trying to connect with https on http server or vice-versa\n", level=logger.WARNING)
+            if SETTINGS['DEBUG']:
+                logger.log(
+                    "Data should be decoded at this point but it seems like it's ssl data",
+                    level=logger.WARNING,
+                )
+                logger.log(f"Client may be trying to connect with https on http server or vice-versa\n", level=logger.WARNING)
             return None
             
         try:
@@ -422,7 +422,7 @@ class BaseServer:
     def receive_data(
         self,
         sock: socket.socket,
-        timeout: Union[int, float] = 5,
+        timeout: Union[int, float] = 1,
     ) -> bytes:
         """
         Receives data from the socket but raises a TimeoutError if no data is received within the specified time.
@@ -459,7 +459,7 @@ class BaseServer:
     def receive_full_request(
         self,
         sock: socket.socket,
-        timeout: Union[int, float] = 5,
+        timeout: Union[int, float] = 1,
         stream_timeout: Union[int, float] = .1,
      ) -> bytes:
         """
@@ -517,7 +517,8 @@ class BaseServer:
         return data
     
     def is_socket_closed(self, sock: socket.socket, timeout: float=.1) -> bool:
-        """Check if a client socket has closed the connection.
+        """
+        Checks if a client socket has closed the connection.
         
         Note:
             - This may hang if the connected endpoint doesn't send anything. Utilize socket.settimeout to counter this.

@@ -123,8 +123,7 @@ CONTENT_COMPRESSION: dict[str] = {
     "level": 5,
     "vary_on": True,  # Whether to include Vary header in response
     "mimetypes": [
-        "text/html",
-        "text/css",
+        "text/*",
         "application/javascript",
         "application/json",
         "application/xml",

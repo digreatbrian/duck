@@ -192,10 +192,10 @@ CONTENT_COMPRESSION: dict[str] = {
     "min_size": 1024,  # files more than 1KB
     "max_size": 512 * 1024,  # files not more than 512KB
     "level": 5,
+    "compress_streaming_responses": True, # Whether to compress streaming http responses.
     "vary_on": True,  # Whether to include Vary header in response
     "mimetypes": [
-        "text/html",
-        "text/css",
+        "text/*",
         "application/javascript",
         "application/json",
         "application/xml",
@@ -296,7 +296,6 @@ DJANGO_SIDE_URLS: list[str] = [
     "/admin.*",
     "/x-static.*"
 ]
-
 
 
 # Whether Django registered urls must skip Duck middleware checks

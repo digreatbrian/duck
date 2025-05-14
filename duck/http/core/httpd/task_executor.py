@@ -6,9 +6,16 @@ import asyncio
 import threading
 import concurrent.futures
 
-from typing import Optional, Union, Callable, Coroutine, Any
+from typing import (
+    Optional,
+    Union,
+    Callable,
+    Coroutine,
+    Any,
+)
 from collections import deque
 from duck.utils.importer import x_import
+from duck.settings import SETTINGS
 
 
 def trio_execute(task, event_loop):
@@ -49,7 +56,7 @@ class RequestHandlingExecutor:
         self,
         async_executor: Optional[Union[str, Callable]] = None,
         thread_executor: Optional[Union[str, Callable]] = None,
-        max_workers: int = 50,  # Limits number of concurrent threads
+        max_workers: int = 2_000,  # Limits number of concurrent threads
     ):
         """
         Initialize RequestHandlingExecutor.
@@ -64,21 +71,22 @@ class RequestHandlingExecutor:
 
         assert callable(self.async_executor) or self.async_executor is None, "Async executor must be callable or None."
         assert callable(self.thread_executor) or self.thread_executor is None, "Thread executor must be callable or None."
-
-        # Start the asyncio event loop in a background thread
-        self._asyncio_loop = asyncio.new_event_loop()
-        self._loop_thread = threading.Thread(target=self._run_asyncio_loop, daemon=True)
-        self._loop_thread.start()
-
+        
         # Thread pool for CPU-bound tasks
         self._thread_pool = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
-
-        # Deque for handling async tasks
-        self._task_queue = deque()
-        self._task_queue_lock = threading.Lock()
-
-        # Start task consumer
-        self._asyncio_loop.call_soon_threadsafe(asyncio.create_task, self._task_consumer())
+        
+        if SETTINGS['ASYNC_HANDLING']:
+            # Start the asyncio event loop in a background thread
+            self._asyncio_loop = asyncio.new_event_loop()
+            self._loop_thread = threading.Thread(target=self._run_asyncio_loop, daemon=True)
+            self._loop_thread.start()
+            
+            # Deque for handling async tasks
+            self._task_queue = deque()
+            self._task_queue_lock = threading.Lock()
+    
+            # Start task consumer
+            self._asyncio_loop.call_soon_threadsafe(asyncio.create_task, self._task_consumer())
 
     def _run_asyncio_loop(self):
         """Run the asyncio event loop in a separate thread."""
