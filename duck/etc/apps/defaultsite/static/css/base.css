@@ -74,13 +74,12 @@ a:focus {
 
 .container {
     max-width: 800px;
-    width: 90%;
+    width: 85%;
     margin: 2rem auto;
     background: var(--container-bg);
     padding: 1.5rem;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    overflow-wrap: break-word;
     word-wrap: break-word;
     word-break: break-word;
     hyphens: auto;
@@ -108,7 +107,7 @@ p {
     line-height: 1.5;
     margin: 1rem 0;
     color: var(--text-muted);
-    text-align: justify;
+    text-align: center;
 }
 
 img {
