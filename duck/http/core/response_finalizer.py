@@ -8,6 +8,7 @@ The final touches include:
 - etc.
 """
 import re
+import fnmatch
 
 from typing import (
     Dict,
@@ -23,6 +24,7 @@ from duck.http.response import (
     StreamingRangeHttpResponse,
     HttpRangeNotSatisfiableResponse,
 )
+from duck.logging import logger
 from duck.logging.logger import (
     handle_exception as log_failsafe,
 )
@@ -174,23 +176,43 @@ class ResponseFinalizer:
             if not COMPRESS_STREAMING_RESPONSES:
                 # Compressing streaming responses disallowed
                 return
-                
+            
+            content_type = response.get_header("content-type", "")
+            mimetype_supported = any([fnmatch.fnmatch(content_type, pattern) for pattern in response.content_obj.compression_mimetypes])
+            
+            if not mimetype_supported:
+                return
+            
             response.super_iter_content = response.iter_content
             
             def iter_and_compress():
                 """
-                Compress content as we iterate torwards it.
+                Compress content as we iterate towards it, one chunk at a time.
+                Ensures safe and correct compression output.
                 """
                 for chunk in response.super_iter_content():
-                    response.content_obj.set_content(chunk, content_type="text/plain") # use fake content type to force compression
-                    response.content_obj.compression_level = COMPRESSION_LEVEL
-                    response.content_obj.compression_min_size = 0
-                    response.content_obj.compression_max_size = len(chunk) + 1
-                    response.content_obj.compression_mimetypes = COMPRESSION_MIMETYPES
-                    response.content_obj.compress(COMPRESSION_ENCODING)
-                    
-                    yield response.content_obj.data
+                    if not chunk:
+                        continue  # Skip empty or None chunks
             
+                    # Create a fresh compression wrapper or content object per chunk
+                    content_obj = response.content_obj.__class__()  # Clone a fresh object
+                    content_obj.set_content(chunk, content_type="text/plain") # use fake content type to force compression
+                    content_obj.compression_level = COMPRESSION_LEVEL
+                    content_obj.compression_min_size = 0
+                    content_obj.compression_max_size = len(chunk) + 1
+                    content_obj.compression_mimetypes = COMPRESSION_MIMETYPES
+            
+                    try:
+                        content_obj.compress(COMPRESSION_ENCODING)
+                        compressed_data = content_obj.data
+                    except Exception as e:
+                        # Optional: log error and fall back to uncompressed
+                        if SETTINGS['DEBUG']:
+                            logger.log_raw(f"Compression failed for chunk: {e}", level=logger.WARNING)
+                        compressed_data = chunk
+            
+                    yield compressed_data
+                    
             if response.get_header("content-encoding", "identity") == "identity":
                 # Assume compression will not fail, this is is a bit dangerous if compression fails as response might include 
                 # unmatching invalid content content encoding
