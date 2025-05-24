@@ -63,7 +63,7 @@ class ResponseFinalizer:
         cors = SETTINGS["CORS_HEADERS"] or {}
         security = SECURITY_HEADERS or {}
 
-        for h, v in {**extra, **cors, **security}.items():
+        for h, v in { **security, **cors,  **extra}.items():
             if h.lower() != 'server':
                 response.headers.setdefault(h, v)
             else:
