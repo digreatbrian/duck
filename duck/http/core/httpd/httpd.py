@@ -12,6 +12,7 @@ import socket
 import asyncio
 import threading
 
+from functools import partial
 from typing import Optional, Tuple, Coroutine, Union, Callable
 
 from duck.contrib.responses import (
@@ -23,6 +24,7 @@ from duck.http.core.handler import (
     log_response,
 )
 from duck.settings import SETTINGS
+from duck.exceptions.all import SettingsError
 from duck.logging import logger
 from duck.meta import Meta
 from duck.http.core.processor import RequestProcessor
@@ -153,7 +155,13 @@ class BaseServer:
             domain (str, optional): Explicit domain that will be logged alongside the log messages.
         """
         host, port = self.addr
+        
+        if SETTINGS["DEBUG"]:
+            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        
         self.sock.bind(self.addr)  # bind socket to (address, port)
+        self.sock.listen(SETTINGS["REQUESTS_BACKLOG"]) # 200 by default
         
         # Prepare server setup
         duck_host = domain or Meta.get_metadata("DUCK_SERVER_HOST")
@@ -161,25 +169,22 @@ class BaseServer:
         server_url = "https" if self.enable_ssl else "http"
         server_url += f"://{duck_host}:{port}"
         
-        if SETTINGS["DEBUG"]:
-            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-        
         if not no_logs:
             if SETTINGS["DEBUG"]:
                 logger.log(f"Started Duck Server on {server_url}", level=logger.DEBUG)
             else:
                 logger.log(
-                    f"Started Duck ProServer on {server_url}\n  ├── PRODUCTION SERVER (domain: {domain or 'Not set'}) \n  "
+                    f"Started Duck Pro Server on {server_url}\n  ├── PRODUCTION SERVER (domain: {domain or 'Not set'}) \n  "
                     f"└── This is a production server, always stay secure! ",
-                     level=logger.DEBUG)
+                     level=logger.DEBUG,
+                 )
         
         # Listen and set the server in running state
-        self.sock.listen(SETTINGS["REQUESTS_BACKLOG"]) # 200 by default
         self.running = True
         
         # Listen and accept incoming connections
         while self.running:
+            
             try:
                 # Accept incoming connections
                 if self.uses_ipv6:
@@ -187,11 +192,8 @@ class BaseServer:
                 else:
                     self.accept_and_handle_ipv4()
                 
-                # Pause before the next request.
-                time.sleep(self.poll) 
-            
             except ssl.SSLError as e:
-                # Wrong protocol used, e.g. https on http or vice versa
+                # Wrong protocol used e.g., https on http or vice versa
                 if not no_logs and SETTINGS["VERBOSE_LOGGING"] and SETTINGS["DEBUG"]:
                     if "HTTP_REQUEST" in str(e):
                         logger.log(f"Client may be trying to connect with https on http server or vice-versa: {e}", level=logger.WARNING)
@@ -210,9 +212,9 @@ class BaseServer:
         Args:
             log_to_console (bool): Log the message that the sever stoped. Defaults to True.
         """
-        self.running = False
         bold_start = "\033[1m"
         bold_end = "\033[0m"
+        self.running = False
         self.close_socket(self.sock)
         
         if log_to_console: # log message indicating server stopped.
@@ -222,7 +224,8 @@ class BaseServer:
                 level=logger.INFO,
                 custom_color=logger.Fore.MAGENTA,
             )
-            # redo socket close to ensure server stopped.
+            
+            # Redo socket close to ensure server stopped.
             self.running = False
             self.close_socket(self.sock)
     
@@ -567,14 +570,11 @@ class BaseServer:
         if flowinfo is not None and scopeid is not None:
             args.extend([flowinfo, scopeid])
 
-        client_thread = threading.Thread(
-            target=target,
-            args=args,
-            name=f"client-{ip}@{port}",
-        ) # create the request handling thread with custom name
-        
-        # Execute request handling thread
-        call_request_handling_executor(client_thread)
+        task = partial(target, *args)
+        task.name=f"client-{ip}@{port}",
+       
+        # Execute request handling in new thread
+        call_request_handling_executor(task)
 
     def _start_async_task(
         self,
@@ -623,9 +623,7 @@ class BaseMicroServer:
         from duck.app.microapp import MicroApp
 
         if not isinstance(microapp, MicroApp):
-            raise ValueError(
-                f"MicroApp instance expected, received {type(micropp)} instead."
-            )
+            raise ValueError(f"MicroApp instance expected, received {type(micropp)} instead.")
         self.microapp = microapp # set the micro application instance
 
     def process_and_handle_request(
@@ -643,10 +641,17 @@ class BaseMicroServer:
             request_data (RequestData): The full request data object.
         """
         from duck.shortcuts import to_response
-        from duck.settings.loaded import WSGI
+        from duck.settings.loaded import WSGI, REQUEST_CLASS 
+
+        request_class = REQUEST_CLASS
+
+        if not issubclass(request_class, HttpRequest):
+            raise SettingsError(
+                f"REQUEST_CLASS set in settings.py should be an instance of Duck HttpRequest not {request_class}"
+            )
         
         try:
-            request = HttpRequest(
+            request = request_class(
                 client_socket=sock,
                 client_address=addr,
             ) # create an http request instance.

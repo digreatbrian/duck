@@ -119,7 +119,7 @@ class Content:
         """
         success = False
         
-        mimetype_supported = any([fnmatch.fnmatch(self.content_type, pattern) for pattern in self.compression_mimetypes])
+        mimetype_supported = self.mimetype_supported(self.content_type)
         
         if (data and len(data) <= self.compression_max_size
                 and isinstance(data, bytes) and mimetype_supported):
@@ -165,7 +165,7 @@ class Content:
         """
         success = False
         
-        mimetype_supported = any([fnmatch.fnmatch(self.content_type, pattern) for pattern in self.compression_mimetypes])
+        mimetype_supported = self.mimetype_supported(self.content_type)
         
         if (data and len(data) <= self.compression_max_size
                 and isinstance(data, bytes) and mimetype_supported):
@@ -196,6 +196,15 @@ class Content:
                 success = True
         return data, success
 
+    def mimetype_supported(self, mimetype: str) -> bool:
+        """
+        Checks whether the given mimetype is supported for compression or decompression.
+        """
+        for pattern in self.compression_mimetypes:
+            if fnmatch.fnmatch(mimetype, pattern):
+                return True
+        return False
+        
     def correct_encoding(self):
         """
         Returns the calculated current correct encoding depending on the current data.

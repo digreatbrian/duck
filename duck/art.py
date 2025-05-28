@@ -30,7 +30,7 @@ def display_duck_art():
     
     # Display large art only if the screen is sufficiently wide and tall
     if columns >= 80 and lines >= 24:  # Common size for tablets and PCs
-        print(duck_art_large)
+        print(bold_start + duck_art_large + bold_end)
     else:
         print(bold_start + duck_art_small + bold_end)
 

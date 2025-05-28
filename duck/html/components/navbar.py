@@ -148,7 +148,7 @@ class NavbarContainer(FlexContainer):
         # Add Navbar Links Container
         navbar_links_container = Container()
         navbar_links_container.properties["class"] = "navbar-links-container collapse navbar-collapse d-lg-flex align-items-center"
-        navbar_links_container.style["justify-content"] = "end"
+        #navbar_links_container.style["justify-content"] = "flex-end"
 
         # Add Navbar Links to their container
         navbar_links_container.add_child(NavbarLinks(**self.kwargs))
@@ -167,6 +167,22 @@ class NavbarContainer(FlexContainer):
                 }
             """
         )
+        
+        # Add responsive styles
+        style = Style(
+            inner_body="""
+                @media (max-width: 768px){
+                    .navbar-links-container {
+                        justify-content: flex-start !important;
+                    }
+                    .nav-brand-image {
+                        height: 30px !important;
+                    }
+                }
+            """
+        )
+        
+        self.add_child(style)
         self.add_child(script)
 
 
@@ -209,18 +225,4 @@ class Navbar(InnerHtmlComponent):
 
         # Add Navbar Container
         self.add_child(NavbarContainer(**self.kwargs))
-
-        # Add responsive styles
-        style = Style(
-            inner_body="""
-                @media (max-width: 768px){
-                    .navbar-collapse {
-                        justify-content: start !important;
-                    }
-                    .nav-brand-image {
-                        height: 30px !important;
-                    }
-                }
-            """
-        )
-        self.add_child(style)
+       

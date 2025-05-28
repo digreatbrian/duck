@@ -98,8 +98,8 @@ def get_debug_error_as_html(exception: Exception, request: Optional = None):
     exception = logger.expand_exception(exception)
     
     # Make html from exception
-    exception = escape(exception).replace("^\n", "^\n\n").replace("\n", "\n<br>")
     host = None # intialize host
+    exception = escape(exception).replace("^\n", "^\n\n").replace("\n", "\n<br>")
     
     if not request:
        body = f"""
@@ -125,7 +125,7 @@ def get_debug_error_as_html(exception: Exception, request: Optional = None):
         <h4 class="subheading" >Request</h4>
         <ul class="inner">
           <li><p>Path: {request.path}</p>
-          <li><p<Method: {request.method}</p>
+          <li><p>Method: {request.method}</p>
           <li><p>Host: {host}</p>
           <li><p>HTTP-Version: {request.http_version}</p>
           <li><p>Content-Length: {request.content_obj.size}</p>
@@ -258,7 +258,7 @@ def get_method_not_allowed_error_response(request: HttpRequest, route_info: Opti
         if route_info:
             body = f'<p>Specified Method not allowed</p><div class="allowed-methods"> Allowed Methods: {[m.upper() for m in route_info["methods"]]}'
         else:
-            body = "<Specified Method not allowed>"
+            body = "<p>Specified Method not allowed</p>"
         response = template_response(
             HttpMethodNotAllowedResponse,
             body=body,
@@ -439,6 +439,7 @@ class WSGI:
         Returns:
             Tuple[HttpResponse, bool]: Http response and a boolean whether to log the response to the console.
         """
+        from django.db import close_old_connections
         from duck.http.core.processor import RequestProcessor
         
         processor = None # initialize request processor
@@ -498,6 +499,9 @@ class WSGI:
             if SETTINGS["USE_DJANGO"]:
                 disable_logging = True
         
+        # Clean up Django DB connections
+        close_old_connections()
+        
         # Finalize and return response
         self.finalize_response(response, request)
         
@@ -511,12 +515,14 @@ class WSGI:
                 request (HttpRequest): The request object.
         """
         response, disable_logging = self.get_response(request)
+        
+        # Send response to client
         self.send_response(
             response,
             request.client_socket,
             request,
             disable_logging=disable_logging,
-        )  # send response to client
+        )
         
     def __call__(
         self,
@@ -577,4 +583,5 @@ class WSGI:
         
         # Start sending response
         self.start_response(request)
+        
         return request

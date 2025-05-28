@@ -8,6 +8,7 @@ The final touches include:
 - etc.
 """
 import re
+import io
 import fnmatch
 
 from typing import (
@@ -178,12 +179,33 @@ class ResponseFinalizer:
                 return
             
             content_type = response.get_header("content-type", "")
-            mimetype_supported = any([fnmatch.fnmatch(content_type, pattern) for pattern in response.content_obj.compression_mimetypes])
+            total_stream_size = None
             
-            if not mimetype_supported:
-                return
-            
+            if hasattr(response.stream, "tell") and hasattr(response.stream, "seek"):
+                response.stream.seek(0, io.SEEK_END) # seek to EOF
+                total_stream_size = response.stream.tell()
+                
+            if total_stream_size is not None:
+                content_obj = response.content_obj.__class__()  # Clone a fresh object
+                if total_stream_size > content_obj.compression_max_size or total_stream_size < content_obj.compression_min_size:
+                    # Total stream size if beyond or below compression limits
+                    return
+                
+            compressable = False # Whether the content is compressable by trying to compress the first chunk
             response.super_iter_content = response.iter_content
+            
+            for chunk in response.iter_content():
+                if chunk:
+                    # Create a fresh compression wrapper or content object per chunk
+                    chunk = chunk[:16] # Check compression using first 16 bytes to avoid performance degradationt
+                    content_obj = response.content_obj.__class__()  # Clone a fresh object
+                    content_obj.set_content(chunk, content_type=content_type)
+                    content_obj.compression_level = COMPRESSION_LEVEL
+                    content_obj.compression_min_size = 0
+                    content_obj.compression_max_size = 16
+                    content_obj.compression_mimetypes = COMPRESSION_MIMETYPES
+                    compressable = content_obj.compress(COMPRESSION_ENCODING) # sets if content is compressable
+                break
             
             def iter_and_compress():
                 """
@@ -196,24 +218,17 @@ class ResponseFinalizer:
             
                     # Create a fresh compression wrapper or content object per chunk
                     content_obj = response.content_obj.__class__()  # Clone a fresh object
-                    content_obj.set_content(chunk, content_type="text/plain") # use fake content type to force compression
+                    content_obj.set_content(chunk, content_type=content_type)
                     content_obj.compression_level = COMPRESSION_LEVEL
                     content_obj.compression_min_size = 0
                     content_obj.compression_max_size = len(chunk) + 1
                     content_obj.compression_mimetypes = COMPRESSION_MIMETYPES
-            
-                    try:
-                        content_obj.compress(COMPRESSION_ENCODING)
-                        compressed_data = content_obj.data
-                    except Exception as e:
-                        # Optional: log error and fall back to uncompressed
-                        if SETTINGS['DEBUG']:
-                            logger.log_raw(f"Compression failed for chunk: {e}", level=logger.WARNING)
-                        compressed_data = chunk
-            
+                    compressed = content_obj.compress(COMPRESSION_ENCODING)
+                    compressed_data = content_obj.data
+                    
                     yield compressed_data
                     
-            if response.get_header("content-encoding", "identity") == "identity":
+            if response.get_header("content-encoding", "identity") == "identity" and compressable:
                 # Assume compression will not fail, this is is a bit dangerous if compression fails as response might include 
                 # unmatching invalid content content encoding
                 response.set_header("Content-Encoding", COMPRESSION_ENCODING)
