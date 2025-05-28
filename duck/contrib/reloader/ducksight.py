@@ -18,11 +18,11 @@ from threading import Timer
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
+from duck.logging import logger
 from duck.settings import SETTINGS
-from duck.utils import ipc
 from duck.utils.filelock import open_and_lock
 from duck.utils.path import joinpaths
-from duck.logging import logger
+from duck.utils import ipc
 
 
 # Define the base directory for the application
@@ -83,12 +83,13 @@ def _cleanup_current_webserver() -> list:
         RuntimeError: If there was a failure in retrieving the process data respective file.
     """
     data = None
+    
     try:
         data = processes.get_process_data("main")
         server_sys_argv = data.get("sys_argv")
         if not server_sys_argv:
             raise RuntimeError(
-                "Failed to retrieve Duck application process sys.argv, ensure the app is running."
+                "Failed to retrieve Duck application process `sys.argv`, ensure the app is running."
             )
     except KeyError:
         raise RuntimeError(
@@ -96,9 +97,8 @@ def _cleanup_current_webserver() -> list:
         )
     try:
         with ipc.get_writer() as writer:
-            writer.write_message(
-                "prepare-restart"
-            )  # send message to main application process for cleanup
+            # Send message to main application process for cleanup
+            writer.write_message("prepare-restart")
     finally:
         time.sleep(1)  # wait a second for server to finish cleanup
     return data
@@ -166,10 +166,12 @@ def start_ducksight_reloader_process():
     """
     process = multiprocessing.Process(target=_start_reloader, daemon=False)
     process.start()
-    processes.set_process_data("ducksight-reloader", {
-        "pid": process.pid,
-        "start_time": time.time()
-    })
+    processes.set_process_data(
+        "ducksight-reloader", {
+            "pid": process.pid,
+            "start_time": time.time(),
+         }
+    )
     return process
 
 
@@ -203,13 +205,17 @@ def ducksight_reloader_process_alive() -> bool:
     state = get_state() == "alive"
     try:
         pid = processes.get_process_data("ducksight-reloader").get("pid")
-        # check if process is running
+        
+        # Check if process is running
         live_result = is_process_running(pid)
+        
         if live_result == state:
             return state
+        
         else:
             set_state("alive" if live_result else "dead")
             return live_result
+    
     except KeyError:
         pass
 
@@ -226,8 +232,7 @@ class DuckSightReloader:
         timeout = SETTINGS.get("AUTO_RELOAD_POLL", 1.0)
 
         if platform.system() == "Windows":
-            timeout = max(timeout,
-                          2.0)  # Minimum timeout for stability on Windows
+            timeout = max(timeout, 2.0)  # Minimum timeout for stability on Windows
 
         self.observer = Observer(timeout=timeout)
         self.watch_dir = watch_dir
@@ -241,32 +246,40 @@ class DuckSightReloader:
             set_state("dead")  # first method to trigger a stop
 
             try:
-                # second method to kill old reloader process if still running.
+                # Second method to kill old reloader process if still running.
                 current_pid = os.getpid()
-                old_pid = processes.get_process_data("ducksight-reloader").get(
-                    "pid")
+                old_pid = processes.get_process_data("ducksight-reloader").get("pid")
+                
                 if not old_pid == current_pid:
                     os.kill(old_pid, signal.SIGKILL)
+            
             except (KeyError, ProcessLookupError):
                 pass
+            
             finally:
                 # wait for old reloader process to terminate if running.
                 time.sleep(1)
 
             event_handler = Handler()
-            self.observer.schedule(event_handler,
-                                   self.watch_dir,
-                                   recursive=True)
+            self.observer.schedule(
+                event_handler,
+                self.watch_dir,
+                recursive=True
+            )
+            
             self.observer.start()
             set_state("alive")
 
             while get_state() == "alive":
                 time.sleep(0.1)
+                
         except KeyboardInterrupt:
             set_state("dead")
+        
         finally:
             set_state("dead")
             self.observer.stop()
+            
             if self.observer.is_alive():
                 self.observer.join()
 
@@ -303,7 +316,7 @@ class Handler(FileSystemEventHandler):
                 break
 
         if event.is_directory or not file_allowed:
-            # ignore file, we dont need to watch for any of its changes.
+            # ignore file, we don't need to watch for any of its changes.
             return
 
         if event.event_type not in {"created", "modified", "deleted", "moved"}:
@@ -317,8 +330,7 @@ class Handler(FileSystemEventHandler):
             self.restart_timer.cancel()
 
         # Schedule a new restart with a delay
-        self.restart_timer = Timer(self.debounce_interval,
-                                   self._trigger_restart)
+        self.restart_timer = Timer(self.debounce_interval, self._trigger_restart)
         self.restart_timer.start()
 
     def _trigger_restart(self):
@@ -331,19 +343,23 @@ class Handler(FileSystemEventHandler):
         if self.latest_event:
             self.restarting = True
             action = self.latest_event.event_type
+            
             if action == "moved":
                 src_path = self.latest_event.src_path
                 dest_path = getattr(self.latest_event, "dest_path", "unknown")
+                
                 logger.log_raw(
                     f"\nFile {src_path} was moved to {dest_path}, reloading...",
                     custom_color=logger.Fore.YELLOW,
-                )
+                 )
             else:
                 file_path = self.latest_event.src_path
+                
                 logger.log_raw(
                     f"\nFile {file_path} was {action}, reloading...",
                     custom_color=logger.Fore.YELLOW,
-                )
+                 )
+            
             restart_webserver()
             self.restarting = False
             self.latest_event = None  # Clear the latest event after handling

@@ -14,6 +14,8 @@ from typing import (
     Any,
 )
 from collections import deque
+from inspect import iscoroutinefunction
+
 from duck.utils.importer import x_import
 from duck.settings import SETTINGS
 
@@ -102,7 +104,7 @@ class RequestHandlingExecutor:
                     task = self._task_queue.popleft()
             if task:
                 await task()
-            await asyncio.sleep(0.01)  # Yield control to the event loop
+            await asyncio.sleep(0.00001)  # Yield control to the event loop
 
     def on_thread_task_complete(self, future):
          try:
@@ -118,13 +120,13 @@ class RequestHandlingExecutor:
         - Async tasks are added to a queue for non-blocking execution.
         - CPU-bound tasks run in a thread pool.
         """
-        if isinstance(task, threading.Thread):
+        if not iscoroutinefunction(task):
             # Handle CPU-bound tasks via thread pool
             if self.thread_executor:
                 self.thread_executor(task)
             else:
-                future = self._thread_pool.submit(task.run)  # Optimized thread execution
-                future.name = task.name
+                future = self._thread_pool.submit(task)  # Optimized thread execution
+                future.name = getattr(task, 'name', repr(task))
                 future.add_done_callback(self.on_thread_task_complete)
         else:
             # Handle async tasks by adding them to the asyncio queue

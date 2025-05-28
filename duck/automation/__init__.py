@@ -508,8 +508,7 @@ class Automation:
                     break  # force stop, maybe method join was used.
 
                 if counter == 0:
-                    on_start_wrapper(
-                    )  # call function on_start_wrapper just once
+                    on_start_wrapper()  # call function on_start_wrapper just once
                 
                 if self.disable_execution:
                     break
@@ -518,9 +517,7 @@ class Automation:
                 self.on_pre_execute()  # do some stuff before execution
                 self.execute()  # execute the automation
                 self.on_post_execute()  # do some stuff after execution
-                self.__executed = (
-                    True  # set that the method has executed for the first time
-                )
+                self.__executed = (True)  # set that the method has executed for the first time
                 self.__execution_times += 1
                 counter += 1  # counter is more accurate on number of times the loop was run compared to __execution_times.
                 time.sleep(self.interval)  # sleep before next execution cycle
@@ -530,8 +527,7 @@ class Automation:
                     break  # force stop, maybe method join was used.
 
                 if i == 0:
-                    on_start_wrapper(
-                    )  # call function on_start_wrapper just once
+                    on_start_wrapper()  # call function on_start_wrapper just once
                 
                 if self.disable_execution:
                     break
@@ -540,9 +536,7 @@ class Automation:
                 self.on_pre_execute()  # do some stuff before execution
                 self.execute()  # execute the automation
                 self.on_post_execute()  # do some stuff after execution
-                self.__executed = (
-                    True  # automation has executed for the first time
-                )
+                self.__executed = (True)  # automation has executed for the first time
                 self.__execution_times += 1
                 time.sleep(self.interval)  # sleep before next execution cycle
 
@@ -555,14 +549,16 @@ class Automation:
         Do whatever task you want here e.g. running bash scripts or something else.
 
         Example:
+        ```py
+        import os
 
-                import os
-
-                class SimpleAutomation(Automation):
-                        def execute(self):
-                                os.system('bash some_script.bash')
-                automation = SimpleAutomation(start_time='immediate', schedules=1, interval=0)
-                automation.start # start the automation
+        class SimpleAutomation(Automation):
+            def execute(self):
+                os.system('bash some_script.bash')
+        
+        automation = SimpleAutomation(start_time='immediate', schedules=1, interval=0)
+        automation.start # start the automation
+        ```
         """
         if not self.callback:
             raise NotImplementedError(

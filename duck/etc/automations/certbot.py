@@ -78,7 +78,7 @@ class BaseCertbotAutoSSL(Automation):
         
     def on_start(self):
         if SETTINGS["ENABLE_HTTPS"] and not SETTINGS["FORCE_HTTPS"]:
-            logger.log("CertbotAutoSSL: FORCE_HTTPS is disabled, this is strictly required", level=logger.WARNING)
+            logger.log("CertbotAutoSSL: `FORCE_HTTPS` disabled in settings", level=logger.WARNING)
             self.disable_execution = True
             
     def extract_config_values(self, config_path: str, *args):
@@ -173,14 +173,20 @@ class BaseCertbotAutoSSL(Automation):
             
             if SETTINGS["DEBUG"]:
                 logger.log(f"CertbotAutoSSL: Wrote SSL private key credential to {SSL_CERT_KEY_PATH}", level=logger.DEBUG)
-                
-        logger.log(f"CertbotAutoSSL: Wrote SSL credentials successfully", level=logger.DEBUG)
-
+        
+        # Log a debug message
+        logger.log("CertbotAutoSSL: SSL credentials successfully created or renewed\n", level=logger.DEBUG)
+                       
     def execute(self):
         certbot_root = SETTINGS["CERTBOT_ROOT"]
         certbot_email = SETTINGS["CERTBOT_EMAIL"]
         certbot_executable = SETTINGS.get("CERTBOT_EXECUTABLE", "certbot")
         certbot_extra_args = SETTINGS.get("CERTBOT_EXTRA_ARGS", [])
+        called_before = False
+        
+        if hasattr(self, "_called_before"):
+            # This method has been called before
+            called_before = True
         
         app = self.get_running_app()
         domain = app.domain
@@ -194,7 +200,8 @@ class BaseCertbotAutoSSL(Automation):
         if not os.path.isdir(certbot_root):
             os.makedirs(certbot_root, exist_ok=True) # create certbot root if not directory exists
             
-        logger.log("CertbotAutoSSL: Running Certbot for SSL renewal", level=logger.DEBUG)
+        if not called_before:
+            logger.log("CertbotAutoSSL: Running Certbot for SSL renewal", level=logger.DEBUG)
         
         # Ensure domain is set
         if not app.is_domain_set:
@@ -208,10 +215,14 @@ class BaseCertbotAutoSSL(Automation):
         while not app.started:
             time.sleep(.5) # wait for app to start
             
-        logger.log(
-            "CertbotAutoSSL: App has been started, executing `certbot`...",
-            level=logger.DEBUG,
-        )
+        if not called_before:
+            logger.log(
+                "CertbotAutoSSL: App has been started, executing `certbot`",
+                level=logger.DEBUG,
+            )
+        
+        else:
+            logger.log("CertbotAutoSSL: Executing `certbot`", level=logger.DEBUG)
         
         # Construct Certbot command
         certbot_command = [
@@ -239,18 +250,26 @@ class BaseCertbotAutoSSL(Automation):
             )
 
             if result.returncode == 0:
-                logger.log("CertbotAutoSSL: SSL certificate successfully created or renewed\n", level=logger.DEBUG)
                 self.on_cert_success()
             else:
-                logger.log(f"CertbotAutoSSL: Certbot failed with exit code {result.returncode}", level=logger.WARNING)
-                logger.log(f"CertbotAutoSSL: STDERR: \n{result.stderr.strip()}\n", level=logger.WARNING)
-
+                
+                if SETTINGS['DEBUG']:
+                    logger.log(f"CertbotAutoSSL: Certbot failed with exit code {result.returncode}", level=logger.WARNING)
+                    logger.log(f"CertbotAutoSSL: STDERR: \n{result.stderr.strip()}\n", level=logger.WARNING)
+                else:
+                    logger.log(f"CertbotAutoSSL: Certbot failed with exit code {result.returncode}\n", level=logger.WARNING)
+                  
         except FileNotFoundError:
-            logger.log("CertbotAutoSSL: Certbot not found. Make sure it's installed and available in PATH", level=logger.WARNING)
-            logger.log("CertbotAutoSSL: Try configuring `CERTBOT_EXECUTABLE` in settings.py if installed\n", level=logger.WARNING)
+            if SETTINGS['DEBUG']:
+                logger.log("CertbotAutoSSL: Certbot not found. Make sure it's installed and available in PATH", level=logger.WARNING)
+                logger.log("CertbotAutoSSL: Try configuring `CERTBOT_EXECUTABLE` if installed\n", level=logger.WARNING)
+            else:
+                logger.log("CertbotAutoSSL: Certbot not found. Make sure it's installed and available in PATH\n", level=logger.WARNING)
+            
+            self.disable_execution = True
             
         except Exception as e:
-            logger.log(f"CertbotAutoSSL: Unexpected error: {str(e)}", level=logger.WARNING)
+            logger.log(f"CertbotAutoSSL: Unexpected error: {str(e)}\n", level=logger.WARNING)
 
 
 # Instantiate the automation
@@ -259,6 +278,5 @@ CertbotAutoSSL = BaseCertbotAutoSSL(
     description="Automatically creates or renews Let's Encrypt SSL certificates using Certbot",
     start_time="immediate",
     schedules=-1,
-    interval= 30 * 24 * 3600  # every 30 days
+    interval= 5  # every 30 minutes
 )
-

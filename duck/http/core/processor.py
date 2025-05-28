@@ -45,9 +45,7 @@ class RequestProcessor:
         Args:
                 request (HttpRequest): HttpRequest object to process
         """
-        assert isinstance(
-            request, HttpRequest
-        ), "Request should be an instance of HttpRequest not `{type(request)}`."
+        assert isinstance(request, HttpRequest), f"Request should be an instance of HttpRequest not `{type(request)}`."
         self.request = request
         self.normalize_request()
     

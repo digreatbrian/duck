@@ -73,7 +73,9 @@ class MicroApp:
 
         # creating vital threads without running them
         self.duck_server_thread = threading.Thread(
-            target=self.server.start_server, args=[self.no_logs, domain])
+            target=self.server.start_server,
+            args=[self.no_logs, domain]
+        )
         type(self).all_threads.append(self.duck_server_thread)
 
     def start_server(self):
@@ -144,4 +146,3 @@ class HttpsRedirectMicroApp(MicroApp):
         WSGI.apply_middlewares_to_response(redirect, request)
         WSGI.finalize_response(redirect, request)
         return redirect
-

@@ -84,3 +84,4 @@ This video will be featured on the official Duck website and may be used in futu
 For any issues, feel free to report these at [issues](https://github.com/digreatbrian/duck/issues) page.
 
 #### **Duck** is updated and improved frequently, check out this repo more oftenly for bug fixes & improvements.
+

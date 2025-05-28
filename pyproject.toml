@@ -40,25 +40,33 @@ classifiers = [
     "Operating System :: OS Independent"
 ]
 keywords = [
-    "webserver",
-    "web-framework",
-    "proxy",
-    "Django",
     "Python",
-    "HTTP",
+    "web framework",
+    "web server",
+    "reverse proxy",
+    "HTTP/2",
     "WSGI",
-    "Duck",
-    "reverse-proxy",
-    "flask",
-    "tornado"
+    "ASGI",
+    "Django integration",
+    "Flask",
+    "Tornado",
+    "FastAPI",
+    "microservices",
+    "middleware",
+    "high-performance",
+    "async",
+    "Duck framework",
+    "routing",
+    "load balancing",
+    "HTTP proxy",
+    "web application"
 ]
 
 [project.urls]
 Homepage = "https://github.com/digreatbrian/duck"
 Repository = "https://github.com/digreatbrian/duck"
 Issues = "https://github.com/digreatbrian/duck/issues"
-Documentation = "https://github.com/digreatbrian/duck/wiki"
-Createrpage = "https://brianmusakwa.link"
+Documentation = "https://duckframework.xyz/documentation"
 
 [project.entry-points.console_scripts]
 duck = "duck.__main__:cli"
