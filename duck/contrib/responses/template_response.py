@@ -1,6 +1,7 @@
 """
 This module provides a shortcut to create a better-mid response with a given response class and icon link.
 """
+import os
 
 from typing import Type
 
@@ -10,7 +11,8 @@ from duck.settings import SETTINGS
 from duck.utils.path import joinpaths
 from duck.utils.safemarkup import mark_safe
 
-FAVICON = joinpaths(str(SETTINGS["STATIC_URL"]), "duck-favicon.png")
+
+FAVICON = os.getenv("SIMPLE_RESPONSE_DEFAULT_ICON") or joinpaths(str(SETTINGS["STATIC_URL"]), "duck-favicon.png")
 
 
 def template_response(

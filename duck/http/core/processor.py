@@ -331,6 +331,7 @@ class RequestProcessor:
                 if SETTINGS["MIDDLEWARE_FAILURE_BEHAVIOR"] != "ignore":
                     if state == "bad":
                          return self.get_middleware_error_response(middleware)
+            
         else:
             # Check all middlewares
             state, middleware = self.check_middlewares()

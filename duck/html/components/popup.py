@@ -4,6 +4,7 @@ Popup HTML Component.
 This module defines a reusable `Popup` component that creates a full-screen popup overlay.
 It includes an exit button (dependent on Bootstrap icons) and JavaScript functionality for opening and closing.
 """
+import random
 
 from duck.html.components.container import FlexContainer
 from duck.html.components.script import Script
@@ -45,13 +46,19 @@ class Popup(FlexContainer):
             "display": "none",  # Hidden by default
             "flex-direction": "column",
         })
+        
+        popup_name = "popup-" + str(random.randint(0, 1000))
         self.properties["class"] = "popup"
+        self.properties["id"] = popup_name
 
         # JavaScript script to handle popup behavior
         script = Script(
             inner_body="""
+                var popup_selector = '#%s';
+                
                 function movePopupToBody() {
-                    var popup = $('.popup');  // Select popup using jQuery
+                    var popup = $(popup_selector);  // Select popup using jQuery
+                    
                     if (popup.length && popup.parent()[0] !== document.body) {
                         popup.appendTo('body');  // Move popup to body
                     }
@@ -62,14 +69,14 @@ class Popup(FlexContainer):
                 }
 
                 function showPopup() {
-                    var popup = $('.popup');
+                    var popup = $(popup_selector);
                     movePopupToBody();  // Ensure it's properly placed in <body>
                     adjustPopupHeight();
                     popup.css('display', 'flex');  // Show popup with flex layout
                 }
 
                 function adjustPopupHeight() {
-                    $('.popup').css('height', $(window).height() + 'px');  // Set height dynamically
+                    $(popup_selector).css('height', $(window).height() + 'px');  // Set height dynamically
                 }
 
                 // Ensure movePopupToBody is executed when the document is ready
@@ -78,8 +85,8 @@ class Popup(FlexContainer):
                     adjustPopupHeight();  // Adjust height on load
 
                     // Close popup when clicking outside its content
-                    $('.popup').on('click', function (event) {
-                        if ($(event.target).is('.popup')) {
+                    $(popup_selector).on('click', function (event) {
+                        if ($(event.target).is(popup_selector)) {
                             closePopup(this);  // Close popup when clicking on background
                         }
                     });
@@ -87,7 +94,7 @@ class Popup(FlexContainer):
                     // Adjust popup height when window resizes
                     $(window).resize(adjustPopupHeight);
                 });
-            """
+            """%(popup_name)
         )
 
         # Create an exit button inside a container
@@ -108,5 +115,6 @@ class Popup(FlexContainer):
         exit_btn_container.add_child(exit_btn)
 
         # Add the close button container and script to the popup
-        self.add_child(exit_btn_container)
+        if not self.kwargs.get('no_exit_button'):
+            self.add_child(exit_btn_container)
         self.add_child(script)

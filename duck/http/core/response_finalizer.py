@@ -181,6 +181,9 @@ class ResponseFinalizer:
             content_type = response.get_header("content-type", "")
             total_stream_size = None
             
+            if not hasattr(response, "stream"):
+                return 
+                
             if hasattr(response.stream, "tell") and hasattr(response.stream, "seek"):
                 response.stream.seek(0, io.SEEK_END) # seek to EOF
                 total_stream_size = response.stream.tell()
