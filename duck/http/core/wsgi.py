@@ -127,7 +127,7 @@ def get_debug_error_as_html(exception: Exception, request: Optional = None):
           <li><p>Path: {request.path}</p>
           <li><p>Method: {request.method}</p>
           <li><p>Host: {host}</p>
-          <li><p>HTTP-Version: {request.http_version}</p>
+          <li><p>HTTP-Version: {request.http_version if request.request_store.get("h2_handling") != True else "HTTP/2"}</p>
           <li><p>Content-Length: {request.content_obj.size}</p>
         </ul>
       </div><br><div class="exception">{exception}</div>
@@ -568,8 +568,9 @@ class WSGI:
                 request_data,
             )
         except Exception as e:
-            #!: Server Error
+            # Internal server error
             response = get_server_error_response(e, None)
+            
             self.send_response(
                 response,
                 client_socket,

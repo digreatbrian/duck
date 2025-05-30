@@ -74,7 +74,7 @@ def get_correct_urlpatterns() -> List:
                 f"according to DJANGO_SIDE_URLS setting, yet you added it to Duck urlpatterns."
             )
     
-        # strip left forward slash if present to suppress Django warnings
+        # Strip left forward slash if present to suppress Django warnings
         url = url.lstrip("/")
         duck_django_view = views.duck_django_view
         
@@ -86,15 +86,17 @@ def get_correct_urlpatterns() -> List:
             # This pattern is a regex url pattern
             urlpatterns.append(
                 re_path(
-                    url,
+                    "^" + url if not url.startswith('^') else url,
                     duck_django_view,
                     name=name,
                 ))
         else:
             # its a normal url pattern
+            url = duck_url_to_django_syntax(url)
+            
             urlpatterns.append(
                 path(
-                    duck_url_to_django_syntax(url),
+                    url,
                     duck_django_view,
                     name=name,
                 ))

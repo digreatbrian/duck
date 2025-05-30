@@ -11,6 +11,7 @@ from . import views
 
 
 STATIC_URL = normalize_url_path(str(SETTINGS["STATIC_URL"])) + "/"
+
 MEDIA_URL = normalize_url_path(str(SETTINGS["MEDIA_URL"])) + "/"
 
 

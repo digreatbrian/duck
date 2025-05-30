@@ -253,7 +253,7 @@ DJANGO_BIND_PORT: int = 9999
 # Django Server Wait Time
 # Time in seconds to wait before checking if the Django server is up and running.
 # This variable is used to periodically verify the server's status during the initial startup or maintenance routines, ensuring that the server is ready to handle incoming requests.
-DJANGO_SERVER_WAIT_TIME: str = 2
+DJANGO_SERVER_WAIT_TIME: str = 4
 
 
 # These commands will be run before Django server startup if USE_DJANGO is set to True.
@@ -441,10 +441,11 @@ FRONTEND: dict[str, dict] = {
 # This maps status codes to callables which are responsible for generating new responses.
 # The following are the arguments parsed to custom template callables:
 #     current_response: The HTTP response object containing the preprocessed response.
-#     request (optional):
-#         The corresponding request, can be None if the response was generated at a lower level before
-#          the request data was processed.
-CUSTOM_TEMPLATES: dict = {}
+#     request (optional): The corresponding request, can be None if the response was generated at a lower level before the request data was processed.
+CUSTOM_TEMPLATES: dict = {
+    # Example:
+    # 404: lambda current_response, request: "The 404 response was overridden"
+}
 
 
 # Default Request Headers (loaded from JSON files)

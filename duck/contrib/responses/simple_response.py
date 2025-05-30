@@ -3,21 +3,24 @@ This module provides a shortcut to create a simple response with a given respons
 """
 
 import os
+
 from typing import Type
 
 from duck.http.response import HttpResponse
+from duck.settings import SETTINGS
 from duck.storage import duck_storage
 from duck.utils.safemarkup import mark_safe
+from duck.utils.path import joinpaths
 
 
-with open(
-    os.path.join(duck_storage,
-                       "etc/templates/simple_response.html")) as fd:
+FAVICON = os.getenv("SIMPLE_RESPONSE_DEFAULT_ICON") or joinpaths(str(SETTINGS["STATIC_URL"]), "images/duck-favicon.png")
+
+
+with open(joinpaths(duck_storage, "etc/templates/simple_response.html")) as fd:
     simple_response_html = fd.read()
 
 
-with open(os.path.join(duck_storage,
-                       "etc/templates/simple_icon_response.html")) as fd:
+with open(joinpaths(duck_storage, "etc/templates/simple_icon_response.html")) as fd:
     simple_icon_response_html = fd.read()
 
 
@@ -90,7 +93,7 @@ def simple_response(
     title: str = None,
     heading: str = None,
     body: str = None,
-    icon_link="/static/images/duck-favicon.png",
+    icon_link=FAVICON,
     icon_type="image/png",
 ) -> HttpResponse:
     """

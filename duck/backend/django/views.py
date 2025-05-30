@@ -92,9 +92,11 @@ def _duck_django_view(
         route_info = RouteRegistry.fetch_route_info_by_url(duck_request.path)
         url = route_info["url"]
         handler_kwargs = route_info["handler_kwargs"]
+        
         # Call the Duck view with the necessary parameters
         duck_view = route_info["handler"]
         duck_response = duck_view(duck_request, **handler_kwargs)
+    
     except RouteNotFoundError:
         duck_response = not_found404()
     

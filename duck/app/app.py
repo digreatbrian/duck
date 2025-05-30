@@ -993,30 +993,37 @@ class App:
             self.start_django_server()
             time.sleep(self.DJANGO_SERVER_WAIT_TIME)
 
-            # check if django is running
+            # Check if django is running
             if not self.django_server_up:
                 logger.log("Failed to start Django server", level=logger.ERROR)
                 self.stop()
+            
             else:
-                host_url = ("http://"
-                            if not self.server.enable_ssl else "https://")
+                host_url = "http://" if not self.server.enable_ssl else "https://"
                 host, port = self.server.addr
+                
                 if host.startswith("0") and not self.uses_ipv6:
-                    host = (
-                        "127.0.0.1"  # convert host to browser's recognizeable
-                    )
+                    # Convert host to browser's recognizeable
+                    host = "127.0.0.1"
+                
                 else:
                     if self.uses_ipv6:
                         host = f"[{host}]"
+                
                 host_url += f"{host}:{port}"
+                
+                logger.log_raw("\n")
+                
                 logger.log(
                     "Django started yey, that's good!",
                     level=logger.DEBUG,
                     custom_color=logger.Fore.GREEN,
                 )
+                
                 logger.log(
                     f"Duck Server listening on {host_url}",
                     level=logger.DEBUG,
                     custom_color=logger.Fore.GREEN,
                 )
+                
         self.on_app_start()

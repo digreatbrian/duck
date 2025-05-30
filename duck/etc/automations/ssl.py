@@ -35,7 +35,7 @@ class BaseDuckSSLWatch(Automation):
     def on_start(self):
         if not self.logged_automation_start:
             if not SETTINGS["ENABLE_HTTPS"]:
-                logger.log("DuckSSLWatch: `ENABLE_HTTPS` is disabled, automation is not going to be run", level=logger.WARNING)
+                logger.log("DuckSSLWatch: `ENABLE_HTTPS` required, automation disabled", level=logger.WARNING)
                 self.disable_execution = True
             else:
                 logger.log("DuckSSLWatch: Watching SSL file changes", level=logger.DEBUG)
@@ -46,7 +46,7 @@ class BaseDuckSSLWatch(Automation):
         """
         Reloads server ssl certfile context.
         """
-        logger.log("DuckSSLWatch: Server SSL certfile changed, reloading ssl context...\n", level=logger.WARNING)
+        logger.log("DuckSSLWatch: Server SSL certfile changed, reloading ssl context...", level=logger.WARNING)
         self.ssl_sock.context.load_cert_chain(certfile=SSL_CERT_PATH, keyfile=SSL_CERT_KEY_PATH)
         
     def reload_server_keyfile(self):

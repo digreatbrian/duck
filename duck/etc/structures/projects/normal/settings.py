@@ -122,6 +122,7 @@ CONTENT_COMPRESSION: dict[str] = {
     "max_size": 512 * 1024,  # files not more than 512KB
     "level": 5,
     "vary_on": True,  # Whether to include Vary header in response
+    "compress_streaming_responses": True, # Whether to compress streaming http responses.
     "mimetypes": [
         "text/*",
         "application/javascript",
@@ -320,10 +321,11 @@ FRONTEND: dict[str, dict] = {
 # This maps status codes to callables which are responsible for generating new responses.
 # The following are the arguments parsed to custom template callables:
 #     current_response: The HTTP response object containing the preprocessed response.
-#     request (optional):
-#         The corresponding request, can be None if the response was generated at a lower level before
-#          the request data was processed.
-CUSTOM_TEMPLATES: dict = {}
+#     request (optional): The corresponding request, can be None if the response was generated at a lower level before the request data was processed.
+CUSTOM_TEMPLATES: dict = {
+    # Example:
+    # 404: lambda current_response, request: "The 404 response was overridden",
+}
 
 
 # Extra Headers
