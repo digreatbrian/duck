@@ -48,17 +48,24 @@ from duck.utils.sockservers import xsocket
 # Using raw bytes string for the regex
 KEEP_ALIVE_REGEX = rb"(?i)\bConnection\s*:\s*keep\s*-?\s*alive\b"
 
+
 KEEP_ALIVE_TIMEOUT = SETTINGS["KEEP_ALIVE_TIMEOUT"]
+
 
 ASYNC_HANDLING = SETTINGS["ASYNC_HANDLING"]
 
+
 SERVER_POLL = SETTINGS["SERVER_POLL"]
+
 
 SERVER_BUFFER = SETTINGS["SERVER_BUFFER"]
 
+
 REQUEST_TIMEOUT = SETTINGS["REQUEST_TIMEOUT"]
 
+
 CONNECTION_MODE = SETTINGS["CONNECTION_MODE"]
+
 
 # Class for sending and logging resoponses
 response_handler = ResponseHandler()
