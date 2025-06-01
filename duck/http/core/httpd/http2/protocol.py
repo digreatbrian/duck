@@ -71,9 +71,14 @@ class H2Protocol:
                     self._closing = True
                     self.event_loop.remove_reader(self.sock.fileno())
                     self.send_goaway(0)
+            
             except ProtocolError as e:
                 logger.log(f"Protocol Error: {e}", level=logger.WARNING)
                 logger.log_exception(e)
+            
+            except ssl.SSLError:
+                pass
+                
             except Exception as e:
                 logger.log(f"HTTP/2 Error: {e}", level=logger.WARNING)
                 logger.log_exception(e)
