@@ -14,6 +14,11 @@ class Link(InnerHtmlComponent):
         url (str): The link's URL.
         text (str): Text for the link.
     """
+    def __init__(self, text=None, url=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.kwargs["text"] = text
+        self.kwargs["url"] = url
+        
     def get_element(self):
         return "a"
         
