@@ -10,7 +10,9 @@ The module also defines `URLResolveError`, an exception raised when
 URL resolution fails.
 """
 import io
+
 from typing import Optional, Any, Union
+from functools import lru_cache
 
 from duck import template as _template
 from duck.settings import SETTINGS
@@ -33,6 +35,8 @@ from duck.contrib.responses import (
     simple_response,
     template_response,
 )
+from duck.contrib.responses.errors import get_404_error_response
+from duck.contrib.sync import sync_to_async
 from duck.exceptions.all import (
     RouteNotFoundError,
     TemplateError,
@@ -40,7 +44,7 @@ from duck.exceptions.all import (
 
 from duck.meta import Meta
 from duck.routes import RouteRegistry
-import os
+
 
 __all__ = [
     "simple_response",
@@ -49,6 +53,7 @@ __all__ = [
     "jinja2_render",
     "django_render",
     "render",
+    "async_render",
     "redirect",
     "jsonify",
     "not_found404",
@@ -83,6 +88,7 @@ def csrf_token(request) -> str:
     return token
 
 
+@lru_cache(maxsize=128)
 def static(resource_path: str) -> str:
     """
     Returns the absolute static url path for provided resource.
@@ -91,6 +97,7 @@ def static(resource_path: str) -> str:
     return static(resource_path)
 
 
+@lru_cache(maxsize=128)
 def media(resource_path: str) -> str:
     """
     Returns the absolute media url path for provided resource.
@@ -199,6 +206,48 @@ def render(
             raise _e  # reraise error
 
 
+async def async_render(
+    request,
+    template: str,
+    context: dict = {},
+    engine: str = "django",
+    **kw,
+) -> TemplateResponse:
+    """
+    Asynchronously renders a template and returns the response.
+
+    Args:
+            request (HttpRequest): Http request object.
+            template (str): Template path within the TEMPLATE_DIR.
+            context (dict, optional): Dictionary respresenting template context.
+            engine (str, optional): Template engine to use for rendering template, defaults to 'django'.
+            **kw: Additional keywords to parse to the http response for the current template engine.
+
+    Returns:
+            TemplateResponse: Http response rendered using Django or Jinja2.
+    """
+    allowed_engines = {"jinja2", "django"}
+
+    if engine not in allowed_engines:
+        raise TemplateError(
+            f"Provided engine not recognized, should be one of ['jinja2', 'django'] not '{engine}' "
+        )
+    try:
+        if engine == "jinja2":
+            return await sync_to_async(jinja2_render)(request, template, context, **kw)
+        else:
+            return await sync_to_async(django_render)(request, template, context, **kw)
+    except Exception as e:
+        _e = e
+        e = str(e)
+        if "Syntax error" in e or "syntax error" in e:
+            raise TemplateError(
+                f"Error rendering template, make sure you are using right template engine: {e}"
+            ) from _e
+        else:
+            raise _e  # reraise error
+
+
 def redirect(location: str, permanent: bool = False, content_type="text/html", **kw):
     """
     Returns a HttpRedirectResponse object
@@ -235,20 +284,30 @@ def jsonify(data: Any, status_code: int = 200, **kw):
     return JsonResponse(data, status_code=status_code, **kw,) 
 
 
-def not_found404(body: Optional[str] = None, content_type="text/html", **kw):
-    """Returns a 404 `HttpNotFoundResponse` object either a simple response or a template response given DEBUG mode is on or off.
+def not_found404(request: Optional[HttpRequest] = None, body: str = None) -> HttpResponse:
+    """
+    Returns a 404 error response, either a simple response or a template response given DEBUG mode is on or off.
 
     Args:
-        content (Optional[body]): Body for the response, defaults to None
-        content_type (str): Content type for response, defaults to 'text/html'
-        **kw: Keyword arguments to parse to HttpNotFoundResponse
-
+        request (Optional[HttpRequest]): The target http request.
+        body (str, optional): Body for the 404 response.
+        
     Returns:
-        HttpNotFoundResponse: The http not found response object.
+        HttpResponse: The http not found response object.
     """
-    if SETTINGS["DEBUG"]:
-        return template_response(HttpNotFoundResponse, body=body)
-    return simple_response(HttpNotFoundResponse)
+    if body:
+        if SETTINGS['DEBUG']:
+            response = template_response(
+                HttpNotFoundResponse,
+                body=body,
+            )
+        else:
+            response = simple_response(
+                HttpNotFoundResponse,
+                body=body,
+            )
+        return response
+    return get_404_error_response(request)
 
 
 def merge(
@@ -260,23 +319,23 @@ def merge(
     This merges two http response objects into one http response object
 
     Notes:
-            By default, this only merge content and content headers.
-            This is useful esp when you have a certain type of HttpResponse (for instance HttpNotFoundResponse) but you want that Base response object to have content of a rendered html file.
-
+    - By default, this only merge content and content headers.
+    - This is useful especially when you have a certain type of HttpResponse (for instance HttpNotFoundResponse) 
+       but you want that Base response object to have content of a rendered html file.
     """
     assert isinstance(
         base_response, HttpResponse
     ), f"Argument base_response should be an HttpResponse not {type(base_response)}"
+    
     assert isinstance(
         take_response, HttpResponse
     ), f"Argument take_response should be an HttpResponse not {type(take_response)}"
 
     base_response.content_obj = take_response.content_obj
-
-    base_response.set_content_headers(
-        force_set=True
-    )  # add all content headers from take_response to base response
-
+    
+    # Add all content headers from take_response to base response
+    base_response.set_content_headers(force_set=True)
+    
     if merge_headers:
         base_response.header_obj.headers.update(take_response.header_obj.headers)
 
@@ -305,11 +364,13 @@ def content_replace(
     ), "Only string or bytes allowed for new_data"
 
     new_data = new_data.encode("utf-8") if isinstance(new_data, str) else new_data
+    
     if not new_content_type:
         raise ValueError(
             "Please provide new_content_type or any of these `use_existing` for no change, `auto` to "
             "automatically determine content type or any valid content type."
         )
+    
     elif new_content_type == "auto":
         new_content_type = None
 
@@ -321,7 +382,7 @@ def content_replace(
 
     response.content_obj.set_content(new_data, new_content_filepath, new_content_type)
 
-    # update content type header
+    # Update content type header
     response.set_content_type_header()
 
     return response
@@ -376,7 +437,7 @@ def resolve(name: str, absolute: bool = True, fallback_url: Optional[str] = None
      
      For example, using it with:
      `
-     pattern = '/url/<some_input>/path'
+     pattern = '/url/<some_input>/path'  
      pattern = '/url/hello*'
      `
          
@@ -409,7 +470,7 @@ def to_response(value: Any) -> Union[BaseResponse, HttpResponse]:
     Converts any value to http response.
 
     Notes:
-        - If value is already a response object, nothing will be done.
+    - If value is already a response object, nothing will be done.
 
     Raises:
         TypeError: If the value is not convertable to http response.
@@ -418,8 +479,6 @@ def to_response(value: Any) -> Union[BaseResponse, HttpResponse]:
 
     if not isinstance(value, BaseResponse):
         if not isinstance(value, allowed_types):
-            raise TypeError(
-                f"Value '{value}' cannot be converted to http response. Consider these types: {allowed_types}"
-            )
+            raise TypeError(f"Value '{value}' cannot be converted to http response. Consider these types: {allowed_types}")
         value = HttpResponse("%s" % value)
     return value

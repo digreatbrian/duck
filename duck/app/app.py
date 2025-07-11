@@ -67,10 +67,11 @@ import signal
 import socket
 import threading
 
+from typing import Optional
+
 import duck.processes as processes
 import duck.contrib.reloader.ducksight as reloader
 
-from typing import Optional
 from duck.app.microapp import HttpsRedirectMicroApp
 from duck.exceptions.all import (
     ApplicationError,
@@ -90,45 +91,23 @@ from duck.utils.timer import (
     Timer,
     TimerThreadPool,
 )
-from duck.utils import ipc
-from duck.utils.path import url_normalize
-from duck.utils.port_recorder import PortRecorder
-from duck.backend.django import bridge
 from duck.logging import logger
 from duck.meta import Meta
 from duck.setup import setup
 from duck.art import display_duck_art
 from duck.version import version
+from duck.utils import ipc
+from duck.utils.net import (is_ipv4, is_ipv6)
+from duck.utils.path import url_normalize
+from duck.utils.port_recorder import PortRecorder
+from duck.utils.lazy import Lazy
 
 
-def is_ipv6(ip_address: str) -> bool:
-    """
-    Check if the provided IP address is a valid IPv6 address.
-    """
-    try:
-        socket.inet_pton(socket.AF_INET6, ip_address)
-        return True
-    except socket.error:
-        return False
-
-
-def is_ipv4(ip_address: str) -> bool:
-    """
-    Check if the provided IP address is a valid IPv4 address.
-    """
-    try:
-        socket.inet_pton(socket.AF_INET, ip_address)
-        return True
-    except socket.error:
-        return False
-
-
-def is_domain(name) -> bool:
-    """
-    Check if the provided name is a valid domain name.
-    """
-    return all(
-        [len(part) <= 63 and part.isalnum() for part in name.split(".")])
+# Import Django bridge function only if USE_DJANGO=True
+if SETTINGS['USE_DJANGO']:
+    from duck.backend.django import bridge
+else:
+    bridge = None
 
 
 class App:
@@ -167,13 +146,54 @@ class App:
         domain: str = None,
         uses_ipv6: bool = False,
         no_checks: bool = False,
+        disable_signal_handler: bool = False,
+        disable_ipc_handler: bool = False,
+        skip_setup: bool = False,
+        enable_force_https_logs: bool = False,
     ):
+        """
+        Initializes the main Duck application instance.
+    
+        This constructor sets up the application server, including optional Django integration,
+        HTTPS redirection, and automation dispatching. It validates IP configuration, initializes
+        environment settings, performs startup checks, and prepares runtime threads for the
+        core services.
+    
+        Args:
+            addr (str): The IP address or hostname the server will bind to. Defaults to "localhost".
+            port (int): The port number to run the application on. Defaults to 8000.
+            domain (str, optional): The public-facing domain for the app. If not provided, defaults to `addr`.
+            uses_ipv6 (bool): Whether to use IPv6 for networking. Defaults to False.
+            no_checks (bool): If True, skips initial environment checks. Defaults to False.
+            disable_signal_handler (bool): If True, disables setup of OS-level signal handlers. Defaults to False.
+            disable_ipc_handler (bool): If True, disables setup of inter-process communication handlers. Defaults to False.
+            skip_setup (bool): If True, skips setting up Duck environment, e.g. setting up urlpatterns and blueprints.
+            enable_force_https_logs (bool): If True, force https microapp logs will be outputed to console. Defaults to False.
+            
+        Raises:
+            ApplicationError: If the provided address is invalid or if multiple main application
+            instances are created (only one is allowed).
+    
+        Side Effects:
+        - Validates IP address format (IPv4 or IPv6).
+        - Initializes HTTPS redirect server if `FORCE_HTTPS` is enabled.
+        - Starts Django server if `USE_DJANGO` is set.
+        - Starts the main application server.
+        - Registers automation triggers if `RUN_AUTOMATIONS` is enabled.
+        - Adds the application port to a port registry to prevent conflicts.
+        
+        Notes:
+        - Only a single instance of the main `App` should be created. For additional services or sub-applications, use `MicroApp`.
+            
+        - Set `disable_ipc_handler=False` **only** in a test environment.
+              The IPC handler introduces a blocking mechanism that keeps the main interpreter running.
+              Disabling it in production may lead to unhandled or improperly managed requests, as the blocking behavior is essential for proper execution.
+        """
         if uses_ipv6 and not is_ipv6(addr) and not str(addr).isalnum():
             raise ApplicationError("Argument uses_ipv6=True yet addr provided is not a valid IPV6 address.")
 
         if not uses_ipv6 and not is_ipv4(addr) and not str(addr).isalnum():
             raise ApplicationError("Argument `addr` is not a valid IPV4 address.")
-        
         
         self.addr = addr
         self.port = port
@@ -185,7 +205,7 @@ class App:
         
         # Set appropriate domain
         self.domain = domain or addr if not uses_ipv6 else f"[{addr}]"
-
+        
         if is_ipv4(self.domain) and self.domain.startswith("0"):
             # IP "0.x.x.x" not allowed as domain because most browsers cannot resolve this.
             self.domain = "localhost"
@@ -195,11 +215,16 @@ class App:
         self.SETTINGS = SETTINGS
         self.DJANGO_ADDR = addr, SETTINGS["DJANGO_BIND_PORT"]
         self.force_https = SETTINGS["FORCE_HTTPS"]
+        self.enable_force_https_logs = enable_force_https_logs
         self.use_django = SETTINGS["USE_DJANGO"]
         self.run_automations = SETTINGS["RUN_AUTOMATIONS"]
+        self.disable_signal_handler = disable_signal_handler
+        self.disable_ipc_handler = disable_ipc_handler
+        self.skip_setup = skip_setup
         
         # Setup Duck environment and the entire application.
-        setup()
+        if not skip_setup:
+            setup()
         
         if not no_checks:
             # run some checks
@@ -213,13 +238,14 @@ class App:
             force_https_addr = addr
             force_https_port = SETTINGS["FORCE_HTTPS_BIND_PORT"]
 
-            self.force_https_app = HttpsRedirectMicroApp(
+            self.force_https_app = Lazy(
+                HttpsRedirectMicroApp,
                 location_root_url=self.absolute_uri,
                 addr=force_https_addr,
                 port=force_https_port,
                 enable_https=False,
                 parent_app=self,
-                no_logs=True,
+                no_logs=not enable_force_https_logs,
                 uses_ipv6=uses_ipv6,
             )  # create force https app
 
@@ -513,7 +539,7 @@ class App:
         if SETTINGS['RUN_AUTOMATIONS']:
             self.automations_dispatcher.prepare_stop()
 
-    def stop(self, log_to_console: bool = True, no_exit=False):
+    def stop(self, log_to_console: bool = True, no_exit: bool = False):
         """
         Stops the application and terminates the whole program.
 
@@ -570,19 +596,21 @@ class App:
                 stop_thread(thread)
             except Exception as e:
                 pass
-
+        
+        try:
+            # Gracefully terminate threads and processes before exiting
+            threading.enumerate()  # Check running threads for debugging
+        except Exception:
+            pass
+                
+        try:
+            # Execute a pre stop method before final termination.
+            self.on_pre_stop()
+        except Exception as e:
+            logger.log_exception(e) # Log the exception.
+          
         # Perform forceful termination if needed
         if not no_exit:
-            try:
-                # Gracefully terminate threads and processes before exiting
-                threading.enumerate()  # Check running threads for debugging
-            except Exception:
-                pass
-            try:
-                # Execute a pre stop method before final termination.
-                self.on_pre_stop()
-            except Exception as e:
-                logger.log_exception(e) # Log the exception.
             os._exit(0)  # Force exit (avoids lingering threads/processes)
 
     def handle_ipc_messages(self):
@@ -690,7 +718,7 @@ class App:
             f"Use Ctrl-C to quit [APP PID: {self.process_id}]",
             level=logger.DEBUG,
             custom_color=logger.Fore.GREEN,
-        )
+        ) if not self.disable_signal_handler else None
 
         if SETTINGS["AUTO_RELOAD"] and SETTINGS["DEBUG"]:
             # Start ducksight reloader (if not running)
@@ -715,9 +743,15 @@ class App:
             level=logger.DEBUG,
             custom_color=logger.Fore.GREEN,
         )
-        self.register_signals()  # bind signals to appropriate signal_handler
+        
+        if not self.disable_signal_handler:
+            self.register_signals()  # bind signals to appropriate signal_handler
+        
+        # Update application state
         self.started = True
-        self.handle_ipc_messages() # this is a blocking operation
+        
+        if not self.disable_ipc_handler:
+            self.handle_ipc_messages() # this is a blocking operation
 
     def needs_reload(self) -> bool:
         """

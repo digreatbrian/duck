@@ -13,21 +13,38 @@ import asyncio
 import threading
 
 from functools import partial
-from typing import Optional, Tuple, Coroutine, Union, Callable
-
+from typing import (
+    Optional,
+    Tuple,
+    Coroutine,
+    Union,
+    Callable,
+)
 from duck.contrib.responses import (
     simple_response,
     template_response,
+)
+from duck.contrib.sync import (
+    iscoroutinefunction,
+    sync_to_async,
 )
 from duck.http.core.handler import (
     ResponseHandler,
     log_response,
 )
 from duck.settings import SETTINGS
+from duck.settings.loaded import (
+    REQUEST_HANDLING_TASK_EXECUTOR,
+    REQUEST_CLASS,
+    ASGI, WSGI
+)
 from duck.exceptions.all import SettingsError
 from duck.logging import logger
 from duck.meta import Meta
-from duck.http.core.processor import RequestProcessor
+from duck.http.core.processor import (
+    AsyncRequestProcessor,
+    RequestProcessor,
+)
 from duck.http.request import HttpRequest
 from duck.http.request_data import (
     RawRequestData,
@@ -37,38 +54,27 @@ from duck.http.response import (
     HttpRequestTimeoutResponse,
     HttpResponse,
 )
+from duck.contrib.responses.errors import get_timeout_error_response 
 from duck.utils.dateutils import (
     django_short_local_date,
     short_local_date,
 )
 from duck.utils.ssl import is_ssl_data
 from duck.utils.sockservers import xsocket
+from duck.utils.lazy import Lazy
 
 
-# Using raw bytes string for the regex
-KEEP_ALIVE_REGEX = rb"(?i)\bConnection\s*:\s*keep\s*-?\s*alive\b"
-
-
+KEEP_ALIVE_PATTERN = re.compile(rb"(?i)\bConnection\s*:\s*keep\s*-?\s*alive\b")
 KEEP_ALIVE_TIMEOUT = SETTINGS["KEEP_ALIVE_TIMEOUT"]
-
-
-ASYNC_HANDLING = SETTINGS["ASYNC_HANDLING"]
-
-
 SERVER_POLL = SETTINGS["SERVER_POLL"]
-
-
 SERVER_BUFFER = SETTINGS["SERVER_BUFFER"]
-
-
 REQUEST_TIMEOUT = SETTINGS["REQUEST_TIMEOUT"]
-
-
+STREAM_TIMEOUT = SETTINGS["REQUEST_STREAM_TIMEOUT"]
 CONNECTION_MODE = SETTINGS["CONNECTION_MODE"]
-
-
+CONTENT_LENGTH_PATTERN = re.compile(rb"(?i)content-length:\s*(\d+)")
+TRANSFER_ENCODING_PATTERN = re.compile(rb"(?i)transfer-encoding:\s*([^\r\n]+)")
 # Class for sending and logging resoponses
-response_handler = ResponseHandler()
+response_handler = Lazy(ResponseHandler)
 
 
 def call_request_handling_executor(task: Union[threading.Thread, Coroutine]):
@@ -76,36 +82,17 @@ def call_request_handling_executor(task: Union[threading.Thread, Coroutine]):
     This calls the request handling executor with the provided task (thread or coroutine) and the 
     request handling executor keyword arguments set in settings.py.
     """
-    from duck.settings.loaded import REQUEST_HANDLING_TASK_EXECUTOR
-    
     REQUEST_HANDLING_TASK_EXECUTOR.execute(task) # execute thread or coroutine.
-
-
-def get_timeout_error_response(timeout: Optional[Union[int, float]]) -> HttpRequestTimeoutResponse:
-    """
-    Returns the request timeout error response.
-    
-    Args:
-        timeout (Union[int, float]): The timeout in seconds.
-        
-    """
-    if SETTINGS["DEBUG"]:
-        body = "<p>Client sent nothing in expected time it was suppose to!</p>"
-        
-        if timeout:
-            body = "<p>Client sent nothing in expected time it was suppose to!</p><div>Timeout: ({timeout} seconds)</div>"
-        
-        response = template_response(
-            HttpRequestTimeoutResponse,
-            body=body,
-        )
-    else:
-        response = simple_response(HttpRequestTimeoutResponse)
 
 
 class BaseServer:
     """
-    BaseServer class containing server definitions.
+    Base server class containing core server definitions and behaviors.
+    
+    Features:
+    - HTTP Keep-Alive support for persistent connections.
+    - Support for incoming requests using chunked Transfer-Encoding.
+    - Synchronous + Asynchronous request handling using `WSGI` or `ASGI`.'
     """
 
     poll: float | int = SERVER_POLL
@@ -152,10 +139,10 @@ class BaseServer:
         except Exception:
             # ignore any exception
             pass
-    
+            
     def start_server(self, no_logs: bool = False, domain: str = None):
         """
-        Starts HTTP or HTTPS based server.
+        Starts the `HTTP(S)` server.
 
         Args:
             no_logs (bool, optional): Whether to or not to log messages like `started server on ...` (defaults to False)
@@ -175,32 +162,44 @@ class BaseServer:
         duck_host = (list(duck_host)[0] if isinstance(duck_host, tuple) else duck_host or "localhost")
         server_url = "https" if self.enable_ssl else "http"
         server_url += f"://{duck_host}:{port}"
+        server_gateway = "WSGI" if not SETTINGS['ASYNC_HANDLING'] else "ASGI"
         
         if not no_logs:
             if SETTINGS["DEBUG"]:
-                logger.log(f"Started Duck Server on {server_url}", level=logger.DEBUG)
+                logger.log(f"Started Duck {server_gateway} Server on {server_url}", level=logger.DEBUG)
             else:
                 logger.log(
-                    f"Started Duck Pro Server on {server_url}\n  ├── PRODUCTION SERVER (domain: {domain or 'Not set'}) \n  "
-                    f"└── This is a production server, always stay secure! ",
+                    f"Started Duck Pro {server_gateway} Server on {server_url}\n  ├── PRODUCTION SERVER (domain: {domain or 'Not set'}) \n  "
+                    f"└── This is a production server, stay secure!",
                      level=logger.DEBUG,
                  )
+                 
+                if SETTINGS['SUPPORT_HTTP_2'] or SETTINGS['ASYNC_HANDLING']:
+                     if SETTINGS['ASYNC_LOOP'] != "uvloop":
+                         logger.log(
+                             "Default asyncio loop enabled, 'uvloop' is recommended for better performance.", 
+                             level=logger.WARNING,
+                         )
         
         # Listen and set the server in running state
         self.running = True
         
         # Listen and accept incoming connections
         while self.running:
-            
             try:
                 # Accept incoming connections
+                sock = None
+                
                 if self.uses_ipv6:
-                    self.accept_and_handle_ipv6()
+                    sock = self.accept_and_handle_ipv6()
                 else:
-                    self.accept_and_handle_ipv4()
+                    sock = self.accept_and_handle_ipv4()
                 
             except ssl.SSLError as e:
                 # Wrong protocol used e.g., https on http or vice versa
+                if sock:
+                    self.close_socket(sock)
+                    
                 if not no_logs and SETTINGS["VERBOSE_LOGGING"] and SETTINGS["DEBUG"]:
                     if "HTTP_REQUEST" in str(e):
                         logger.log(f"Client may be trying to connect with https on http server or vice-versa: {e}", level=logger.WARNING)
@@ -209,6 +208,9 @@ class BaseServer:
                 pass
         
             except Exception as e:
+                if sock:
+                    self.close_socket(sock)
+                    
                 if not no_logs:
                     logger.log_exception(e)
 
@@ -239,29 +241,43 @@ class BaseServer:
     def accept_and_handle_ipv6(self):
         """
         Accepts and handle IPV6 connection.
+        
+        Returns:
+            xsocket: The client socket.
         """
         sock, (host, port, flowinfo, scopeid)  = self.sock.accept()
         sock = xsocket.from_socket(sock)
         addr = (host, port)
-        args = (self.handle_conn, sock, addr, flowinfo, scopeid)
+        async_handling = SETTINGS['ASYNC_HANDLING']
+        args = (self.handle_conn if not async_handling else self.async_handle_conn, sock, addr, flowinfo, scopeid)
         
-        if ASYNC_HANDLING:
+        if async_handling:
             self._start_async_task(*args)
         else:
             self._start_thread(*args)
+        
+        # Finally return the client socket.
+        return sock
             
     def accept_and_handle_ipv4(self):
         """
         Accepts and handle IPV4 connection.
+        
+        Returns:
+            xsocket: Client socket object.
         """
         sock, addr = self.sock.accept()
         sock = xsocket.from_socket(sock)
-        args = (self.handle_conn, sock, addr)
+        async_handling = SETTINGS['ASYNC_HANDLING']
+        args = (self.handle_conn if not async_handling else self.async_handle_conn, sock, addr)
         
-        if ASYNC_HANDLING:
+        if async_handling:
             self._start_async_task(*args)
         else:
             self._start_thread(*args)
+        
+        # Finally return the client socket
+        return sock
         
     def handle_conn(
         self,
@@ -280,6 +296,8 @@ class BaseServer:
             scopeid (Optional): Scope id if IPv6.
         """
         sock.addr = addr
+        sock.flowinfo = flowinfo
+        sock.scopeid = scopeid
         
         try:
             # Receive the full request (in bytes)
@@ -296,6 +314,48 @@ class BaseServer:
         
         # Process data/request 
         self.process_data(sock, addr, RawRequestData(data))
+        
+        # Close client socket just in case it is not closed
+        self.close_socket(sock)
+    
+    async def async_handle_conn(
+        self,
+        sock: socket.socket,
+        addr: Tuple[str, int],
+        flowinfo: Optional = None,
+        scopeid: Optional = None,
+    ) -> None:
+        """
+        Main entry point to handle new connection asynchronously (supports both ipv6 and ipv4).
+
+        Args:
+            sock (socket.socket): The client socket object.
+            addr (Tuple[str, int]): Client ip address and port.
+            flowinfo (Optional): Flow info if IPv6.
+            scopeid (Optional): Scope id if IPv6.
+        """
+        sock.addr = addr
+        sock.flowinfo = flowinfo
+        sock.scopeid = scopeid
+        
+        try:
+            # Receive the full request (in bytes)
+            data = await self.async_receive_full_request(sock, self.request_timeout)
+        except TimeoutError:
+            # For the first request, client took too long to respond.
+            await self.async_do_request_timeout(sock, addr)
+            return
+        
+        if not data:
+            # Client sent an empty request, terminate the connection immediately
+            await self.close_socket(sock)
+            return
+        
+        # Process data/request 
+        await self.async_process_data(sock, addr, RawRequestData(data))
+        
+        # Close client socket just in case it is not closed
+        self.close_socket(sock)
     
     def process_data(self, sock, addr, request_data: RawRequestData):
         """
@@ -320,7 +380,7 @@ class BaseServer:
             logger.log_exception(e)
         
         finally:
-            keep_alive_re = re.compile(KEEP_ALIVE_REGEX)
+            keep_alive_re = KEEP_ALIVE_PATTERN
             
             # Check if client wants a keep alive connection
             # Only handle keep alive connection if the server supports it.
@@ -328,6 +388,41 @@ class BaseServer:
                 if self.connection_mode == "keep-alive":
                     # server supports keep alive
                     self.handle_keep_alive_conn(sock, addr)
+            
+            # Finally close the socket if everything is finished
+            self.close_socket(sock)
+    
+    async def async_process_data(self, sock, addr, request_data: RawRequestData):
+        """
+        Process and handle the request dynamically and asynchronously
+        """
+        data = request_data.data if isinstance(request_data, RawRequestData) else request_data.content
+        
+        if is_ssl_data(data):
+            if SETTINGS['DEBUG']:
+                logger.log(
+                    "Data should be decoded at this point but it seems like it's ssl data",
+                    level=logger.WARNING,
+                )
+                logger.log(f"Client may be trying to connect with https on http server or vice-versa\n", level=logger.WARNING)
+            return None
+            
+        try:
+            await self.async_process_and_handle_request(sock, addr, request_data)
+        except Exception as e:
+            # processing and handling error resulted in an error
+            # log the error message
+            logger.log_exception(e)
+        
+        finally:
+            keep_alive_re = KEEP_ALIVE_PATTERN
+            
+            # Check if client wants a keep alive connection
+            # Only handle keep alive connection if the server supports it.
+            if keep_alive_re.search(data.split(b"\r\n\r\n")[0]):  # target headers only
+                if self.connection_mode == "keep-alive":
+                    # server supports keep alive
+                    await self.async_handle_keep_alive_conn(sock, addr)
             
             # Finally close the socket if everything is finished
             self.close_socket(sock)
@@ -367,18 +462,67 @@ class BaseServer:
             finally:
                 # After every keep alive cycle, check if client still wants to continue with
                 # the connection or terminate immediately
-                keep_alive_re = re.compile(KEEP_ALIVE_REGEX)
+                keep_alive_re = KEEP_ALIVE_PATTERN
                 
                 if keep_alive_re.search(data.split(b"\r\n\r\n")[0]):
                     # client seem to like to continue with keep alive connection
                     if self.connection_mode == "keep-alive":
                         # keep connection alive
                         continue
-                    break
+                    else:
+                        break
                 else:
                     # Client would like to terminate keep alive connection.
                     break
-
+    
+    async def async_handle_keep_alive_conn(
+        self,
+        sock: socket.socket,
+        addr: Tuple[str, int],
+    ) -> None:
+        """
+        Processes and handles keep alive connection asynchronously.
+        """
+        
+        # Assume the client wants keep alive to run forever until explicitly stated to end it.
+        while True:
+            try:
+                # Receive client request with a timeout.
+                data = await self.async_receive_full_request(sock, KEEP_ALIVE_TIMEOUT)
+                
+                if not data:
+                    # Client sent nothing or closed connection
+                    # End the keep alive data exchange immediately
+                    break
+                
+                # Process and handle the complete request using appropriate WSGI
+                await self.async_process_and_handle_request(sock, addr, RawRequestData(data))
+            
+            except TimeoutError:
+                # Client sent nothing in expected time it was suppose to
+                # Close connection immediately
+                break
+            
+            except Exception as e:
+                # Encountered an unknown exception, log that exception right away
+                logger.log_exception(e)
+            
+            finally:
+                # After every keep alive cycle, check if client still wants to continue with
+                # the connection or terminate immediately
+                keep_alive_re = KEEP_ALIVE_PATTERN
+                
+                if keep_alive_re.search(data.split(b"\r\n\r\n")[0]):
+                    # client seem to like to continue with keep alive connection
+                    if self.connection_mode == "keep-alive":
+                        # keep connection alive
+                        continue
+                    else:
+                        break
+                else:
+                    # Client would like to terminate keep alive connection.
+                    break
+                    
     def do_request_timeout(
         self,
         sock: socket.socket,
@@ -405,6 +549,33 @@ class BaseServer:
         
         # Close client socket immediately
         self.close_socket(sock)
+    
+    async def async_do_request_timeout(
+        self,
+        sock: socket.socket,
+        addr: Tuple[str, int],
+        no_logs: bool = False,
+    ):
+        """
+        Sends request timeout response to client and close connection asynchronously.
+
+        Args:
+                sock (socket.socket): Client socket object
+                addr (Tuple[str, int]): Client ip address and port.
+                no_logs (bool): Whether to log response to console.
+        """
+        # Send timeout error message to client.
+        timeout_response = get_timeout_error_response(timeout=self.request_timeout)
+        
+        # Send timeout response
+        await response_handler.async_send_response(
+            timeout_response,
+            sock,
+            disable_logging=no_logs,
+         )
+        
+        # Close client socket immediately
+        self.close_socket(sock)
         
     def process_and_handle_request(
         self,
@@ -420,9 +591,32 @@ class BaseServer:
                 addr (Tuple[str, int]): Tuple for ip and port from where this request is coming from, ie Client addr
                 request_data (RequestData): The request data object
         """
-        from duck.settings.loaded import WSGI as handle_wsgi_request
+        handle_wsgi_request = WSGI
         
         handle_wsgi_request(
+            self.application,
+            sock,
+            addr,
+            request_data,
+        )
+    
+    async def async_process_and_handle_request(
+        self,
+        sock: socket.socket,
+        addr: Tuple[str, int],
+        request_data: RequestData,
+    ) -> None:
+        """
+        Asynchronously processes the request using WSGI application callable.
+
+        Args:
+                sock (socket.socket): Client Socket object
+                addr (Tuple[str, int]): Tuple for ip and port from where this request is coming from, ie Client addr
+                request_data (RequestData): The request data object
+        """
+        handle_asgi_request = ASGI
+        
+        await handle_asgi_request(
             self.application,
             sock,
             addr,
@@ -432,7 +626,7 @@ class BaseServer:
     def receive_data(
         self,
         sock: socket.socket,
-        timeout: Union[int, float] = 1,
+        timeout: Union[int, float] = REQUEST_TIMEOUT,
     ) -> bytes:
         """
         Receives data from the socket but raises a TimeoutError if no data is received within the specified time.
@@ -465,12 +659,49 @@ class BaseServer:
         finally:
             # Reset the timeout.
             sock.settimeout(None)
+    
+    async def async_receive_data(
+        self,
+        sock: socket.socket,
+        timeout: Union[int, float] = REQUEST_TIMEOUT,
+    ) -> bytes:
+        """
+        Asynchronously receives data from the socket but raises a TimeoutError if no data is received within the specified time.
 
+        Args:
+            sock (socket.socket): The socket object to receive data from.
+            timeout (Union[int, float]): The timeout in seconds to receive data.
+
+        Raises:
+            TimeoutError: If no data is received within the specified time.
+
+        Returns:
+            bytes: The received data in bytes.
+        """
+        sock.settimeout(timeout) # apply the timeout.
+        data = b""
+        
+        try:
+            # Receive data once
+            data = await sync_to_async(sock.recv, thread_sensitive=True)(self.buffer)
+            return data
+        except socket.timeout:
+            # No data received within expected timeout.
+            raise TimeoutError("No data received within specified timeout")
+        
+        except Exception:
+            # Encountered an unknown exception, return data as it is.
+            return data
+        
+        finally:
+            # Reset the timeout.
+            sock.settimeout(None)
+            
     def receive_full_request(
         self,
         sock: socket.socket,
-        timeout: Union[int, float] = 1,
-        stream_timeout: Union[int, float] = .1,
+        timeout: Union[int, float] = REQUEST_TIMEOUT,
+        stream_timeout: Union[int, float] = STREAM_TIMEOUT,
      ) -> bytes:
         """
         Receives the complete request data from the socket.
@@ -480,7 +711,7 @@ class BaseServer:
                 timeout (Union[int, float]): Timeout in seconds to receive the first part of the data.
                 stream_timeout (Union[int, float]):
                     The timeout in seconds to receive the next stream of
-                    bytes after the first part has been received. Default to 0.1 for instant data streaming.
+                    bytes after the first part has been received.
         
         Raises:
                 TimeoutError: If no data is received within the first timeout (not stream timeout).
@@ -492,67 +723,330 @@ class BaseServer:
             # Receive the first part of data
             data = self.receive_data(sock, timeout)
         
-        except ConnectionResetError:
-            # Connection was reset whilst receiving data, return empty bytes
+        except (ConnectionResetError, TimeoutError, Exception):
+            # Return empty bytes
             return b""
         
-        except TimeoutError as e:
-            # No data was received within the timeout, returm empty bytes
-            return b""
+        def receive_data_upto_headers_end(data: bytearray):
+            """
+            Receives data until all headers have been received.
+            
+            Raises:
+                ConnectionResetError: On connection close.
+                TimeoutError: If we receive nothing in certain timeframe.
+                Exception: Any unknown exception.
+            """
+            # Receive data until there is enough \r\n\r\n
+            while not b"\r\n\r\n" in data:
+                data += self.receive_data(sock, timeout)
+            
         
-        except Exception:
-            # Unknown exception, return empty bytes
-            return b""
+        def receive_data_using_content_length(data: bytearray, content_length: int):
+            """
+            Receive more data using the content-length header.
+            """
+            _, received_content = data.split(b"\r\n\r\n", 1)        
+            received_length = len(received_content)
+            
+            while received_length < content_length:
+                try:
+                    # Receive data with a stream timeout
+                    more_data = self.receive_data(sock, timeout)
+                    data += more_data
+                    received_length += len(more_data)
+                    if not more_data:
+                        # Data received is empty, this may mean the client is done sending.
+                        break
+                    
+                except (ConnectionResetError, TimeoutError, Exception):
+                    return
+                    
+        def receive_data_using_transfer_encoding(data: bytearray, encoding: bytes):
+            """
+            Efficiently receive and process data using the 'chunked' transfer-encoding.
+            Only 'chunked' is supported.
         
-        if data:
-            # First part of data is not empty
+            Args:
+                data (bytearray): Mutable bytearray holding already received request data.
+                encoding (bytes): Value of the Transfer-Encoding header.
+        
+            Raises:
+                Exception: On invalid chunk sizes or unexpected stream errors.
+            """
+            if encoding.strip().lower() != b"chunked":
+                receive_data_using_streaming_method(data)
+                return
+        
+            _, body = data.split(b"\r\n\r\n", 1)
+            body_offset = len(data) - len(body)
+        
+            while True:
+                # Read chunk size line
+                while b"\r\n" not in data[body_offset:]:
+                    try:
+                        more = self.receive_data(sock, stream_timeout)
+                        data += more
+                    except (ConnectionResetError, TimeoutError, Exception):
+                        return
+                        
+                # Parse chunk size
+                try:
+                    newline_index = data.index(b"\r\n", body_offset)
+                    chunk_size_line = data[body_offset:newline_index]
+                    chunk_size = int(chunk_size_line.split(b";")[0].strip(), 16)
+                except Exception:
+                    return  # Invalid chunk size line
+        
+                body_offset = newline_index + 2  # Move past \r\n
+        
+                if chunk_size == 0:
+                    # Final chunk
+                    # Receive the trailing \r\n after the final chunk
+                    while len(data) < body_offset + 2:
+                        try:
+                            more = self.receive_data(sock, stream_timeout)
+                            data += more
+                        except (ConnectionResetError, TimeoutError, Exception):
+                            return
+                    return
+        
+                # Receive chunk data + \r\n
+                remaining = chunk_size + 2  # chunk data + trailing \r\n
+                while len(data) - body_offset < remaining:
+                    try:
+                        more = self.receive_data(sock, stream_timeout)
+                        data += more
+                    except (ConnectionResetError, TimeoutError, Exception):
+                        return
+        
+                body_offset += remaining  # Move offset past the full chunk
+            
+        def receive_data_using_streaming_method(data: bytearray):
+            """
+            Receive data through streaming interval method where if we 
+            don't receive data within specific timeout, that means the data is complete.
+            """
             while True:
                 try:
                     # Receive data with a stream timeout
                     more_data = self.receive_data(sock, stream_timeout)
                     data += more_data
-                    if not data:
+                    if not more_data:
                         # Data received is empty, this may mean the client is done sending.
                         break
-                
-                except TimeoutError as e:
-                    # Client sent nothing within the stream timeout, ignore and stop receiving more data
-                    break
-                
-                except Exception:
-                    # Unknown exception, ignore and stop receiving more data
-                    break
+                except (ConnectionResetError, TimeoutError, Exception):
+                    return
         
+        if data:
+            # First part of data is not empty
+            # Prefer receive_data_using_content_length over receive_data_using_streaming_method, these
+            # approaches modify data inplace.
+            
+            # Modify data to be mutable in nested functions
+            data = bytearray(data)
+            
+            try:
+                # Receive until headers are complete.
+                receive_data_upto_headers_end(data)
+            except (ConnectionResetError, TimeoutError, Exception):
+                return bytes(data)    
+            
+            encoding_match = TRANSFER_ENCODING_PATTERN.search(data)
+            
+            if encoding_match:
+                receive_data_using_transfer_encoding(data, encoding_match.group(1))
+                return bytes(data)
+            
+            # Try to extract Content-Length using a regex (fast, direct)
+            length_match = CONTENT_LENGTH_PATTERN.search(data)
+            
+            if length_match:
+                try:
+                    content_length = int(length_match.group(1))
+                    receive_data_using_content_length(data, content_length)
+                except ValueError:               
+                    receive_data_using_streaming_method(data)
+            else:
+                receive_data_using_streaming_method(data)
+            
         # Return the received data
-        return data
-    
-    def is_socket_closed(self, sock: socket.socket, timeout: float=.1) -> bool:
-        """
-        Checks if a client socket has closed the connection.
+        return bytes(data)
         
-        Note:
-            - This may hang if the connected endpoint doesn't send anything. Utilize socket.settimeout to counter this.
-
+    async def async_receive_full_request(
+        self,
+        sock: socket.socket,
+        timeout: Union[int, float] = REQUEST_TIMEOUT,
+        stream_timeout: Union[int, float] = STREAM_TIMEOUT,
+     ) -> bytes:
+        """
+        Asynchronously receives the complete request data from the socket.
+        
         Args:
-            sock (socket.socket): The client socket.
+                sock (socket.socket): The socket object
+                timeout (Union[int, float]): Timeout in seconds to receive the first part of the data.
+                stream_timeout (Union[int, float]):
+                    The timeout in seconds to receive the next stream of
+                    bytes after the first part has been received.
+        
+        Raises:
+                TimeoutError: If no data is received within the first timeout (not stream timeout).
 
         Returns:
-            bool: True if the socket is closed, False otherwise.
+                bytes: The received data in bytes.
         """
         try:
-            # Use select to check if the socket is readable
-            r, _, _ = select.select([sock], [], [], 0)
-            if r:
-                data = sock.recv(1, socket.MSG_PEEK)
-                if len(data) == 0:
-                    return True
-            return False
-        except socket.error:
-            return True
-        except ValueError or OSError:
-            # likely socket is closed
-            return True
-    
+            # Receive the first part of data
+            data = await self.async_receive_data(sock, timeout)
+        
+        except (ConnectionResetError, TimeoutError, Exception):
+            # Return empty bytes
+            return b""
+        
+        async def receive_data_upto_headers_end(data: bytearray):
+            """
+            Receives data until all headers have been received.
+            
+            Raises:
+                ConnectionResetError: On connection close.
+                TimeoutError: If we receive nothing in certain timeframe.
+                Exception: Any unknown exception.
+            """
+            # Receive data until there is enough \r\n\r\n
+            while not b"\r\n\r\n" in data:
+                data += await self.async_receive_data(sock, timeout)
+            
+        
+        async def receive_data_using_content_length(data: bytearray, content_length: int):
+            """
+            Receive more data using the content-length header.
+            """
+            _, received_content = data.split(b"\r\n\r\n", 1)        
+            received_length = len(received_content)
+            
+            while received_length < content_length:
+                try:
+                    # Receive data with a stream timeout
+                    more_data = await self.async_receive_data(sock, timeout)
+                    data += more_data
+                    received_length += len(more_data)
+                    if not more_data:
+                        # Data received is empty, this may mean the client is done sending.
+                        break
+                    
+                except (ConnectionResetError, TimeoutError, Exception):
+                    return
+                    
+        async def receive_data_using_transfer_encoding(data: bytearray, encoding: bytes):
+            """
+            Efficiently receive and process data using the 'chunked' transfer-encoding.
+            Only 'chunked' is supported.
+        
+            Args:
+                data (bytearray): Mutable bytearray holding already received request data.
+                encoding (bytes): Value of the Transfer-Encoding header.
+        
+            Raises:
+                Exception: On invalid chunk sizes or unexpected stream errors.
+            """
+            if encoding.strip().lower() != b"chunked":
+                await receive_data_using_streaming_method(data)
+                return
+        
+            _, body = data.split(b"\r\n\r\n", 1)
+            body_offset = len(data) - len(body)
+        
+            while True:
+                # Read chunk size line
+                while b"\r\n" not in data[body_offset:]:
+                    try:
+                        more = await self.async_receive_data(sock, stream_timeout)
+                        data += more
+                    except (ConnectionResetError, TimeoutError, Exception):
+                        return
+                        
+                # Parse chunk size
+                try:
+                    newline_index = data.index(b"\r\n", body_offset)
+                    chunk_size_line = data[body_offset:newline_index]
+                    chunk_size = int(chunk_size_line.split(b";")[0].strip(), 16)
+                except Exception:
+                    return  # Invalid chunk size line
+        
+                body_offset = newline_index + 2  # Move past \r\n
+        
+                if chunk_size == 0:
+                    # Final chunk
+                    # Receive the trailing \r\n after the final chunk
+                    while len(data) < body_offset + 2:
+                        try:
+                            more = await self.async_receive_data(sock, stream_timeout)
+                            data += more
+                        except (ConnectionResetError, TimeoutError, Exception):
+                            return
+                    return
+        
+                # Receive chunk data + \r\n
+                remaining = chunk_size + 2  # chunk data + trailing \r\n
+                while len(data) - body_offset < remaining:
+                    try:
+                        more = await self.async_receive_data(sock, stream_timeout)
+                        data += more
+                    except (ConnectionResetError, TimeoutError, Exception):
+                        return
+        
+                body_offset += remaining  # Move offset past the full chunk
+            
+        async def receive_data_using_streaming_method(data: bytearray):
+            """
+            Receive data through streaming interval method where if we 
+            don't receive data within specific timeout, that means the data is complete.
+            """
+            while True:
+                try:
+                    # Receive data with a stream timeout
+                    more_data = await self.async_receive_data(sock, stream_timeout)
+                    data += more_data
+                    if not more_data:
+                        # Data received is empty, this may mean the client is done sending.
+                        break
+                except (ConnectionResetError, TimeoutError, Exception):
+                    return
+        
+        if data:
+            # First part of data is not empty
+            # Prefer receive_data_using_content_length over receive_data_using_streaming_method, these
+            # approaches modify data inplace.
+            
+            # Modify data to be mutable in nested functions
+            data = bytearray(data)
+            
+            try:
+                # Receive until headers are complete.
+                await receive_data_upto_headers_end(data)
+            except (ConnectionResetError, TimeoutError, Exception):
+                return bytes(data)    
+            
+            encoding_match = TRANSFER_ENCODING_PATTERN.search(data)
+            
+            if encoding_match:
+                await receive_data_using_transfer_encoding(data, encoding_match.group(1))
+                return bytes(data)
+            
+            # Try to extract Content-Length using a regex (fast, direct)
+            length_match = CONTENT_LENGTH_PATTERN.search(data)
+            
+            if length_match:
+                try:
+                    content_length = int(length_match.group(1))
+                    await receive_data_using_content_length(data, content_length)
+                except ValueError:               
+                    await receive_data_using_streaming_method(data)
+            else:
+                await receive_data_using_streaming_method(data)
+            
+        # Return the received data
+        return bytes(data)
+        
     def _start_thread(
         self,
         target: Callable,
@@ -573,13 +1067,14 @@ class BaseServer:
         """
         args = [sock, addr]
         ip, port = addr
+        sock.t0 = time.perf_counter()
         
         if flowinfo is not None and scopeid is not None:
             args.extend([flowinfo, scopeid])
 
         task = partial(target, *args)
-        task.name=f"client-{ip}@{port}",
-       
+        task.name=f"client-{ip}@{port}"
+        
         # Execute request handling in new thread
         call_request_handling_executor(task)
 
@@ -606,16 +1101,14 @@ class BaseServer:
         if flowinfo is not None and scopeid is not None:
             args.extend([flowinfo, scopeid])
         
-        async def inner_client_task():
-            # inner function to request handling task execution
-            target(*args)
-            
-        async def client_task(): # create the asynchronous request handling coroutine.
-            # entry function to task execution
-            await inner_client_task()
+        if iscoroutinefunction(target):
+            # Execute request handling coroutine
+            coro = target(*args)
+            call_request_handling_executor(coro)
         
-        # Execute request handling coroutine
-        call_request_handling_executor(client_task)
+        else:
+            # Execute request handling coroutine
+            call_request_handling_executor(sync_to_async(target, thread_sensitive=True)(*args))
 
 
 class BaseMicroServer:
@@ -632,7 +1125,7 @@ class BaseMicroServer:
         if not isinstance(microapp, MicroApp):
             raise ValueError(f"MicroApp instance expected, received {type(micropp)} instead.")
         self.microapp = microapp # set the micro application instance
-
+    
     def process_and_handle_request(
         self,
         sock: socket.socket,
@@ -648,8 +1141,7 @@ class BaseMicroServer:
             request_data (RequestData): The full request data object.
         """
         from duck.shortcuts import to_response
-        from duck.settings.loaded import WSGI, REQUEST_CLASS 
-
+        
         request_class = REQUEST_CLASS
 
         if not issubclass(request_class, HttpRequest):
@@ -696,6 +1188,79 @@ class BaseMicroServer:
             WSGI.finalize_response(response, request)
             
             response_handler.send_response(
+                response,
+                client_socket=request.client_socket,
+                request=request,
+                disable_logging=self.microapp.no_logs,
+            )
+            
+            if not self.microapp.no_logs:
+                # If logs are not disabled for the micro application, log error immediately
+                logger.log_exception(e)
+        
+    async def async_process_and_handle_request(
+        self,
+        sock: socket.socket,
+        addr: Tuple[str, int],
+        request_data: RequestData,
+    ) -> None:
+        """
+        Processes and handles the request asynchronously.
+
+        Args:
+            sock (socket.socket): The target client socket.
+            addr (Tuple): The client address and port.
+            request_data (RequestData): The full request data object.
+        """
+        from duck.shortcuts import to_response
+        from duck.settings.loaded import ASGI, REQUEST_CLASS 
+
+        request_class = REQUEST_CLASS
+
+        if not issubclass(request_class, HttpRequest):
+            raise SettingsError(
+                f"REQUEST_CLASS set in settings.py should be an instance of Duck HttpRequest not {request_class}"
+            )
+        
+        try:
+            request = request_class(
+                client_socket=sock,
+                client_address=addr,
+            ) # create an http request instance.
+            
+            # Parse request data to create a request object.
+            await sync_to_async(request.parse, thread_sensitive=False)(request_data)
+            
+            # Process the request and obtain the http response by
+            # parsing the request and the predefined request processor.
+            # This method also finalizes response by default.
+            response = await self.microapp._async_view(
+                request,
+                AsyncRequestProcessor(request),
+            )
+            
+            # Validate the response type.
+            response = to_response(response)
+            
+            # Send the http response back to client
+            await response_handler.async_send_response(
+                response,
+                client_socket=request.client_socket,
+                request=request,
+                disable_logging=self.microapp.no_logs,
+            )
+
+        except Exception as e:
+            # Encountered an unknown error.
+            from duck.http.core.asgi import get_server_error_response
+            
+            # Send an http server error response to client.
+            response = get_server_error_response(e, request)
+           
+            # Finalize server error response
+            await ASGI.finalize_response(response, request)
+            
+            await response_handler.async_send_response(
                 response,
                 client_socket=request.client_socket,
                 request=request,

@@ -13,12 +13,16 @@ import urllib.parse
 from duck.etc.internals.template_engine import InternalDuckEngine
 from duck.http.middlewares import BaseMiddleware
 from duck.http.request import HttpRequest
-from duck.http.response import HttpForbiddenRequestResponse, TemplateResponse
+from duck.http.response import (
+    HttpForbiddenRequestResponse,
+    TemplateResponse,
+)
 from duck.meta import Meta
 from duck.settings import SETTINGS
 from duck.utils.urlcrack import URL
 from duck.utils.safe_compare import constant_time_compare
 from duck.shortcuts import simple_response
+
 
 CSRF_USE_SESSIONS = SETTINGS["CSRF_USE_SESSIONS"]
 
@@ -40,8 +44,7 @@ def generate_dynamic_secret_key() -> bytes:
         bytes: A dynamic, secure key derived from system-specific data.
     """
     # Use machine-specific information (e.g., os.urandom, hostname, or MAC address)
-    machine_specific_data = os.getenv("HOSTNAME",
-                                      "default_host").encode() + os.urandom(16)
+    machine_specific_data = os.getenv("HOSTNAME", "default_host").encode() + os.urandom(16)
     key = hashlib.sha256(machine_specific_data).digest()
     return key
 
@@ -162,6 +165,7 @@ def get_csrf_token(request):
         # the csrf secret in request.META is invalid, add new one
         csrf_secret = add_new_csrf_cookie(request)
         csrf_token = mask_cipher_secret(csrf_secret)
+    
     if CSRF_USE_SESSIONS:
         request.session[CSRF_SESSION_KEY] = csrf_secret
     return csrf_token
@@ -355,12 +359,10 @@ class CSRFMiddleware(BaseMiddleware):
             # csrf cookie needs to be sent to client
             csrf_secret = request.META.get("CSRF_COOKIE")
             csrf_cookie_name = SETTINGS["CSRF_COOKIE_NAME"]
-            csrf_cookie_domain = SETTINGS[
-                "CSRF_COOKIE_DOMAIN"] or Meta.get_metadata(
-                    "DUCK_SERVER_DOMAIN")
+            csrf_cookie_domain = SETTINGS["CSRF_COOKIE_DOMAIN"] or \
+                Meta.get_metadata("DUCK_SERVER_DOMAIN")
             max_age = SETTINGS["CSRF_COOKIE_AGE"]
-            expires = datetime.datetime.utcnow() + datetime.timedelta(
-                seconds=max_age)
+            expires = datetime.datetime.now(datetime.UTC) + datetime.timedelta(seconds=max_age)
             path = SETTINGS["CSRF_COOKIE_PATH"]
             secure = SETTINGS["CSRF_COOKIE_SECURE"]
             httponly = SETTINGS["CSRF_COOKIE_HTTPONLY"]
@@ -385,46 +387,15 @@ class CSRFMiddleware(BaseMiddleware):
                 httponly=httponly,
                 samesite=samesite,
             )
-
-    @classmethod
-    def is_django_side_url(self, url: str) -> bool:
-        """
-        Returns whether the request URL is in DJANGO_SIDE_URLS in settings.py,
-        this means that the request is meant to be handled by Django directly, and Duck doesn't
-        know anything about the urlpattern resolving to this request url.
-        """
-        django_side_urls = SETTINGS["DJANGO_SIDE_URLS"] or []# urls registered only in Django.
-        
-        for django_side_url in django_side_urls:
-            if re.compile(django_side_url).fullmatch(url):
-                # URL meant to be handle by Django directly
-                return True
-        return False
-        
-    @classmethod
-    def is_duck_explicit_url(cls, url: str) -> bool:
-        """
-        Returns whether the request URL is in DUCK_EXPLICIT_URLS meaning,
-        The request with the url doesn't need to be parsed to Django server first to produce a
-        response, but rather to be handled by Duck directly.
-        
-        Notes:
-            - This is only useful when USE_DJANGO=True as all requests all proxied to Django server to
-            generate the http response.
-        """
-        # Duck explicit URLs are urls not to be proxied to Django even if USE_DJANGO=True.
-        # They are handled directly by within Duck.
-        duck_explicit_urls = SETTINGS["DUCK_EXPLICIT_URLS"] or []
-        
-        for duck_explicit_url in duck_explicit_urls:
-            if re.compile(duck_explicit_url).fullmatch(url):
-                # URL meant to be handle by Duck directly
-                return True
-        return False
-    
+            
     @classmethod
     def process_request(cls, request: HttpRequest):
-        if SETTINGS["USE_DJANGO"] and (cls.is_django_side_url(request.path) or not cls.is_duck_explicit_url(request.path)):
+        from duck.http.core.processor import (
+            is_django_side_url,
+            is_duck_explicit_url,
+        )
+        
+        if SETTINGS["USE_DJANGO"] and (is_django_side_url(request.path) or not is_duck_explicit_url(request.path)):
             # This request is meant for Django to handle, no need to do Csrf middleware checks (Django will do it).
             return cls.request_ok
             

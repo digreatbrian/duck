@@ -16,6 +16,7 @@ from duck.utils.path import (
     normalize_url_path,
     is_good_url_path,
 )
+from duck.utils.lazy import Lazy
 
 
 class BaseRouteRegistry:
@@ -25,8 +26,7 @@ class BaseRouteRegistry:
     This registry supports wildcard patterns (*), automatically replacing angle bracket placeholders like <name> with wildcards. It ensures uniqueness of routes both by name and by URL pattern.
     """
 
-    url_map = defaultdict(
-        dict)  # {normalized_url: {name: (handler, methods, pattern)}}
+    url_map = defaultdict(dict)  # {normalized_url: {name: (handler, methods, pattern)}}
     """Mapping of URLs to route details"""
 
     def __init__(self):
@@ -226,7 +226,7 @@ class BaseRouteRegistry:
             re.compile(pattern),
         )
 
-    @functools.lru_cache(maxsize=75)
+    @functools.lru_cache(maxsize=256)
     def fetch_route_info_by_name(self, name: str) -> Dict:
         """Fetches the handler, allowed methods, URL pattern for a route, etc by its name
 
@@ -256,7 +256,7 @@ class BaseRouteRegistry:
                     }
         raise RouteNotFoundError(f'Route with name "{name}" not found')
 
-    @functools.lru_cache(maxsize=75)
+    @functools.lru_cache(maxsize=256)
     def fetch_route_info_by_url(self, url_path: str) -> Dict:
         """Fetches the handler and allowed methods for a given URL path.
 
@@ -294,4 +294,4 @@ class BaseRouteRegistry:
             f'Route "{url_path}" doesn\'t match any registered routes')
 
 
-RouteRegistry = BaseRouteRegistry()
+RouteRegistry = Lazy(BaseRouteRegistry)

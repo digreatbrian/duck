@@ -12,11 +12,11 @@ from duck.html.components.utils.include import (
 from duck.etc.middlewares import middlewares
 from duck.etc.normalizers import normalizers
 from duck.secrets import DUCK_SECRET, SECRET_DOMAIN
-from duck.storage import duck_storage
+from duck.storage import duck_storage, BaseDir
 
 
 # Base directory where the Duck application is running from
-BASE_DIR: str | pathlib.Path = pathlib.Path(__file__).resolve().parent
+BASE_DIR: str | pathlib.Path = BaseDir()
 
 
 # SECURITY WARNING: Keep the secret key used in production secret!
@@ -86,18 +86,6 @@ BLUEPRINTS: list[str] = [
     "duck.etc.apps.essentials.blueprint.StaticFiles",
     "duck.etc.apps.react_frontend.blueprint.ReactFrontend",
 ]
-
-
-# Request Handling Task Executor keyword arguments
-# These are keyword arguments to parse to the request handling task executor.
-# Do help on the executor to see supported keyword arguments.
-# Predefined async executors:
-#   "duck.http.core.httpd.task_executor.trio_execute"
-#   "duck.http.core.httpd.task_executor.curio_execute"
-REQUEST_HANDLING_TASK_EXECUTOR_KWARGS: dict = {
-    "async_executor": None,
-    "thread_executor": None,
-}
 
 
 # Asynchronous Request Handling

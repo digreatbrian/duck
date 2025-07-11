@@ -88,7 +88,7 @@ def get_current_log_file() -> str:
         return current_log_file
 
     # Format the new log file name with the given LOG_FILE_FORMAT
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.UTC)
     formatted_time = log_file_format.format(
         day=now.day,
         month=now.month,

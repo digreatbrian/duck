@@ -30,10 +30,11 @@ class DjangoCommand:
         # This command uses sys.argv to retrieve command arguments.
         
         from duck.settings import SETTINGS
-        from duck.backend.django.bridge import DUCK_APP_MODULE
+        from duck.backend.django.bridge import find_manage_py
         
         python_path = SETTINGS["PYTHON_PATH"]
-        django_app_home = DUCK_APP_MODULE.__path__[0]
+        manage_py = find_manage_py()
+        base_dir = str(SETTINGS['BASE_DIR'])
         command_args = []
         
         keyword_reached = False
@@ -44,8 +45,6 @@ class DjangoCommand:
             else:
                 command_args.append(arg)
         
-        command = [python_path, joinpaths(django_app_home, "manage.py")]
-        command.extend(command_args)
-        
-        root_dir = os.path.abspath('.')
-        subprocess.call(command, cwd=root_dir, env={**os.environ, "PYTHONPATH": add_to_pythonpath(root_dir)})
+        command = [python_path, manage_py]
+        command.extend(command_args)   
+        subprocess.call(command, cwd=base_dir, env={**os.environ, "PYTHONPATH": add_to_pythonpath(base_dir)})

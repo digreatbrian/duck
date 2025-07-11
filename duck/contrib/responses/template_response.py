@@ -49,11 +49,10 @@ def template_response(
     context["debug"] = debug
 
     if not issubclass(response_class, HttpResponse):
-        raise TypeError(
-            "The response class must be a subclass of HttpResponse.")
+        raise TypeError("The response class must be a subclass of HttpResponse.")
+    
     if icon_link and not icon_type:
-        raise TypeError(
-            "The icon type must be provided when an icon link is provided.")
+        raise TypeError("The icon type must be provided when an icon link is provided.")
 
     response = TemplateResponse(
         request=None,

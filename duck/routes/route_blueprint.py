@@ -14,6 +14,7 @@ To resolve a url for a blueprint, the name should be `{blueprint_name}.{path_nam
 """
 
 import pathlib
+
 from typing import List, Optional
 
 from duck.urls import (

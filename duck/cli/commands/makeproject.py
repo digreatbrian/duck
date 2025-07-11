@@ -4,6 +4,7 @@ Module containing makeproject command class.
 import os
 
 from duck.logging import console
+from duck.utils.path import joinpaths
 
 
 class MakeProjectCommand:
@@ -38,6 +39,7 @@ class MakeProjectCommand:
         from duck.setup.makeproject import makeproject
         
         dest_dir = os.path.abspath(dest_dir)
+        dest_project_path = joinpaths(dest_dir, name)
         
         console.log(
             f'Creating Duck {project_type.title()} Project' if project_type != "normal"
@@ -54,12 +56,12 @@ class MakeProjectCommand:
             
             # Log something to the console
             console.log(
-                f'Project "{name}" created in directory "{dest_dir}"',
+                f'Project "{name}" created at "{dest_project_path}"',
                 custom_color=console.Fore.GREEN,
             )
         except FileExistsError:
             console.log(
-                f'Project with name "{name}" already exists in destination directory: {dest_dir}',
+                f'Project with name "{name}" already exists at: "{dest_project_path}"',
                 level=console.WARNING,
             )
             overwrite = input(
@@ -76,7 +78,7 @@ class MakeProjectCommand:
                 
                 # Log something to console.
                 console.log(
-                    f'Project "{name}" created in directory "{dest_dir}"',
+                    f'Project "{name}" created at "{dest_project_path}"',
                     custom_color=console.Fore.GREEN)
             else:
                 console.log("Cancelled project creation!", level=console.DEBUG)

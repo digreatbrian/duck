@@ -19,11 +19,13 @@ dependencies = [
     "Jinja2>=3.1.5",
     "watchdog>=4.0.1",
     "requests>=2.31.0",
-    "h2==4.2.0",
+    "h2>=4.2.0",
     "diskcache",
     "colorama",
     "tzdata",
     "click",
+    "asgiref>=3.8.1",
+    "psutil>=7.0.0",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",

@@ -12,12 +12,14 @@ from typing import Dict, List, Optional, Union
 from duck.exceptions.all import (
     DjangoTemplateError,
     TemplateError,
+    SettingsError,
 )
 from duck.template.templatetags import (
     TemplateFilter,
     TemplateTag,
 )
 from duck.utils.path import joinpaths
+from duck.utils.importer import import_module_once
 from duck.settings import SETTINGS
 
 
@@ -196,8 +198,7 @@ class DjangoEngine(Engine):
         self._duck_templatetags: List[str] = ["duck.backend.django.templatetags.ducktags"]  # all internal and custom template tags and filters
         self.autoescape = autoescape
         self.libraries = libraries
-        self._django_engine = (_django_engine
-                               or self.get_default_django_engine())
+        self._django_engine = _django_engine or self.get_default_django_engine()
         self.setup_django_engine()
 
     @classmethod
@@ -211,18 +212,26 @@ class DjangoEngine(Engine):
         """
         Returns the django default template engine.
         """
-        from django import setup
         from django.template import Engine as _Engine
-
-        os.environ.setdefault(
-            "DJANGO_SETTINGS_MODULE",
-            "backend.django.duckapp.duckapp.settings",
-        )  # set django settings if not set
+        from django.core.exceptions import ImproperlyConfigured
         
-        setup()
+        # Attempt to import the local Django project settings
+        try:
+            if not hasattr(self, '_imported_django_settings_module'):
+                import_module_once(SETTINGS['DJANGO_SETTINGS_MODULE'])
+                self._imported_django_settings_module = True
+        except (ImportError, KeyError, ModuleNotFoundError):
+            raise SettingsError(
+                "Please make sure that the Django project structure for Duck is correct for you to use Django template engine.")
         
         if not hasattr(self, "_django__engine"):
-            self._django__engine = _Engine.get_default()
+            try:
+                self._django__engine = _Engine.get_default()
+            except ImproperlyConfigured:
+                raise SettingsError(
+                    "Please make sure that the Django project structure for Duck is correct for you to use Django template engine. "
+                    "Also ensure that DJANGO_SETTINGS_MODULE is set correctly in Duck settings.py."
+                )
         return self._django__engine
 
     def apply_templatetags(

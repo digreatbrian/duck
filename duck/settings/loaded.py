@@ -3,7 +3,14 @@ Module for loading objects defined in `settings.py` or in the Duck application c
 Provides functions to retrieve various components and configurations dynamically.
 """
 
-from typing import (Any, List, Dict, Tuple, Type, Coroutine)
+from typing import (
+    Any,
+    List,
+    Dict,
+    Tuple,
+    Type,
+    Coroutine,
+)
 
 from duck.etc.templatetags import (
     BUILTIN_TEMPLATETAGS,
@@ -18,15 +25,16 @@ from duck.exceptions.all import (
     NormalizerLoadError,
     SettingsError, 
 )
-from duck.routes import Blueprint
-from duck.settings import SETTINGS
-from duck.automation import Automation
-from duck.automation.dispatcher import AutomationDispatcher
-from duck.automation.trigger import AutomationTrigger
 from duck.http.core.proxyhandler import HttpProxyHandler
 from duck.http.request import HttpRequest
 from duck.html.components.templatetags import HtmlComponentTemplateTag
-from duck.utils.importer import import_module_once, x_import
+from duck.automation import Automation
+from duck.automation.dispatcher import AutomationDispatcher
+from duck.automation.trigger import AutomationTrigger
+from duck.routes import Blueprint
+from duck.settings import SETTINGS
+from duck.utils.importer import (import_module_once, x_import)
+from duck.utils.lazy import Lazy
 
 
 def get_wsgi() -> Any:
@@ -44,6 +52,23 @@ def get_wsgi() -> Any:
         return x_import(wsgi_path)(SETTINGS)
     except Exception as e:
         raise SettingsError(f"Failed to load WSGI: {e}") from e
+
+
+def get_asgi() -> Any:
+    """
+    Returns the loaded ASGI application defined in `settings.py`.
+
+    Raises:
+        SettingsError: If `ASGI` is not defined or cannot be imported.
+    """
+
+    asgi_path = SETTINGS.get("ASGI")
+    if not asgi_path:
+        raise SettingsError("Please define ASGI in `settings.py`.")
+    try:
+        return x_import(asgi_path)(SETTINGS)
+    except Exception as e:
+        raise SettingsError(f"Failed to load ASGI: {e}") from e
 
 
 def get_file_upload_handler() -> Any:
@@ -203,8 +228,7 @@ def get_triggers_and_automations(
     """
     automations = []
     try:
-        for idx, (automation_path,
-                  meta) in enumerate(SETTINGS.get("AUTOMATIONS", {}).items()):
+        for idx, (automation_path, meta) in enumerate(SETTINGS.get("AUTOMATIONS", {}).items()):
             try:
                 automation = x_import(automation_path)
             except ImportError:
@@ -287,15 +311,23 @@ def get_user_urlpatterns():
         raise SettingsError(f"Error loading urlpatterns: {e}") from e
 
 
-def get_user_middlewares():
+def get_user_middlewares() -> List[Type]:
     """
-    Returns loaded middlewares set in settings.py
+    Loads and optionally adapts user-defined middleware classes listed in settings.
+
+    Middleware classes must define classmethods such as `process_request`,
+    `process_response`, and `get_error_response`.
+    
+    Returns:
+        List[Type]: List of middleware classes, optionally patched for compatibility.
     """
     try:
-        middlewares = [x_import(m) for m in SETTINGS["MIDDLEWARES"]]
+        middlewares = [
+            x_import(path) for path in SETTINGS["MIDDLEWARES"]
+        ]
         return middlewares
     except Exception as e:
-        raise MiddlewareLoadError("Error loading middlewares: %s" % str(e)) from e
+        raise MiddlewareLoadError(f"Failed to load middlewares: {e}") from e
 
 
 def get_normalizers():
@@ -373,16 +405,27 @@ def get_request_handling_task_executor():
     """
     try:
         request_handling_task_executor = x_import(SETTINGS["REQUEST_HANDLING_TASK_EXECUTOR"])
-        kwargs = SETTINGS["REQUEST_HANDLING_TASK_EXECUTOR_KWARGS"] or {}
-        return request_handling_task_executor(**kwargs)
+        return request_handling_task_executor()
     except Exception as e:
         raise SettingsError(f"Error loading request handling task executor: {e}") from e
 
 
-# Initialize components based on settings
-WSGI = get_wsgi()
+def get_preferred_log_style() -> str:
+    """
+    Returns the preferred log style based on `setting.py`.
+    """
+    style = SETTINGS["PREFERRED_LOG_STYLE"]
+    supported = {"duck", "django"}
+    if style and style not in supported:
+        raise SettingsError(f"PREFERRED_LOG_STYLE unsupported. Supported styles: {supported}")
 
-FILE_UPLOAD_HANDLER = get_file_upload_handler()
+
+# Initialize components based on settings
+WSGI = Lazy(get_wsgi)
+
+ASGI = Lazy(get_asgi)
+
+FILE_UPLOAD_HANDLER = Lazy(get_file_upload_handler)
 
 USER_TEMPLATETAGS = get_user_templatetags()
 
@@ -392,16 +435,20 @@ HTML_COMPONENT_TAGS = (
     else []
 )
 
-ALL_TEMPLATETAGS = HTML_COMPONENT_TAGS  + USER_TEMPLATETAGS + BUILTIN_TEMPLATETAGS
+ALL_TEMPLATETAGS = (
+    USER_TEMPLATETAGS
+    + BUILTIN_TEMPLATETAGS
+    + HTML_COMPONENT_TAGS
+)
 
 REQUEST_CLASS = get_request_class()
 
 CONTENT_COMPRESSION = get_content_compression_settings()
 
-PROXY_HANDLER = get_proxy_handler() if SETTINGS["USE_DJANGO"] else None
+PROXY_HANDLER = Lazy(get_proxy_handler) if SETTINGS["USE_DJANGO"] else None
 
 AUTOMATION_DISPATCHER, AUTOMATIONS = (
-    get_automation_dispatcher(), get_triggers_and_automations()
+    Lazy(get_automation_dispatcher), Lazy(get_triggers_and_automations)
     if SETTINGS.get("RUN_AUTOMATIONS")
     else (None, []), 
 )
@@ -418,6 +465,8 @@ SESSION_STORAGE = get_session_storage()
 
 SESSION_STORE = get_session_store()
 
-FRONTEND = get_frontend()
+FRONTEND = Lazy(get_frontend)
 
-REQUEST_HANDLING_TASK_EXECUTOR = get_request_handling_task_executor()
+REQUEST_HANDLING_TASK_EXECUTOR = Lazy(get_request_handling_task_executor)
+
+PREFERRED_LOG_STYLE = Lazy(get_preferred_log_style)

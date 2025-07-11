@@ -1,103 +1,102 @@
 """
-Test cases for Duck routes.
+Test cases for Duck routes and middleware behavior.
+
+This module ensures that default server routes and middleware responses 
+conform to expected HTTP status codes and security standards.
 """
 
 import unittest
-
 import requests
+
 from duck.tests.test_server import TestBaseServer
 
 
 class TestBaseRoutes(TestBaseServer):
     """
-    Test class for testing Duck default before creating user custom routes.
+    Test class for verifying default routes on the Duck server
+    before any user-defined routes are registered.
     """
 
     def test_root_url(self):
         """
-        Test cases on root url response.
+        Test that the root URL ("/") returns a 200 OK status.
+
+        This ensures the base route is properly registered and reachable.
         """
-        url = f"http://{self.server_addr}:{self.server_port}/"
-        response = requests.get(url)
-        self.assertEqual(response.status_code, 200)  # check status_code
+        response = requests.get(f"{self.base_url}/", verify=False)
+        self.assertEqual(response.status_code, 200)
 
     def test_about_url(self):
         """
-        Test cases on about url response.
+        Test that the "/about" route returns a 200 OK response.
+
+        Verifies static informational routes are accessible by default.
         """
-        url = f"http://{self.server_addr}:{self.server_port}/about"
-        response = requests.get(url)
-        self.assertEqual(response.status_code, 200)  # check status
+        response = requests.get(f"{self.base_url}/about", verify=False)
+        self.assertEqual(response.status_code, 200)
 
     def test_contact_url(self):
         """
-        Test cases on contact url response.
+        Test that the "/contact" route returns a 200 OK response.
+
+        Ensures all default informational routes are properly served.
         """
-        url = f"http://{self.server_addr}:{self.server_port}"
-        response = requests.get(url)
-        self.assertEqual(response.status_code, 200)  # check status
+        response = requests.get(f"{self.base_url}/contact", verify=False)
+        self.assertEqual(response.status_code, 200)
 
 
 class TestMiddlewareResponses(TestBaseRoutes):
     """
-    Test different responses from Duck server based on different constructed requests.
+    Test class for validating server-side middleware behavior,
+    including error handling, CSRF protection, and input sanitization.
     """
-
+    
     def test_not_found(self):
         """
-        Tests whether the processing middleware HttpNotFoundMiddleware is working.
+        Test that the server returns a 404 status for unknown paths.
+
+        This ensures that HttpNotFoundMiddleware is correctly handling
+        routes that are not explicitly defined.
         """
-        url = f"http://{self.server_addr}:{self.server_port}/abcdefg"
-        response = requests.get(url)
-        self.assertEqual(response.status_code, 404)  # check status
+        response = requests.get(f"{self.base_url}/abcdefg", verify=False)
+        self.assertEqual(response.status_code, 404)
 
     def test_csrf_protection(self):
         """
-        Tests if CSRF protection if working according to CSRFMiddleware.
+        Test that unsafe methods (POST, PUT, DELETE) are blocked without CSRF token.
+
+        This validates that CSRFMiddleware is enforcing protection on modifying requests
+        that lack proper authorization headers or tokens.
         """
-        url = f"http://{self.server_addr}:{self.server_port}"
-        response = requests.post(url,
-                                 data={
-                                     "username": "admin",
-                                     "password": "admin1234"
-                                 })
-
-        self.assertEqual(response.status_code, 403)  # check status
-
-        response = requests.put(url,
-                                data={
-                                    "username": "admin",
-                                    "password": "admin1234"
-                                })
-        self.assertEqual(response.status_code, 403)  # check status
-
-        response = requests.delete(url,
-                                   data={
-                                       "username": "admin",
-                                       "password": "admin1234"
-                                   })
-        self.assertEqual(response.status_code, 403)  # check status
+        for method in [requests.post, requests.put, requests.delete]:
+            with self.subTest(method=method.__name__):
+                response = method(self.base_url, data={"username": "admin", "password": "admin1234"}, verify=False)
+                self.assertEqual(response.status_code, 403)
 
     def test_url_attacks(self):
         """
-        Tests for protection against url attacks like SQL injection, Command Injection and XSS.
+        Test server's protection against common URL-based attacks.
+
+        Includes:
+        - SQL injection-style malformed paths
+        - Command injection attempts
+        - XSS injection via query parameters
+
+        Ensures input validation middleware (e.g., HttpSanitizationMiddleware) 
+        correctly blocks suspicious or malformed requests.
         """
-        url = f"http://{self.server_addr}:{self.server_port}"
-        sql_uri = url + "/[--]/hello/world"
-        command_uri = url + "/hello/world;echo foo"
-        xss_uri = (
-            url
-            + '/hello/world/?q=<script>console.log("hello world")</script>')
+        attack_paths = [
+            "/[--]/hello/world",  # Simulated SQL injection
+            "/hello/world;echo foo&",  # Simulated command injection
+            "/hello/world/?q=<script>console.log('hello')</script>"  # XSS vector
+        ]
 
-        response = requests.get(sql_uri)
-        self.assertEqual(response.status_code, 400)
-
-        response = requests.get(command_uri)
-        self.assertEqual(response.status_code, 400)
-
-        response = requests.get(xss_uri)
-        self.assertEqual(response.status_code, 400)
+        for path in attack_paths:
+            with self.subTest(path=path):
+                response = requests.get(self.base_url + path, verify=False)
+                self.assertEqual(response.status_code, 400)
 
 
 if __name__ == "__main__":
     unittest.main()
+ 

@@ -10,7 +10,7 @@ class WWWRedirectMiddleware(BaseMiddleware):
     """
 
     debug_message: str = (
-        "WWWRedirectMiddleware: Redirect true")
+        "WWWRedirectMiddleware: Redirecting to non-www domain")
 
     @classmethod
     def get_error_response(cls, request):

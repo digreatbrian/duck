@@ -15,8 +15,7 @@ class RuntestsCommand:
     @classmethod
     def setup(cls):
         # Setup before command execution
-        # Setup minimum settings module for CLI to function correctly
-        os.environ.setdefault("DUCK_SETTINGS_MODULE", "duck.etc.structures.projects.testing.settings")
+        pass
         
     @classmethod
     def main(cls):

@@ -2,6 +2,7 @@
 Module containing react_frontend template tag implementation.
 
 Example Use Case:
+```django
     <body id="root">
     {% react_frontend %}
     
@@ -20,6 +21,7 @@ Example Use Case:
     
     {% endreact_frontend %}
     </body>
+```
 """
 from typing import Dict
 from urllib.parse import urljoin

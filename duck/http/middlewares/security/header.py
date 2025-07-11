@@ -4,62 +4,70 @@ Module for header middlewares.
 import re
 import ipaddress
 
-from duck.contrib.responses import simple_response, template_response
 from duck.http.middlewares import BaseMiddleware
 from duck.http.middlewares.security.modules.header_injection import (
     check_header_injection,
 )
 from duck.http.response import HttpBadRequestResponse, HttpForbiddenRequestResponse
 from duck.settings import SETTINGS
+from duck.shortcuts import simple_response, template_response
 from duck.utils.wildcard import process_wildcards
+
+
+# Pre-compile regex and constants for speed
+HOSTNAME_LABEL_RE = re.compile(r"^(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
+
+MAX_HOSTNAME_LENGTH = 253
 
 
 def is_valid_host(host):
     """
-    Validate a hostname or IP address, optionally with a port (e.g., 'example.com:8000').
+    Super-fast validation of hostname or IP address, optionally with a port.
     Returns a tuple (is_valid, message).
     """
 
     if not host:
         return False, "Hostname is empty"
 
-    # Split host and optional port
+    # Fast split for port (IPv4/hostname:port case)
     if ':' in host and host.count(':') == 1:
-        host, port = host.split(':', 1)
+        h, port = host.split(':', 1)
         if not port.isdigit() or not (0 < int(port) < 65536):
             return False, f"Invalid port number '{port}'. Port must be an integer between 1 and 65535."
-    elif ':' in host:
-        # Possibly an IPv6 address with port — strip brackets and port
-        if host.startswith('['):
-            try:
-                addr, port = host.rsplit(']:', 1)
-                ip = ipaddress.ip_address(addr.strip('[]'))
-                if not port.isdigit() or not (0 < int(port) < 65536):
-                    return False, f"Invalid port '{port}' on IPv6 address."
-                return True, f"Valid IPv6 address with port."
-            except Exception:
-                return False, "Malformed IPv6 address with port."
+        host = h  # continue validating host only
 
-    # Now validate pure hostname or IP
+    elif ':' in host:
+        # IPv6 with port, e.g., [::1]:8000
+        if host.startswith('[') and ']' in host:
+            i = host.find(']')
+            addr = host[1:i]
+            port = host[i+2:] if host[i+1:i+2] == ':' else ''
+            try:
+                ip = ipaddress.ip_address(addr)
+            except Exception:
+                return False, "Malformed IPv6 address."
+            if not port.isdigit() or not (0 < int(port) < 65536):
+                return False, f"Invalid port '{port}' on IPv6 address."
+            return True, "Valid IPv6 address with port."
+        # else: fall through to next checks
+
+    # Try IP address (IPv4 or IPv6)
     try:
         ip = ipaddress.ip_address(host.strip("[]"))
         return True, f"Valid IP address (IPv{ip.version})."
-    except ValueError:
-        pass  # Not an IP address
+    except Exception:
+        pass
 
-    # Validate as hostname
-    hostname_regex = re.compile(r"^(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
-    MAX_HOSTNAME_LENGTH = 253
-
+    # Hostname validation
     if len(host) > MAX_HOSTNAME_LENGTH:
         return False, f"Hostname exceeds the maximum length of {MAX_HOSTNAME_LENGTH} characters."
 
     labels = host.split(".")
-    if any(label == "" for label in labels):
+    if any(not label for label in labels):
         return False, "Hostname contains empty labels (e.g., consecutive dots)."
 
     for label in labels:
-        if not hostname_regex.match(label):
+        if not HOSTNAME_LABEL_RE.match(label):
             return False, f"Invalid label '{label}' in hostname."
 
     return True, "Valid hostname."

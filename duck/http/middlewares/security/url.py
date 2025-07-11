@@ -1,8 +1,7 @@
 """
 Module containing middleware classes for inspecting urls for various attacks like XSS and SQL Injection.
 """
-import re   
-from duck.contrib.responses import simple_response, template_response
+
 from duck.http.middlewares import BaseMiddleware
 from duck.http.middlewares.security.modules.command_injection import (
     check_command_injection_in_url,
@@ -13,6 +12,7 @@ from duck.http.middlewares.security.modules.sql_injection import (
 from duck.http.middlewares.security.modules.xss import check_xss_in_url
 from duck.http.response import HttpBadRequestResponse
 from duck.settings import SETTINGS
+from duck.shortcuts import simple_response, template_response
 from duck.utils.path import is_good_url_path
 
 
@@ -42,7 +42,9 @@ class URLSecurityMiddleware(BaseMiddleware):
 
 
 class XSSMiddleware(BaseMiddleware):
-    """XSSMiddleware class mitigating against XSS attacks"""
+    """
+    XSSMiddleware class mitigating against XSS attacks.
+    """
 
     debug_message: str = "XSSMiddleware: Potential url xss"
 
@@ -61,15 +63,18 @@ class XSSMiddleware(BaseMiddleware):
     @classmethod
     def process_request(cls, request):
         # check for xss in url
-        url = request.path
+        url = request.fullpath
         xss_found, msg = check_xss_in_url(url)
         if xss_found:
+            request.url_xss_attack = msg
             return cls.request_bad
         return cls.request_ok
 
 
 class SQLInjectionMiddleware(BaseMiddleware):
-    """SQLInjectionMiddleware class mitigating against SQL injection attacks."""
+    """
+    SQLInjectionMiddleware class mitigating against SQL injection attacks.
+    """
 
     debug_message: str = "SQLInjectionMiddleware: Potential URL sql injection"
 
@@ -86,14 +91,16 @@ class SQLInjectionMiddleware(BaseMiddleware):
     @classmethod
     def process_request(cls, request):
         # check for sql injection in url
-        url = request.path
+        url = request.fullpath
         if not check_sql_injection_in_url(url):
             return cls.request_ok
         return cls.request_bad
 
 
 class CommandInjectionMiddleware(BaseMiddleware):
-    """CommandInjectionMiddleware class mitigating against command injection attacks."""
+    """
+    CommandInjectionMiddleware class mitigating against command injection attacks.
+    """
 
     debug_message: str = (
         "CommandInjectionMiddleware: Potential URL command injection")
@@ -110,7 +117,7 @@ class CommandInjectionMiddleware(BaseMiddleware):
 
     @classmethod
     def process_request(cls, request):
-        # check for sql injection in url
+        # check for command injection in url
         url = request.fullpath
         if not check_command_injection_in_url(url.split(
                 "?", 1)[0]) and not check_command_injection_in_url(

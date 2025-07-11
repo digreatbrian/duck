@@ -92,30 +92,31 @@ class Request:
         # request.parse(request_data)
         # print(request.request_store["something"]) # Outputs 'anything'
         
-        self.__meta = {}  # meta for the request
+        self.__meta: Dict = {}  # meta for the request
         self.__session = SESSION_STORE(None)  # session for the request
-        self.__remote_addr: tuple[str, int] = None  # client remote address and port
+        self.__remote_addr: Tuple[str, int] = None  # client remote address and port
         self.__headers: Headers = Headers()  # request headers
         self.__fullpath: str = None  # full path for the request
         self.__path: str = None  # path stripped of queries if so
         self.__id: str = None  # request unique identifier
         
         self.client_socket: socket.socket = None # client socket which made this request
+        self.client_address: Tuple[str, int] = None # client remote address
         self.application = None
         self.method: str = ""
         self.path: str = ""
         self.http_version: str = ""
         self.error: Exception = None
-        self.request_store = {}
+        self.request_store: Dict = {}
         self.content_obj: Content = Content(b"", suppress_errors=True)
         self.topheader: str = ""  # topheader .e.g GET / HTTP/1.1
         self.request_data: RequestData = None # Will be set when Request.parse is used
         self.uses_ipv6 = Meta.get_metadata("DUCK_USES_IPV6")
         
-        self.AUTH: dict = dict()
-        self.META: dict = self.__meta
-        self.FILES: dict = dict()
-        self.COOKIES: dict = dict()
+        self.AUTH: Dict = dict()
+        self.META: Dict = self.__meta
+        self.FILES: Dict = dict()
+        self.COOKIES: Dict = dict()
         self.GET: QueryDict = QueryDict()
         self.POST: QueryDict = QueryDict()
         self.QUERY: FixedQueryDict[str, QueryDict] = FixedQueryDict({

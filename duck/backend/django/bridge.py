@@ -11,24 +11,43 @@ Here's how it works:
 """
 import os
 import subprocess
-from importlib import import_module
 
-from duck.logging import logger
+from pathlib import Path
+from functools import lru_cache
+
 from duck.settings import SETTINGS
+from duck.logging import logger
+from duck.utils.importer import import_module_once
 from duck.cli import add_to_pythonpath
-
-
-root_dir = os.path.abspath('.')
 
 
 # Attempt to import the local Django duck app module
 try:
-    duckapp = import_module("backend.django.duckapp")
-    DUCK_APP_MODULE = duckapp
-except ImportError:
+    django_settings_module = import_module_once(SETTINGS['DJANGO_SETTINGS_MODULE'])
+except (ImportError, KeyError, ModuleNotFoundError):
     raise ImportError(
-        "Please make sure that the Django project structure for Duck is correct"
+        "Please make sure that the Django project structure for Duck is correct and DUCK_SETTINGS_MODULE is set correctly."
     )
+
+
+@lru_cache(maxsize=1)
+def find_manage_py() -> str:
+    """
+    Traveses the Django project directory and returns the final absolute path for `manage.py`.
+    """
+    settings_path = django_settings_module.__file__ or django_settings_module.__path__._path[0]
+    settings_dir = Path(settings_path).parent
+
+    # Traverse upward to find manage.py
+    current_dir = settings_dir
+    max_up = 5  # prevent infinite loop
+    
+    for _ in range(max_up):
+        candidate = os.path.join(current_dir, "manage.py")
+        if os.path.isfile(candidate):
+            return candidate
+        current_dir = os.path.dirname(current_dir)  # go up one level
+    raise FileNotFoundError("manage.py not found within reasonable directory traversal.")
 
 
 def run_django_app_commands():
@@ -39,15 +58,14 @@ def run_django_app_commands():
     the latest database schema and static files.
     """
     commands = SETTINGS["DJANGO_COMMANDS_ON_STARTUP"]
-
+    manage_py = find_manage_py()
+    base_dir = str(SETTINGS['BASE_DIR'])
+    
     if not commands:
         return
 
-    logger.log(f"Running Django commands\n  └── {commands} \n",
-               level=logger.DEBUG)
-
-    manage_py = "backend/django/duckapp/manage.py"
-
+    logger.log(f"Running Django commands\n  └── {commands} \n", level=logger.DEBUG)
+    
     for command in commands:
         command = command.strip()
         if command.startswith("collectstatic"):
@@ -59,13 +77,12 @@ def run_django_app_commands():
                     level=logger.WARNING,
                 )
         argv = [SETTINGS["PYTHON_PATH"], manage_py, *command.split(" ")]
-        logger.log(f"Running command: {command}",
-                   level=logger.DEBUG)  # log command being run
-        process = subprocess.run(argv, check=True, cwd=root_dir, env={**os.environ, "PYTHONPATH": add_to_pythonpath(root_dir)})
+        logger.log(f"Running command: {command}", level=logger.DEBUG)  # log command being run
+        process = subprocess.run(argv, check=True, cwd=base_dir, env={**os.environ, "PYTHONPATH": add_to_pythonpath(base_dir)})
         logger.log_raw("\n")
 
 
-def start_django_app(host_addr: str, port: int, uses_ipv6=False):
+def start_django_app(host_addr: str, port: int, uses_ipv6: bool = False):
     """
     Starts the Django application server.
 
@@ -74,9 +91,12 @@ def start_django_app(host_addr: str, port: int, uses_ipv6=False):
         port (int): The port to bind the server to.
         uses_ipv6 (bool): Whether host on ipv6 address
     """
+    manage_py = find_manage_py()
+    base_dir = str(SETTINGS['BASE_DIR'])
+    
     if uses_ipv6:
         host_addr = f"[{host_addr}]"
-    manage_py = "backend/django/duckapp/manage.py"
+    
     argv = [
         SETTINGS["PYTHON_PATH"],
         manage_py,
@@ -84,5 +104,5 @@ def start_django_app(host_addr: str, port: int, uses_ipv6=False):
         f"{host_addr}:{port}",
         "--noreload",
     ]
-    process = subprocess.Popen(argv, cwd=root_dir, env={**os.environ, "PYTHONPATH": add_to_pythonpath(root_dir)})
+    process = subprocess.Popen(argv, cwd=base_dir, env={**os.environ, "PYTHONPATH": add_to_pythonpath(base_dir)})
     return process

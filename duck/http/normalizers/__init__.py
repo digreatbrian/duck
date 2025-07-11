@@ -17,7 +17,7 @@ class URLNormalizer:
             raise NormalizationError(f"HttpRequest object required, not '{type(request).__name__}'")
         
         if request.path is not None:  # Ensure the path is not None
-            request.path = normalize_url_path(request.path)
+            request.fullpath = normalize_url_path(request.fullpath)
         
         else:
             request.path = ""

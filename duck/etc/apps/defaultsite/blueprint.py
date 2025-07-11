@@ -14,6 +14,7 @@ DuckSite = Blueprint(
         path("/", views.ducksite_home_view, name="home"),
         path("/contact", views.ducksite_contact_view, name="contact"),
         path("/about", views.ducksite_about_view, name="about"),
+        path("/speedtest", views.ducksite_speedtest_view, name="speedtest"),
         re_path(
             "/duck-static/.*",
             views.ducksite_staticfiles_view,

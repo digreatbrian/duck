@@ -36,9 +36,10 @@ class MakeBlueprintCommand:
         from duck.setup.makeblueprint import makeblueprint
         
         dest_dir = os.path.abspath(destination)
+        dest_blueprint_path = joinpaths(dest_dir, name)
         
         # Log something
-        console.log(f'Creating Awesome Duck Blueprint', level=console.DEBUG)
+        console.log(f'Creating "{name}" Duck Blueprint', level=console.DEBUG)
         
         try:
             makeblueprint(
@@ -75,7 +76,7 @@ class MakeBlueprintCommand:
                 
                 # Log success message
                 console.log(
-                    f'Blueprint "{name}" created in directory "{dest_dir}"',
+                    f'Blueprint "{name}" created at "{dest_blueprint_path}"',
                     custom_color=console.Fore.GREEN,
                 )
             else:

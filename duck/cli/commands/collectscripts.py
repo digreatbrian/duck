@@ -2,8 +2,8 @@
 Module containing collectscripts command class.
 """
 import os
-import requests
 import pathlib
+import requests
 from typing import List, Tuple
 
 from duck.logging import console

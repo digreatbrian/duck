@@ -44,7 +44,7 @@ def webroot_view(request):
 
     Returns:
         FileResponse: If the requested file exists in CERTBOT_ROOT.
-        Response: 404 Not Found if the file does not exist.
+        HttpResponse: 404 Not Found if the file does not exist.
     """
     file_path = joinpaths(CERTBOT_ROOT, request.path)
     

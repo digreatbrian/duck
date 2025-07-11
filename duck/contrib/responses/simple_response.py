@@ -75,8 +75,8 @@ def _make_simple_response(
     else:
         if not icon_type:
             raise SimpleResponseError(
-                "The icon type must be provided when an icon link is provided."
-            )
+                "The icon type must be provided when an icon link is provided.")
+        
         data = simple_icon_response_html.format(
             title=title or response.status_message,
             heading=heading or response.status_message,

@@ -12,6 +12,6 @@ def home(request):
 	return "<b>Hello world</b>"
 
 def about(request):
-	return to_response("This is about page") # Produces HttpResponse object for the provided content.
+	return to_response("This is the about page") # Produces HttpResponse object for the provided content.
 ```
 """

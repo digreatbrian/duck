@@ -209,7 +209,7 @@ class HttpProxyHandler:
     This class supports both IPv4 and IPv6 and allows modification of headers
     before forwarding the data to the client.
     """
-
+    __slots__ = ("uses_ipv6", "target_host", "target_port", "uses_ssl")
     def __init__(
         self,
         target_host: str,

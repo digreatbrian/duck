@@ -13,7 +13,8 @@ class RequestData:
     an incoming HTTP request. It also includes a flexible `request_store` dictionary
     for attaching arbitrary metadata that can be used throughout request handling.
     """
-
+    __slots__ = ("headers", "content", "request_store")
+    
     def __init__(self, headers: Dict[str, str], content: bytes = b''):
         """
         Initialize a new RequestData instance.
@@ -38,7 +39,8 @@ class RawRequestData(RequestData):
     This class stores the entire HTTP request (headers and body) as raw bytes,
     suitable for use in low-level HTTP request handling or custom parsing logic.
     """
-
+    __slots__ = ("data", "request_store")
+    
     def __init__(self, data: bytes):
         """
         Initialize a new RawRequestData instance.

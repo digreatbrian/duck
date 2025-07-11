@@ -7,3 +7,5 @@ diskcache
 colorama
 tzdata
 click
+asgiref>=3.8.1
+psutil>=7.0.0

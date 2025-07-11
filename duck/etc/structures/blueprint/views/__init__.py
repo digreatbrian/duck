@@ -9,3 +9,5 @@ format your python files.
 __all__ = [
     # Your views here.
 ]
+
+# Write your view definations here.

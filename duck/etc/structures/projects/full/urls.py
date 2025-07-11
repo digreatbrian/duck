@@ -4,16 +4,17 @@ This contains `URL patterns` to register for the application.
 Example:
 
 ```py
-import views
+from duck.urls import path
+from . import views
 
 urlpatterns = [
-    # add urlpatterns here .e.g
-    # path('/', views.home_view, 'home', ['GET'])
+    path('/', views.home_view, 'home', ['GET'])
 ]
 ```
 """
+from duck.urls import path, re_path
+
 
 urlpatterns = [
-    # add urlpatterns here .e.g
-    # path('/', views.home_view, 'home', ['GET'])
+    # add your urlpatterns here.
 ]

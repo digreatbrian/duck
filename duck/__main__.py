@@ -19,16 +19,18 @@ from duck.cli.commands.runserver import RunserverCommand
 from duck.cli.commands.runtests import RuntestsCommand
 from duck.cli.commands.ssl_gen import SSLGenCommand
 from duck.cli.commands.service import ServiceCommand
+from duck.cli.commands.integration import DjangoAddCommand
 
 
 EXAMPLES = f"""
 Examples:
-    python -m duck runserver -a 127.0.0.1 -p 8000
-    python -m duck makeproject myproject -d ./projects
-    python -m duck ssl-gen
-    python -m duck django migrate
-    python -m duck collectstatic
-    python -m duck collectscripts
+    python3 -m duck runserver -a 127.0.0.1 -p 8000
+    python3 -m duck makeproject myproject -d ./projects
+    python3 -m duck makeblueprint myapp
+    python3 -m duck ssl-gen
+    python3 -m duck django migrate
+    python3 -m duck collectstatic
+    python3 -m django-add django_project_path
     
 {console.Fore.YELLOW}Commands requiring execution inside the project directory
 or with DUCK_SETTINGS_MODULE set: {console.Style.RESET_ALL}
@@ -38,7 +40,8 @@ or with DUCK_SETTINGS_MODULE set: {console.Style.RESET_ALL}
    duck django ...
    duck ssl-gen ...
    duck runserver ... (Use --file or --settings to bypass this requirement)
-
+   duck django-add ...
+   ...etc
 """
 
 @click.group(invoke_without_command=True)
@@ -65,14 +68,18 @@ def cli(ctx, version):
 @cli.command()
 @click.option('-y', '--skip-confirmation', is_flag=True, default=False, help="Skip confirmation prompts")
 def collectstatic(skip_confirmation):
-    """Collect static files from blueprint directories."""
+    """
+    Collect static files from Blueprints' directories.
+    """
     CollectStaticCommand.main(skip_confirmation)
 
 
 @cli.command()
 @click.option('-y', '--skip-confirmation', is_flag=True, default=False, help="Skip confirmation prompts")
 def collectscripts(skip_confirmation):
-    """Collect React scripts for the frontend."""
+    """
+    Collect React scripts for the frontend.
+    """
     CollectScriptsCommand.main(skip_confirmation)
 
 
@@ -84,13 +91,15 @@ def collectscripts(skip_confirmation):
 @click.option('--full', 'project_type', flag_value="full", help="Create project with complete files and configuration.")
 @click.option('--project_type', default='normal', type=click.Choice(["normal", "full", "mini"]), help="Specify project type")
 def makeproject(name, dest, overwrite, project_type):
-    """Create a new project whether it's a normal, full or a mini project."""
+    """
+    Create a new project whether it's a normal, full or a mini project.
+    """
     MakeProjectCommand.main(name, dest_dir=dest, overwrite_existing=overwrite, project_type=project_type)
 
 
 @cli.command(help="Create a Duck blueprint directory structure")
 @click.argument("name")
-@click.option("-d", "--dest", help="Destination for blueprint creation.")
+@click.option("-d", "--dest", default=".", help="Destination for blueprint creation.")
 @click.option("-O", "--overwrite", is_flag=True, help="Overwrite an existing blueprint.")
 def makeblueprint(name, dest, overwrite):
    """
@@ -102,7 +111,9 @@ def makeblueprint(name, dest, overwrite):
 @cli.command(help="Execute Django management commands for your project")
 @click.argument('args', nargs=-1)  # Accept multiple arguments
 def django(args):
-    """Run Django-related commands in your project."""
+    """
+    Run Django-related commands in your project.
+    """
     DjangoCommand.main()
 
 
@@ -116,7 +127,9 @@ def django(args):
 @click.option("--reload", is_flag=True, default=False, help="Run application in reload state. Application will run as if it was restarted (optional)")
 @click.option("-dj", "--use-django", is_flag=True, default=False, help="Run application along with Django server. This overrides setting USE_DJANGO in settings.py (optional)")
 def runserver(address, port, domain, settings, ipv6, file, reload, use_django):
-    """Run the development or production server."""
+    """
+    Run the development or production server.
+    """
     if use_django:
         os.environ.setdefault("DUCK_USE_DJANGO", "true")
         
@@ -132,15 +145,30 @@ def runserver(address, port, domain, settings, ipv6, file, reload, use_django):
 
 @cli.command(help="Run default tests using unittest module")
 def runtests():
-    """Run pre-built Duck tests."""
+    """
+    Run pre-built Duck test cases.
+    """
     RuntestsCommand.main()
 
 
 @cli.command(help="Generate a self-signed SSL certificate")
 def ssl_gen():
-    """Generate self-signed SSL certificate."""
+    """
+    Generate self-signed SSL certificate.
+    """
     SSLGenCommand.main()
 
+
+@cli.command(help="Integrate an existing Django project into Duck")
+@click.argument("source") 
+@click.option("-an", "--appname", default=None, help="The Django main app name, useful if main app name is different from project name (optional)")
+@click.option("-d", "--dest", default="duckapp", help="The destination name for the project when it's copied (optional). Defaults to 'duckapp' ")
+def django_add(source, appname, dest):
+    """
+    Integrate an existing Django project into Duck.
+    """
+    DjangoAddCommand.main(source, appname, dest)
+    
 
 @cli.group()
 def service():

@@ -54,7 +54,21 @@ class Content:
     """
     Content class to represent the data to be sent in the response.
     """
-
+    __slots__ = (
+        "_Content__data",
+        "_Content__filepath",
+        "_Content__encoding",
+        "_Content__content_type",
+        "_force_size",
+        "compression_min_size",
+        "compression_max_size",
+        "compression_level",
+        "compression_mimetypes",
+        "supported_encodings",
+        "suppress_errors",
+        "auto_read_file",
+    )
+    
     def __init__(
         self,
         data: bytes = b"",
@@ -112,7 +126,7 @@ class Content:
 
         Conditions:
          - `enable_content_compression` = True.
-         - `size` <= compression_max_size.
+         - `size` <= compression_max_size and `size` >= compression_min_size
          - `content_type` set.
          - `encoding` is recognized.
          - `data` is in bytes.
@@ -122,6 +136,7 @@ class Content:
         mimetype_supported = self.mimetype_supported(self.content_type)
         
         if (data and len(data) <= self.compression_max_size
+                and len(data) >= self.compression_min_size
                 and isinstance(data, bytes) and mimetype_supported):
             
             if not encoding:
@@ -160,6 +175,7 @@ class Content:
         Conditions:
         - `enable_content_compression` = True.
         - `content_type` set.
+        - `size` <= compression_max_size
         - `encoding` is recognized.
         - `data` is in bytes.
         """

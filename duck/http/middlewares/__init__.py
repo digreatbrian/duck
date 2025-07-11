@@ -50,7 +50,7 @@ class BaseMiddleware:
     @classmethod
     def get_error_response(cls, request):
         """
-        Returns the error response when process_request returns BaseMiddleware.request_bad.
+        Returns the error response when process_request returns `BaseMiddleware.request_bad`.
         """
         error_response = HttpBadRequestResponse(
             "Sorry there is an error in Request, that's all we know!")

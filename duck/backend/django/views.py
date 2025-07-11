@@ -13,14 +13,12 @@ from duck.backend.django.utils import (
     django_to_duck_request,
     duck_to_django_response,
 )
+from duck.contrib.sync import convert_to_sync_if_needed
 from duck.exceptions.all import RouteNotFoundError
-from duck.logging import logger
 from duck.routes import RouteRegistry
 from duck.meta import Meta
-from duck.shortcuts import (
-    not_found404,
-    to_response,
-)
+from duck.logging import logger
+from duck.shortcuts import (not_found404, to_response,)
 
 
 def request_meta_update(func: Callable):
@@ -95,10 +93,10 @@ def _duck_django_view(
         
         # Call the Duck view with the necessary parameters
         duck_view = route_info["handler"]
-        duck_response = duck_view(duck_request, **handler_kwargs)
-    
+        duck_response = convert_to_sync_if_needed(duck_view)(duck_request, **handler_kwargs)
+            
     except RouteNotFoundError:
-        duck_response = not_found404()
+        duck_response = not_found404(request=duck_request)
     
     except Exception as e:
         logger.log_raw(

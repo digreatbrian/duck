@@ -171,6 +171,12 @@ class ResponseFinalizer:
             
             if compressed:
                 response.set_header("Content-Encoding", response.content_obj.encoding)
+            else:
+                response.set_header(
+                    "Content-Encoding",
+                    response.content_obj.correct_encoding(),
+                )
+            
         else:
             # This is a streaming http response
             

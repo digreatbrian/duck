@@ -2,8 +2,6 @@
 Provides access to application settings.
 """
 import os
-import sys
-import importlib
 
 from duck.exceptions.all import SettingsError
 from duck.utils.importer import import_module_once
@@ -19,6 +17,25 @@ class Settings(dict):
     
     This class extends the built-in `dict` to store settings in a dictionary-like format.
     It also provides a custom representation of the settings for debugging and logging.
+    
+    Notes:
+    - These settings can be altered at runtime once imported but the `SETTINGS` should be imported and
+      edited at top level before importing anything related to `Duck`.
+       
+       Example:
+       ```py
+       from duck.settings import SETTINGS
+       
+       # Edit settings here .e.g.,
+       # SETTINGS['ENABLE_HTTPS'] = True
+       
+       from duck.app import App
+       
+       app = App()
+       
+       if __name__ == '__main__':
+           app.run()
+       ``` 
     """
     source = None
     
@@ -55,7 +72,8 @@ def settings_to_dict(settings_module: str) -> Settings:
 
 
 def get_combined_settings() -> Settings:
-    """Combines default and user settings into a single dictionary.
+    """
+    Combines default and user settings into a single dictionary.
 
     Reads the default settings from `duck.etc.settings` and attempts to
     read user settings from a `settings` module in the current directory.

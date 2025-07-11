@@ -13,11 +13,11 @@ from duck.html.components.utils.include import (
 from duck.etc.middlewares import middlewares
 from duck.etc.normalizers import normalizers
 from duck.secrets import DUCK_SECRET, SECRET_DOMAIN
-from duck.storage import duck_storage
+from duck.storage import duck_storage, BaseDir
 
 
 # Base directory where the Duck application is running from
-BASE_DIR: str | pathlib.Path = pathlib.Path(__file__).resolve().parent
+BASE_DIR: str | pathlib.Path = BaseDir()
 
 
 # SECURITY WARNING: Keep the secret key used in production secret!
@@ -61,6 +61,13 @@ PYTHON_PATH: str = "python"
 # This wsgi is responsible for processing requests, generating response and sending it to the client unlike other
 # WSGI which only generate response but does'nt send it to client.
 WSGI: str = "duck.http.core.wsgi.WSGI"
+
+
+# Asynchronous Server Gateway Interface (ASGI) to use within Duck.
+# **Caution**: Changing ASGI may result in unexpected behavior for logging if not handled correctly.
+# This asgi is responsible for asynchronously processing requests, generating response and sending it to the client unlike other
+# ASGI which only generate response but does'nt send it to client.
+ASGI: str = "duck.http.core.asgi.ASGI"
 
 
 # HTTPS
@@ -126,23 +133,18 @@ REQUEST_CLASS: str = "duck.http.request.HttpRequest"
 REQUEST_HANDLING_TASK_EXECUTOR: str = "duck.http.core.httpd.task_executor.RequestHandlingExecutor"
 
 
-# Request Handling Task Executor keyword arguments
-# These are keyword arguments to parse to the request handling task executor.
-# Do help on the executor to see supported keyword arguments.
-# Predefined async executors:
-#   "duck.http.core.httpd.task_executor.trio_execute"
-#   "duck.http.core.httpd.task_executor.curio_execute"
-REQUEST_HANDLING_TASK_EXECUTOR_KWARGS: dict = {
-    "async_executor": None,
-    "thread_executor": None,
-}
-
 # Asynchronous Request Handling
 
 # Determines whether to use asynchronous request handling.
 # If set to False, the framework defaults to multithreaded request handling.
 # Example: ASYNC_HANDLING=True enables async handling; False uses threads.
 ASYNC_HANDLING: bool = False
+
+
+# Async Event Loop
+# Specifies which asynchronous event loop backend to use.
+# Options may include: "asyncio" (default), "uvloop"
+ASYNC_LOOP: str = "asyncio"
 
 
 # Server Buffer
@@ -172,6 +174,13 @@ KEEP_ALIVE_TIMEOUT: int | float = 1
 # - A lower timeout might result in incomplete client requests if the client takes too long to send data.
 # - However, a lower timeout can also reduce latency, improving the speed of sending data back to the client or minimizing waiting time for full client requests.
 REQUEST_TIMEOUT: int | float = 0.5  # Optimized for fast request processing
+
+
+# Stream Timeout for Incoming Requests
+# Timeout (in seconds) when receiving a request body without a Content-Length header,
+# or when using "Transfer-Encoding: chunked". 
+# Low values minimize blocking on fast networks but may interrupt uploads on slower connections.
+REQUEST_STREAM_TIMEOUT: int | float = 0.001  # Ideal for instant streaming on fast networks
 
 
 # Requests Backlog
@@ -245,6 +254,12 @@ PROXY_STREAM_CHUNK_SIZE = 4096
 USE_DJANGO: bool = False
 
 
+# Path to the Django settings module.
+# Required when using Django as the backend in the Duck project.
+# Format: "<python_module_path>.settings"
+DJANGO_SETTINGS_MODULE: str = "backend.django.duckapp.duckapp.settings"
+
+
 # Django Server Port
 # This is the port where django server will be started on
 DJANGO_BIND_PORT: int = 9999
@@ -253,7 +268,7 @@ DJANGO_BIND_PORT: int = 9999
 # Django Server Wait Time
 # Time in seconds to wait before checking if the Django server is up and running.
 # This variable is used to periodically verify the server's status during the initial startup or maintenance routines, ensuring that the server is ready to handle incoming requests.
-DJANGO_SERVER_WAIT_TIME: str = 4
+DJANGO_SERVER_WAIT_TIME: str = 5
 
 
 # These commands will be run before Django server startup if USE_DJANGO is set to True.
@@ -673,6 +688,14 @@ LOGGING_DIR: str = BASE_DIR / "assets/.logs"
 # Log File Format
 # Format for log files with date and time, safe for Windows filenames
 LOG_FILE_FORMAT: str = "{year}-{month:02d}-{day:02d}_{hours:02d}-{minutes:02d}-{seconds:02d}"
+
+
+# Preferred Logging Style
+# Specifies the preferred format for logging responses.
+# Options: "duck", "django", or None (empty string).
+# Defaults to "duck".
+# If set to None or not defined, the logging style will be determined by the value of "USE_DJANGO".
+PREFERRED_LOG_STYLE: str = "duck"
 
 
 # Log to File
